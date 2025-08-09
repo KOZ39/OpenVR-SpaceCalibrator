@@ -10,3 +10,6 @@
 [submodule "vendor/minhook"]
 	path = vendor/minhook
 	url = https://github.com/TsudaKageyu/minhook
+[submodule "vendor/fmt"]
+	path = vendor/fmt
+	url = https://github.com/fmtlib/fmt
