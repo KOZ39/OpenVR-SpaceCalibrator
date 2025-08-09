@@ -1,0 +1,9 @@
+ipch
+.vs
+*.db
+*.opendb
+*.aps
+*.user
+.code
+/install/*.exe
+[bB]in
