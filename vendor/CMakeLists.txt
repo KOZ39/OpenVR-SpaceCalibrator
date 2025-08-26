@@ -8,6 +8,14 @@ project("vendor")
 message("Adding minhook...")
 add_subdirectory ("minhook")
 
+# glad
+message("Adding glad...")
+add_library(glad STATIC
+	${CMAKE_SOURCE_DIR}/vendor/glad/src/glad.c
+	${CMAKE_SOURCE_DIR}/vendor/glad/include/glad/glad.h
+	${CMAKE_SOURCE_DIR}/vendor/glad/include/KHR/khrplatform.h)
+target_include_directories(glad PUBLIC ${CMAKE_SOURCE_DIR}/vendor/glad/include)
+
 # GLFW
 message("Adding GLFW...")
 set(GLFW_BUILD_TESTS OFF)

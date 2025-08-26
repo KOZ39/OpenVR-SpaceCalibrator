@@ -83,6 +83,7 @@ target_link_libraries(SpaceCalibratorOverlay
     PRIVATE opengl32.lib
     PRIVATE dwmapi.lib
     PRIVATE imgui
+    PRIVATE glad
     PRIVATE glfw
     PRIVATE fmt
     PRIVATE quill
