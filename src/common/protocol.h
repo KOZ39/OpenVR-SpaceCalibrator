@@ -1,1 +1,154 @@
 #pragma once
+
+#include <inttypes.h>
+
+#ifndef _OPENVR_API
+#include <openvr_driver.h>
+#endif
+
+#ifdef _OPENVR_API
+
+namespace vr
+{
+    // We can't include openvr_driver.h as it will result in multiple definition of some structures.
+    // However, we need to share driver-specific structures with the client application, so duplicate them
+    // here.
+
+    struct DriverPose_t
+    {
+        /* Time offset of this pose, in seconds from the actual time of the pose,
+         * relative to the time of the PoseUpdated() call made by the driver.
+         */
+        double poseTimeOffset;
+
+        /* Generally, the pose maintained by a driver
+         * is in an inertial coordinate system different
+         * from the world system of x+ right, y+ up, z+ back.
+         * Also, the driver is not usually tracking the "head" position,
+         * but instead an internal IMU or another reference point in the HMD.
+         * The following two transforms transform positions and orientations
+         * to app world space from driver world space,
+         * and to HMD head space from driver local body space.
+         *
+         * We maintain the driver pose state in its internal coordinate system,
+         * so we can do the pose prediction math without having to
+         * use angular acceleration.  A driver's angular acceleration is generally not measured,
+         * and is instead calculated from successive samples of angular velocity.
+         * This leads to a noisy angular acceleration values, which are also
+         * lagged due to the filtering required to reduce noise to an acceptable level.
+         */
+        vr::HmdQuaternion_t qWorldFromDriverRotation;
+        double vecWorldFromDriverTranslation[3];
+
+        vr::HmdQuaternion_t qDriverFromHeadRotation;
+        double vecDriverFromHeadTranslation[3];
+
+        /* State of driver pose, in meters and radians. */
+        /* Position of the driver tracking reference in driver world space
+         * +[0] (x) is right
+         * +[1] (y) is up
+         * -[2] (z) is forward
+         */
+        double vecPosition[3];
+
+        /* Velocity of the pose in meters/second */
+        double vecVelocity[3];
+
+        /* Acceleration of the pose in meters/second */
+        double vecAcceleration[3];
+
+        /* Orientation of the tracker, represented as a quaternion */
+        vr::HmdQuaternion_t qRotation;
+
+        /* Angular velocity of the pose in axis-angle
+         * representation. The direction is the angle of
+         * rotation and the magnitude is the angle around
+         * that axis in radians/second. */
+        double vecAngularVelocity[3];
+
+        /* Angular acceleration of the pose in axis-angle
+         * representation. The direction is the angle of
+         * rotation and the magnitude is the angle around
+         * that axis in radians/second^2. */
+        double vecAngularAcceleration[3];
+
+        ETrackingResult result;
+
+        bool poseIsValid;
+        bool willDriftInYaw;
+        bool shouldApplyHeadModel;
+        bool deviceIsConnected;
+    };
+
+}
+
+#endif
+
+namespace ipc::protocol
+{
+    enum Version_t {
+        IPC_PROTOCOL_VER_INVALID,
+        IPC_PROTOCOL_VER_1 = 1,
+        IPC_PROTOCOL_VER_2,
+        IPC_PROTOCOL_VER_3,
+        IPC_PROTOCOL_VER_4,
+        IPC_PROTOCOL_VER_5,
+
+        IPC_PROTOCOL_CURRENT = IPC_PROTOCOL_VER_5,
+    };
+
+    enum CommandType_t : uint8_t {
+        IPC_COMMAND_UNKNOWN,
+        IPC_COMMAND_HANDSHAKE,
+        IPC_COMMAND_SET_DEVICE_TRANSFORM,
+        IPC_COMMAND_SET_ALIGNMENT_SPEED_PARAMS,
+        IPC_COMMAND_RESET_CALIBRATION,
+        IPC_COMMAND_COUNT,
+    };
+
+    struct Command_Handshake_t {
+        Version_t version = Version_t::IPC_PROTOCOL_CURRENT;
+    };
+
+    struct Command_SetDeviceTransform_t {
+        // @TODO: does this make sense to perform per device or per tracking system? per system probably makes a lot more sense tbh also bc it lends itself to multiple calibrations for effectively free
+        // (need to think about ux for it though lol)
+        bool enabled : 1;
+        bool updateTranslation : 1;
+        bool updateRotation : 1;
+        bool updateScale : 1;
+        bool lerpCalibrations : 1;
+        bool hideContinuousTracker : 1;
+        vr::TrackedDeviceIndex_t unOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
+        vr::HmdVector3d_t translation;
+        vr::HmdQuaternion_t rotation;
+        double scale;
+    };
+
+    struct Command_SetAlignmentSpeedParams_t {
+        /**
+         * The threshold at which we adjust the alignment speed based on the position offset
+         * between current and target calibrations. Generally, we increase the speed if we go
+         * above small/large, and decrease it only once it's under tiny.
+         *
+         * These values are expressed as distance squared
+         */
+        double thr_trans_tiny, thr_trans_small, thr_trans_large;
+
+        /**
+         * Similar thresholds for rotation offsets, in radians
+         */
+        double thr_rot_tiny, thr_rot_small, thr_rot_large;
+
+        /**
+         * The speed of alignment, expressed as a lerp/slerp factor. 1 will blend most of the way in <1 second.
+         * (We actually do a lerp(s * delta_t) where s is the speed factor here)
+         */
+        double align_speed_tiny, align_speed_small, align_speed_large;
+    };
+
+    constexpr uint32_t k_unSharedMemoryPoseCount = vr::k_unMaxTrackedDeviceCount;
+    constexpr uint32_t k_unSharedMemoryFrameCount = 512; // @ 90Hz => 5.7s of history, @ 120Hz => 4.2s of history
+    constexpr uint32_t k_unSharedMemoryElementCount = k_unSharedMemoryPoseCount * k_unSharedMemoryFrameCount;
+    constexpr const char* k_szIpcIdentifier = "SPACE_CALIBRATOR_NOVA";
+}
