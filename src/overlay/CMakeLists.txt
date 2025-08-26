@@ -33,7 +33,7 @@ function(GroupSourcesByFolder target)
     endif()
 endfunction()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -73,19 +73,25 @@ target_include_directories(SpaceCalibratorOverlay
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/openvr/headers
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/imgui/backends
+    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/quill/include
+    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/fmt/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/Eigen
 )
 
 target_link_libraries(SpaceCalibratorOverlay
+    PRIVATE SpaceCalibratorCommon
     PRIVATE opengl32.lib
     PRIVATE dwmapi.lib
     PRIVATE imgui
     PRIVATE glfw
+    PRIVATE fmt
+    PRIVATE quill
     PRIVATE ${CMAKE_SOURCE_DIR}/vendor/openvr/lib/win64/openvr_api.lib)
 
 target_compile_definitions(SpaceCalibratorOverlay
     PRIVATE NOMINMAX
     PRIVATE UNICODE
+    PRIVATE _CRT_SECURE_NO_WARNINGS
     PRIVATE IMGUI_DEFINE_MATH_OPERATORS
 )
 

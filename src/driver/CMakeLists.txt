@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.8)
 project(SpaceCalibratorDriver CXX)
 message("SpaceCalibrator - Driver")
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -118,14 +118,19 @@ target_include_directories(SpaceCalibratorDriver
     PRIVATE ${CMAKE_SOURCE_DIR}/src/common
     PRIVATE ${CMAKE_SOURCE_DIR}/src/driver
 	PRIVATE ${OPENVR_LIB_DIR}
-	PRIVATE ${CMAKE_SOURCE_DIR}/vendor/openvr/headers
-	PRIVATE ${CMAKE_SOURCE_DIR}/vendor/minhook/include
-    PRIVATE ${CMAKE_SOURCE_DIR}/vendor
-    PRIVATE ${CMAKE_SOURCE_DIR}/vendor/Eigen)
+    PUBLIC ${CMAKE_SOURCE_DIR}/vendor
+	PUBLIC ${CMAKE_SOURCE_DIR}/vendor/openvr/headers
+	PUBLIC ${CMAKE_SOURCE_DIR}/vendor/minhook/include
+    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/quill/include
+    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/fmt/include
+    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/Eigen)
 
 target_link_libraries(SpaceCalibratorDriver
+    PRIVATE SpaceCalibratorCommon
 	PRIVATE ${OPENVR_LIBRARIES}
 	PRIVATE minhook
+    PRIVATE fmt
+    PRIVATE quill
     PRIVATE kernel32 user32 gdi32 winspool comdlg32 advapi32 shell32 ole32 oleaut32 uuid odbc32 odbccp32
 )
 
@@ -137,6 +142,7 @@ target_compile_definitions(SpaceCalibratorDriver
     PRIVATE NOMINMAX
     PRIVATE UNICODE
     PRIVATE EIGEN_HAS_STD_RESULT_OF=0
+    PRIVATE _CRT_SECURE_NO_WARNINGS
     PRIVATE OPENVRSPACECALIBRATORDRIVER_EXPORTS
 )
 set_target_properties(SpaceCalibratorDriver PROPERTIES OUTPUT_NAME ${DRIVER_NAME})
