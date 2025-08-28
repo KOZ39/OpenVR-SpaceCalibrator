@@ -49,12 +49,11 @@ set(QUILL_DISABLE_NON_PREFIXED_MACROS ON CACHE BOOL "Enable this option to disab
 add_subdirectory(quill)
 
 # Assign solution dirs
-set_property(TARGET minhook PROPERTY FOLDER "vendor") 
-
 set_property(TARGET glfw PROPERTY FOLDER "vendor/glfw")
 set_property(TARGET update_mappings PROPERTY FOLDER "vendor/glfw")
 
+set_property(TARGET minhook PROPERTY FOLDER "vendor") 
 set_property(TARGET imgui PROPERTY FOLDER "vendor")
-
 set_property(TARGET fmt PROPERTY FOLDER "vendor")
 set_property(TARGET quill PROPERTY FOLDER "vendor")
+set_property(TARGET glad PROPERTY FOLDER "vendor")
