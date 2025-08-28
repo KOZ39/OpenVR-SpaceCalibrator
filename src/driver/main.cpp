@@ -11,12 +11,12 @@ spacecal::ServerTrackedDeviceProvider g_server;
 
 OPENVRSPACECALIBRATORDRIVER_API void* HmdDriverFactory(const char* pInterfaceName, int* pReturnCode)
 {
-	if (std::strcmp(vr::IServerTrackedDeviceProvider_Version, pInterfaceName) == 0) {
-		return &g_server;
-	}
+    if (std::strcmp(vr::IServerTrackedDeviceProvider_Version, pInterfaceName) == 0) {
+        return &g_server;
+    }
 
-	if (pReturnCode) {
-		*pReturnCode = vr::VRInitError_Init_InterfaceNotFound;
-	}
-	return nullptr;
+    if (pReturnCode) {
+        *pReturnCode = vr::VRInitError_Init_InterfaceNotFound;
+    }
+    return nullptr;
 }
