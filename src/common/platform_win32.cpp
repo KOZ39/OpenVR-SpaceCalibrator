@@ -1,6 +1,8 @@
 #include "platform.h"
 
 #if _WIN32
+#include "constants.h"
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shlobj.h>
@@ -20,6 +22,55 @@ namespace platform {
         }
 
         return std::filesystem::path();
+    }
+
+    std::string getEnvVariable(const std::string& szEnvVarName) {
+        char szStringBuffer[256] = {};
+        DWORD result = GetEnvironmentVariableA(szEnvVarName.c_str(), szStringBuffer, sizeof(szStringBuffer));
+        if (result > 0 && szStringBuffer[0] != 0) {
+            return szStringBuffer;
+        }
+        return "";
+    }
+
+    constexpr const char* s_STEAM_MUTEX_KEY = "Global\\MUTEX__SpaceCalibrator_Steam";
+    HANDLE s_hSteamMutex = INVALID_HANDLE_VALUE;
+    bool s_isGitHubVersionInstalled = false;
+
+    bool isAnotherInstanceRunning(bool& bIsRunningViaSteam) {
+
+        bIsRunningViaSteam = false;
+        std::string szSteamAppIdEnv = getEnvVariable("SteamAppId");
+        if (spacecal::c_SPACE_CALIBRATOR_STEAM_APP_ID == szSteamAppIdEnv ||
+            spacecal::c_STEAMVR_STEAM_APP_ID == szSteamAppIdEnv) {
+            // We got launched via the Steam client UI.
+            s_hSteamMutex = CreateMutexA(NULL, FALSE, s_STEAM_MUTEX_KEY);
+            bIsRunningViaSteam = true;
+            if (s_hSteamMutex == nullptr) {
+                s_hSteamMutex = INVALID_HANDLE_VALUE;
+            }
+            else {
+                // mutex opened, check if we opened one, if so exit
+                if (GetLastError() == ERROR_ALREADY_EXISTS) {
+                    CloseHandle(s_hSteamMutex);
+                    s_hSteamMutex = INVALID_HANDLE_VALUE;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return false;
+    }
+    void shutdownCurrentInstance() {
+        if (s_hSteamMutex != INVALID_HANDLE_VALUE && s_hSteamMutex != nullptr) {
+            CloseHandle(s_hSteamMutex);
+            s_hSteamMutex = nullptr;
+        }
+    }
+
+    void showMessageDialog(const std::string& title, const std::string& message) {
+        MessageBoxA(nullptr, message.c_str(), title.c_str(), 0);
     }
 }
 #endif
