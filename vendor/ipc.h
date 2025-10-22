@@ -95,25 +95,27 @@ bool ipc_client_read_shared_memory(IpcHandle_t hIpcClient, IpcOperation_t ipcOpe
 #include <thread>
 #include <atomic>
 
+#ifndef IPC_FUNCTION_ARGS_TOTAL_SIZE
 // 16KB
 #define IPC_FUNCTION_ARGS_TOTAL_SIZE (1024*16)
+#endif // IPC_FUNCTION_ARGS_TOTAL_SIZE
 
 #if _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
-#endif
+#endif // WIN32_LEAN_AND_MEAN
 #ifndef NOVIRTUALKEYCODES
 #define NOVIRTUALKEYCODES
-#endif
+#endif // NOVIRTUALKEYCODES
 #ifndef NOSOUND
 #define NOSOUND
-#endif
+#endif // NOSOUND
 #ifndef NOICONS
 #define NOICONS
-#endif
+#endif // NOICONS
 #ifndef NOMINMAX
 #define NOMINMAX
-#endif
+#endif // NOMINMAX
 #include <windows.h>
 #endif
 
@@ -414,7 +416,11 @@ bool ipc_server_write_shared_memory(IpcHandle_t hIpcServer, IpcOperation_t ipcOp
     __internal__IpcHandle_t* handleInternal = (__internal__IpcHandle_t*)hIpcServer;
 
 #if _WIN32
-    WaitForSingleObject((HANDLE)ipcOperation.hNativeMutex, INFINITE);
+    DWORD ret = WaitForSingleObject((HANDLE)ipcOperation.hNativeMutex, 10);
+    if (ret == WAIT_TIMEOUT) {
+        ReleaseMutex((HANDLE)ipcOperation.hNativeMutex);
+        return false;
+    }
     void* pDest = (char*)handleInternal->pSharedMemory + IPC_FUNCTION_ARGS_TOTAL_SIZE + ipcOperation.dwSharedMemoryOffset;
     memcpy(pDest, pSrc, destSize);
     SetEvent((HANDLE)ipcOperation.hNativeEvent);
@@ -435,8 +441,16 @@ bool ipc_client_read_shared_memory(IpcHandle_t hIpcClient, IpcOperation_t ipcOpe
     __internal__IpcHandle_t* handleInternal = (__internal__IpcHandle_t*)hIpcClient;
 
 #if _WIN32
-    WaitForSingleObject((HANDLE)ipcOperation.hNativeEvent, INFINITE);
-    WaitForSingleObject((HANDLE)ipcOperation.hNativeMutex, INFINITE);
+    DWORD ret = WaitForSingleObject((HANDLE)ipcOperation.hNativeEvent, 10);
+    if (ret == WAIT_TIMEOUT) {
+        ReleaseMutex((HANDLE)ipcOperation.hNativeMutex);
+        return false;
+    }
+    ret = WaitForSingleObject((HANDLE)ipcOperation.hNativeMutex, 10);
+    if (ret == WAIT_TIMEOUT) {
+        ReleaseMutex((HANDLE)ipcOperation.hNativeMutex);
+        return false;
+    }
     void* pSrc = (char*)handleInternal->pSharedMemory + IPC_FUNCTION_ARGS_TOTAL_SIZE + ipcOperation.dwSharedMemoryOffset;
     memcpy(pDest, pSrc, destSize);
     ReleaseMutex((HANDLE)ipcOperation.hNativeMutex);

@@ -1,8 +1,9 @@
 #define IPC_IMPLEMENTATION
 #include "ipc_client.h"
+#include "log.h"
 
 namespace ipc {
-    const IpcFunction_t Client::m_funcs[] = {
+    const IpcFunction_t IpcClient::m_funcs[] = {
         {
             .commandType = protocol::IPC_COMMAND_HANDSHAKE,
             .szFunctionName = "SpaceCalibratorNova_Handshake",
@@ -21,7 +22,7 @@ namespace ipc {
         },
     };
 
-    bool Client::Connect() {
+    bool IpcClient::Connect() {
         m_hIpc = ipc_client_init({
             .szSharedMemoryName = protocol::k_szIpcIdentifier,
             .dwSharedBufferSizeBytes = protocol::k_unSharedMemoryElementCount,
@@ -32,6 +33,14 @@ namespace ipc {
             .userData = this,
         });
 
+        m_poseDataOperation = {
+            .szIdentifier = "SpaceCalibratorNova_PoseSharedBuffer",
+            .dwSharedMemoryOffset = 0,
+        };
+        if (!ipc_server_register_operation(m_hIpc, &m_poseDataOperation)) {
+            LOG_IPC_ERROR("Failed to registered pose data shared memory operation!");
+        }
+
         // send handshake to driver
         protocol::Command_Handshake_t handshakeArgs;
         ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_HANDSHAKE, &handshakeArgs, sizeof(handshakeArgs));
@@ -41,17 +50,20 @@ namespace ipc {
         return m_connected;
     }
 
-    void Client::Shutdown() {
+    void IpcClient::Shutdown() {
         ipc_client_shutdown(&m_hIpc);
     }
 
-    void Client::SetDeviceTransform(protocol::Command_SetDeviceTransform_t deviceTransform) {
+    void IpcClient::SetDeviceTransform(protocol::Command_SetDeviceTransform_t deviceTransform) {
         ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_SET_DEVICE_TRANSFORM, &deviceTransform, sizeof(deviceTransform));
     }
-    void Client::SetAlignmentSpeed(protocol::Command_SetAlignmentSpeedParams_t alignmentParams) {
+    void IpcClient::SetAlignmentSpeed(protocol::Command_SetAlignmentSpeedParams_t alignmentParams) {
         ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_SET_ALIGNMENT_SPEED_PARAMS, &alignmentParams, sizeof(alignmentParams));
     }
-    void Client::ResetCalibration() {
+    void IpcClient::ResetCalibration() {
         ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_RESET_CALIBRATION, nullptr, 0);
+    }
+    void IpcClient::PollPoses() {
+        ipc_client_read_shared_memory(m_hIpc, m_poseDataOperation, m_poses, sizeof(m_poses));
     }
 }
