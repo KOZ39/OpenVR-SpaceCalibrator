@@ -17,8 +17,9 @@ namespace platform {
         HRESULT hr = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &path_pwstr);
 
         if (SUCCEEDED(hr)) {
-            return std::filesystem::path(path_pwstr);
+            auto thePath = std::filesystem::path(path_pwstr);
             CoTaskMemFree(path_pwstr);
+            return thePath;
         }
 
         return std::filesystem::path();
