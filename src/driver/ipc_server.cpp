@@ -2,6 +2,7 @@
 #include "ipc_server.h"
 #include "log.h"
 #include "tracked_device_provider.h"
+#include "platform.h"
 
 namespace ipc {
     const ::IpcFunction_t Server::m_funcs[] = {
@@ -31,10 +32,8 @@ namespace ipc {
         if (pArguments) {
             protocol::Command_Handshake_t* pHandshakeParams = reinterpret_cast<protocol::Command_Handshake_t*>(pArguments);
             Server* pThis = reinterpret_cast<Server*>(userdata);
-#if _WIN32
-            // assign thread name on first user-controlled invocation to it
-            SetThreadDescription(GetCurrentThread(), L"IPC Thread");
-#endif
+
+            platform::setThreadName("IPC Thread");
 
             if (pHandshakeParams->version != protocol::IPC_PROTOCOL_CURRENT) {
                 if (pHandshakeParams->version < protocol::IPC_PROTOCOL_CURRENT) {
@@ -44,9 +43,9 @@ namespace ipc {
                     // overlay too new
                     LOG_IPC_CRITICAL("The overlay is newer than the driver! Expected IPC version {}, got {}.", protocol::IPC_PROTOCOL_CURRENT, pHandshakeParams->version);
                 }
+            } else {
+                LOG_IPC_INFO("Overlay connected. Using IPC {}", pHandshakeParams->version);
             }
-
-            LOG_IPC_INFO("Overlay connected. Using IPC {}", pHandshakeParams->version);
         }
     }
 
@@ -76,6 +75,17 @@ namespace ipc {
         }
     }
 
+    void Server::UpdatePose(vr::TrackedDeviceIndex_t unWhichDevice, const vr::DriverPose_t& pose) {
+        if (unWhichDevice < 0 || unWhichDevice > vr::k_unMaxTrackedDeviceCount) {
+            LOG_IPC_FATAL("Attempted to update shared pose buffer, but got invalid device index {}...", unWhichDevice);
+            return;
+        }
+        m_poses[unWhichDevice] = pose;
+        if (!ipc_server_write_shared_memory(m_hIpc, m_poseDataOperation, m_poses, sizeof(m_poses))) {
+            LOG_IPC_ERROR("Tried updating shared pose buffer, but operation is invalid!");
+        }
+    }
+
     bool Server::Connect(spacecal::ServerTrackedDeviceProvider* driver) {
         m_hIpc = ::ipc_server_init({
             .szSharedMemoryName = protocol::k_szIpcIdentifier,
@@ -86,6 +96,15 @@ namespace ipc {
             .dwOperationCount = 0,
             .userData = this,
         });
+
+        m_poseDataOperation = {
+            .szIdentifier = "SpaceCalibratorNova_PoseSharedBuffer",
+            .dwSharedMemoryOffset = 0,
+        };
+
+        if (!ipc_server_register_operation(m_hIpc, &m_poseDataOperation)) {
+            LOG_IPC_ERROR("Failed to registered pose data shared memory operation!");
+        }
 
         m_driver = driver;
 

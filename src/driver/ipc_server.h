@@ -13,6 +13,8 @@ public:
     bool Connect(spacecal::ServerTrackedDeviceProvider* driver);
     void Shutdown();
 
+    void UpdatePose(vr::TrackedDeviceIndex_t unWhichDevice, const vr::DriverPose_t& pose);
+
 private:
     static void Callback_Handshake(::IpcCommandType_t cmdType, ::IpcHandle_t hIpcServer, void* pArguments, void* userdata);
     static void Callback_SetDeviceTransform(::IpcCommandType_t cmdType, ::IpcHandle_t hIpcServer, void* pArguments, void* userdata);
@@ -22,7 +24,10 @@ private:
 private:
     bool m_connected = false;
     ::IpcHandle_t m_hIpc = k_hInvalidIpcHandle;
+    ::IpcOperation_t m_poseDataOperation;
     spacecal::ServerTrackedDeviceProvider* m_driver = nullptr;
+
+    vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {};
 
     static const ::IpcFunction_t m_funcs[];
 };
