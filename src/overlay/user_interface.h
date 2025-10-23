@@ -4,5 +4,5 @@
 
 namespace spacecal {
     // Draws the user interface with ImGUI
-    void DrawInterface();
+    void DrawInterface(bool isOverlay);
 }

@@ -168,49 +168,52 @@ namespace spacecal {
         {
             double time = glfwGetTime();
 
-            int width, height;
+            bool dashboardVisible = false;
+            int width = 0, height = 0;
             glfwGetFramebufferSize(m_glfwWindow, &width, &height);
             const bool windowVisible = (width > 0 && height > 0);
 
-            auto& io = ImGui::GetIO();
+            if (windowVisible || dashboardVisible) {
 
-            // These change state now, so we must execute these before doing our own modifications to the io state for VR
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
+                auto& io = ImGui::GetIO();
 
-            io.DisplaySize = ImVec2((float)m_fboTextureWidth, (float)m_fboTextureHeight);
-            io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+                // These change state now, so we must execute these before doing our own modifications to the io state for VR
+                ImGui_ImplOpenGL3_NewFrame();
+                ImGui_ImplGlfw_NewFrame();
 
-            io.ConfigFlags = io.ConfigFlags & ~ImGuiConfigFlags_NoMouseCursorChange;
-            // if (dashboardVisible) {
-            // 	io.ConfigFlags = io.ConfigFlags | ImGuiConfigFlags_NoMouseCursorChange;
-            // }
+                io.DisplaySize = ImVec2((float)m_fboTextureWidth, (float)m_fboTextureHeight);
+                io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
-            ImGui::NewFrame();
+                io.ConfigFlags = io.ConfigFlags & ~ImGuiConfigFlags_NoMouseCursorChange;
+                if (dashboardVisible) {
+                    io.ConfigFlags = io.ConfigFlags | ImGuiConfigFlags_NoMouseCursorChange;
+                }
 
-            spacecal::DrawInterface();
+                ImGui::NewFrame();
 
-            ImGui::EndFrame();
-            ImGui::Render();
+                spacecal::DrawInterface(dashboardVisible);
 
-            glBindFramebuffer(GL_FRAMEBUFFER, m_fboHandle);
-            glViewport(0, 0, m_fboTextureWidth, m_fboTextureHeight);
-            glClearColor(0, 0, 0, 1);
-            glClear(GL_COLOR_BUFFER_BIT);
+                ImGui::EndFrame();
+                ImGui::Render();
 
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+                glBindFramebuffer(GL_FRAMEBUFFER, m_fboHandle);
+                glViewport(0, 0, m_fboTextureWidth, m_fboTextureHeight);
+                glClearColor(0, 0, 0, 1);
+                glClear(GL_COLOR_BUFFER_BIT);
 
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-            if (width && height)
-            {
-                glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fboHandle);
-                glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-                glfwSwapBuffers(m_glfwWindow);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+                if (width && height)
+                {
+                    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fboHandle);
+                    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                    glfwSwapBuffers(m_glfwWindow);
+                }
             }
 
-
-            const double dashboardInterval = 1.0 / 90.0; // fps
+            constexpr double dashboardInterval = 1.0 / 90.0; // fps
             // double waitEventsTimeout = std::max(CalCtx.wantedUpdateInterval, dashboardInterval);
             double waitEventsTimeout = dashboardInterval;
 
