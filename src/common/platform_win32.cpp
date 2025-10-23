@@ -73,5 +73,11 @@ namespace platform {
     void showMessageDialog(const std::string& title, const std::string& message) {
         MessageBoxA(nullptr, message.c_str(), title.c_str(), 0);
     }
+
+    void setThreadName(const std::string& threadName) {
+        std::wstring szWinThreadName(threadName.size(), L' ');
+        szWinThreadName.resize(std::mbstowcs(&szWinThreadName[0], threadName.c_str(), threadName.size()));
+        SetThreadDescription(GetCurrentThread(), szWinThreadName.c_str());
+    }
 }
 #endif

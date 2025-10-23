@@ -13,4 +13,6 @@ namespace platform {
     void shutdownCurrentInstance();
 
     void showMessageDialog(const std::string& title, const std::string& message);
+
+    void setThreadName(const std::string& threadName);
 }
