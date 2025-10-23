@@ -5,6 +5,14 @@
 
 namespace util {
     void init();
-    const std::filesystem::path& getSpaceCalibratorDir();
+    const std::filesystem::path& getSpaceCalibratorInstallDir();
+    const std::filesystem::path& getSpaceCalibratorLangsDir();
+    const std::filesystem::path& getSpaceCalibratorConfigDir();
     const std::filesystem::path& getSpaceCalibratorLogsDir();
 }
+
+#ifndef _DEBUG
+#define ASSERT(cond, msg)
+#else
+#define ASSERT(cond, msg)
+#endif
