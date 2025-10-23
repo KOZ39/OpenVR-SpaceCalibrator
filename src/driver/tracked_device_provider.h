@@ -2,8 +2,16 @@
 
 #include <openvr_driver.h>
 #include "ipc_server.h"
+#include <chrono>
 
 namespace spacecal {
+
+    struct DeviceTransformation_t {
+        bool hideDevice = false;
+        std::chrono::high_resolution_clock::time_point last_poll;
+
+    };
+
     class ServerTrackedDeviceProvider : public vr::IServerTrackedDeviceProvider {
     public:
         vr::EVRInitError Init(vr::IVRDriverContext* pDriverContext) override;
@@ -14,7 +22,8 @@ namespace spacecal {
         void EnterStandby() override;
         void LeaveStandby() override;
 
-        bool HandleDevicePoseUpdated(uint32_t unWhichDevice, const vr::DriverPose_t& newPose);
+        void BlendTransform(const DeviceTransformation_t device) const;
+        bool HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, const vr::DriverPose_t& newPose);
 
     private:
         ipc::Server m_ipcServer;

@@ -7,7 +7,6 @@
 
 namespace spacecal {
     vr::EVRInitError ServerTrackedDeviceProvider::Init(vr::IVRDriverContext* pDriverContext) {
-
         util::init();
         logging::Init(/* isOverlay */ false);
 
@@ -20,6 +19,7 @@ namespace spacecal {
         return vr::VRInitError_None;
     }
     void ServerTrackedDeviceProvider::Cleanup() {
+        hooking::DisableHooks();
         m_ipcServer.Shutdown();
         VR_CLEANUP_SERVER_DRIVER_CONTEXT();
     }
@@ -36,7 +36,25 @@ namespace spacecal {
     void ServerTrackedDeviceProvider::EnterStandby() {}
     void ServerTrackedDeviceProvider::LeaveStandby() {}
 
-    bool ServerTrackedDeviceProvider::HandleDevicePoseUpdated(uint32_t unWhichDevice, const vr::DriverPose_t& newPose) {
+    void ServerTrackedDeviceProvider::BlendTransform(const DeviceTransformation_t device) const {
+        std::chrono::high_resolution_clock::time_point timestamp = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_seconds = timestamp - device.last_poll;
+        double lerp = elapsed_seconds.count();
+
+        // lerp *= GetTransformRate(device.currentRate);
+        if (lerp > 1.0)
+            lerp = 1.0;
+        if (lerp < 0 || isnan(lerp))
+            lerp = 0;
+
+        // device.transform = device.transform.interpolateAround(lerp, device.targetTransform, deviceWorldPose.translation);
+    }
+
+    bool ServerTrackedDeviceProvider::HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, const vr::DriverPose_t& newPose) {
+
+        m_ipcServer.UpdatePose(unWhichDevice, newPose);
+        
+
         return true;
     }
 }
