@@ -24,6 +24,9 @@ namespace spacecal {
 
         void BlendTransform(const DeviceTransformation_t device) const;
         bool HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, const vr::DriverPose_t& newPose);
+        void ResetCalibration();
+        void SetAlignmentSpeedParams(ipc::protocol::Command_SetAlignmentSpeedParams_t& params);
+        void SetDeviceTransform(ipc::protocol::Command_SetDeviceTransform_t& transform);
 
     private:
         ipc::Server m_ipcServer;

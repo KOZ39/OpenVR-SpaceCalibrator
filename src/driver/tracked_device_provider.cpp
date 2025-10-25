@@ -54,7 +54,18 @@ namespace spacecal {
 
         m_ipcServer.UpdatePose(unWhichDevice, newPose);
         
+        // @TODO: Update pose with calibration
 
         return true;
+    }
+
+    void ServerTrackedDeviceProvider::ResetCalibration() {
+
+    }
+    void ServerTrackedDeviceProvider::SetAlignmentSpeedParams(ipc::protocol::Command_SetAlignmentSpeedParams_t& params) {
+
+    }
+    void ServerTrackedDeviceProvider::SetDeviceTransform(ipc::protocol::Command_SetDeviceTransform_t& transform) {
+
     }
 }

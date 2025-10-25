@@ -53,8 +53,11 @@ namespace ipc {
         if (pArguments) {
             protocol::Command_SetDeviceTransform_t* pDeviceTransform = reinterpret_cast<protocol::Command_SetDeviceTransform_t*>(pArguments);
             Server* pThis = reinterpret_cast<Server*>(userdata);
-
-            LOG_IPC_INFO("Server::Callback_SetDeviceTransform");
+            if (pThis && pDeviceTransform) {
+                pThis->m_driver->SetDeviceTransform(*pDeviceTransform);
+            } else {
+                LOG_IPC_ERROR("Server::Callback_SetDeviceTransform failed due to nullptr");
+            }
         }
     }
 
@@ -62,14 +65,18 @@ namespace ipc {
         if (pArguments) {
             protocol::Command_SetAlignmentSpeedParams_t* pAlignmentParams = reinterpret_cast<protocol::Command_SetAlignmentSpeedParams_t*>(pArguments);
             Server* pThis = reinterpret_cast<Server*>(userdata);
-
-            LOG_IPC_INFO("Server::Callback_SetAlignmentSpeedParams");
+            if (pThis && pAlignmentParams) {
+                pThis->m_driver->SetAlignmentSpeedParams(*pAlignmentParams);
+            } else {
+                LOG_IPC_ERROR("Server::Callback_SetAlignmentSpeedParams failed due to nullptr");
+            }
         }
     }
 
     void Server::Callback_ResetCalibration(::IpcCommandType_t cmdType, ::IpcHandle_t hIpcServer, void* pArguments, void* userdata) {
         if (pArguments) {
             Server* pThis = reinterpret_cast<Server*>(userdata);
+            pThis->m_driver->ResetCalibration();
 
             LOG_IPC_INFO("Server::Callback_ResetCalibration");
         }
