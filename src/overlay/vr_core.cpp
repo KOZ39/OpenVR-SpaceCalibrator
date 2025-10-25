@@ -1,0 +1,210 @@
+#include "vr_core.h"
+#include "util.h"
+#include "log.h"
+
+namespace spacecal {
+    VRState::VRState() {
+        m_aDevices.reserve(vr::k_unMaxTrackedDeviceCount);
+        m_aTrackingSystems.reserve(4);
+    }
+
+    bool VRState::init() {
+        auto initError = vr::VRInitError_None;
+        vr::VR_Init(&initError, vr::VRApplication_Overlay);
+        if (initError != vr::VRInitError_None) {
+            auto error = vr::VR_GetVRInitErrorAsEnglishDescription(initError);
+            LOG_OPENVR_CRITICAL("vr::VR_Init failed, got {}", error);
+            return false;
+        }
+
+        // ensure the interfaces we use are valid and correct
+        if (!vr::VR_IsInterfaceVersionValid(vr::IVRSystem_Version)) {
+            LOG_OPENVR_CRITICAL("OpenVR interface vr::IVRSystem version is invalid! Aborting...");
+            return false;
+        }
+        else if (!vr::VR_IsInterfaceVersionValid(vr::IVRSettings_Version)) {
+            LOG_OPENVR_CRITICAL("OpenVR interface vr::IVRSettings version is invalid! Aborting...");
+            return false;
+        }
+        else if (!vr::VR_IsInterfaceVersionValid(vr::IVROverlay_Version)) {
+            LOG_OPENVR_CRITICAL("OpenVR interface vr::IVROverlay version is invalid! Aborting...");
+            return false;
+        }
+
+        // @TODO: Non-steam stuff
+
+        return true;
+    }
+
+    vr::ETrackedPropertyError VRState::getSteamVrPropString(const vr::TrackedDeviceIndex_t deviceId, vr::ETrackedDeviceProperty deviceProperty, std::string& string) {
+        char buffer[vr::k_unMaxPropertyStringSize] = {};
+        vr::ETrackedPropertyError err = vr::TrackedProp_Success;
+        vr::VRSystem()->GetStringTrackedDeviceProperty(deviceId, deviceProperty, buffer, vr::k_unMaxPropertyStringSize, &err);
+        if (err == vr::TrackedProp_Success) {
+            string = std::string(buffer);
+        }
+        return err;
+    }
+
+    void VRState::updateSteamVRDevice(const vr::TrackedDeviceIndex_t deviceId) {
+        auto deviceClass = vr::VRSystem()->GetTrackedDeviceClass(deviceId);
+
+        // we dont care about these devices types
+        if (deviceClass == vr::TrackedDeviceClass_Invalid // Unset
+            || deviceClass == vr::TrackedDeviceClass_TrackingReference // Base Stations
+            || deviceClass == vr::TrackedDeviceClass_DisplayRedirect) // IVRVirtualDisplay
+            return;
+
+        vr::ETrackedPropertyError err = vr::TrackedProp_Success;
+        std::string szTrackingSystem;
+        err = getSteamVrPropString(deviceId, vr::Prop_TrackingSystemName_String, szTrackingSystem);
+
+        // only log if its failed and not unset / not avail rn
+        if (err != vr::TrackedProp_Success) {
+            if (err != vr::TrackedProp_UnknownProperty &&
+                err != vr::TrackedProp_NotYetAvailable) {
+                LOG_OPENVR_WARN("Failed to get tracking system string for device with id {}, got error {} ({})", deviceId, err, (uint32_t)err);
+            }
+            return;
+        }
+
+        // QUIRKS!
+
+        {
+            // Check if the current HMD is a Pimax crystal
+            if (deviceClass == vr::TrackedDeviceClass_HMD && szTrackingSystem == "aapvr") {
+                // HMD is a Pimax HMD
+                vr::HmdMatrix34_t eyeToHeadLeft = vr::VRSystem()->GetEyeToHeadTransform(vr::Eye_Left);
+                // Crystal's projection matrix is constant 0s or 1s except for [0][3], which stores the IPD offset from the nose
+                bool isCrystalHmd =
+                    eyeToHeadLeft.m[0][0] == 1 && eyeToHeadLeft.m[0][1] == 0 && eyeToHeadLeft.m[0][2] == 0 &&                     // IPD
+                    eyeToHeadLeft.m[1][0] == 0 && eyeToHeadLeft.m[1][1] == 1 && eyeToHeadLeft.m[1][2] == 0 && eyeToHeadLeft.m[1][3] == 0 &&
+                    eyeToHeadLeft.m[2][0] == 0 && eyeToHeadLeft.m[2][1] == 0 && eyeToHeadLeft.m[2][2] == 1 && eyeToHeadLeft.m[2][3] == 0;
+
+                if (isCrystalHmd) {
+                    // Move it outside the aapvr system ; we treat aapvr as if it were lighthouse
+                    szTrackingSystem = "Pimax Crystal HMD";
+                }
+            }
+            else if (deviceClass == vr::TrackedDeviceClass_Controller && szTrackingSystem == "oculus") {
+                std::string renderModel;
+                std::string connectedWirelessDongle;
+                err = getSteamVrPropString(deviceId, vr::Prop_RenderModelName_String, renderModel);
+                err = getSteamVrPropString(deviceId, vr::Prop_ConnectedWirelessDongle_String, connectedWirelessDongle);
+
+                // Check if the controller claims its an oculus controller but also pimax
+                if (renderModel.find("{aapvr}") != std::string::npos &&
+                    renderModel.find("crystal") != std::string::npos &&
+                    connectedWirelessDongle.find("lighthouse") != std::string::npos) {
+                    szTrackingSystem = "Pimax Crystal Controllers";
+                }
+            }
+        }
+
+        // track new tracking systems, prioritise HMD one at front of list
+        {
+            auto existing = std::find(m_aTrackingSystems.begin(), m_aTrackingSystems.end(), szTrackingSystem);
+            if (existing != m_aTrackingSystems.end())
+            {
+                if (deviceClass == vr::TrackedDeviceClass_HMD)
+                {
+                    m_aTrackingSystems.erase(existing);
+                    m_aTrackingSystems.insert(m_aTrackingSystems.begin(), szTrackingSystem);
+                }
+            }
+            else
+            {
+                m_aTrackingSystems.push_back(szTrackingSystem);
+            }
+        }
+
+        std::string szDeviceModel;
+        err = getSteamVrPropString(deviceId, vr::Prop_ModelNumber_String, szTrackingSystem);
+        std::string szDeviceSerial;
+        err = getSteamVrPropString(deviceId, vr::Prop_SerialNumber_String, szTrackingSystem);
+        vr::ETrackedControllerRole controllerRole = (vr::ETrackedControllerRole)vr::VRSystem()->GetInt32TrackedDeviceProperty(deviceId, vr::Prop_ControllerRoleHint_Int32, &err);
+
+        VRDevice_t device = {
+            .dwDeviceIndex = deviceId,
+            .eControllerRole = controllerRole,
+            .eDeviceClass = deviceClass,
+            .szTrackingSystemId = szTrackingSystem,
+            .szModel = szDeviceModel,
+            .szSerial = szDeviceSerial,
+        };
+
+        m_aDevices.push_back(device);
+    }
+
+    void VRState::updateVrState() {
+
+        if (m_aDevices.size() == 0 || m_aTrackingSystems.size() == 0 || m_bStateDirty) {
+            // fresh poll, go through everything because we're in a fresh state
+
+            for (vr::TrackedDeviceIndex_t id = 0; id < vr::k_unMaxTrackedDeviceCount; ++id) {
+                updateSteamVRDevice(id);
+            }
+
+            m_bStateDirty = false;
+        }
+
+        vr::VREvent_t vrEvent = {};
+        while (vr::VRSystem()->PollNextEvent(&vrEvent, sizeof(vrEvent))) {
+            switch (vrEvent.eventType) {
+                // @TODO: Handle these??
+            case vr::EVREventType::VREvent_TrackedDeviceActivated:
+            case vr::EVREventType::VREvent_TrackedDeviceDeactivated:
+            case vr::EVREventType::VREvent_TrackedDeviceUpdated:
+            case vr::EVREventType::VREvent_TrackedDeviceRoleChanged:
+                updateSteamVRDevice(vrEvent.trackedDeviceIndex);
+                break;
+
+            case vr::EVREventType::VREvent_EnterStandbyMode:
+                break;
+            case vr::EVREventType::VREvent_LeaveStandbyMode:
+                break;
+            }
+        }
+    }
+
+    const VRDevice_t VRState::findVrDevice(const std::string& trackingSystem, const std::string& model, const std::string& serial) const {
+
+        // Find the device with the matching tracking system, model and serial
+        for (int i = 0; i < m_aDevices.size(); i++) {
+            const auto& device = m_aDevices[i];
+
+            uint8_t matches = 0;
+
+            if (device.szModel == model) {
+                matches++;
+            }
+            if (device.szSerial == serial) {
+                matches++;
+            }
+
+            // Only return if:
+            //   - The tracking system is identical
+            //   - If the device is not a HMD, the model and serial number ALSO are identical.
+            //   - If the device is the HMD, the model OR serial number are also identical.
+            // 
+            // This handles an edge case of some device drivers being poorly developed or misbehaving, returning bad data to SteamVR and in turn, Space Calibrator
+            // e.g.   SteamLink sometimes reports the Quest Pro as either "Oculus Quest Pro" or "Oculus Quest2" as it's model string
+            //        It still reports the serial number correctly however as "VRLINKHMDQUESTPRO"!
+            if (device.szTrackingSystemId == trackingSystem &&
+                ((matches == 2 && device.eDeviceClass != vr::TrackedDeviceClass::TrackedDeviceClass_HMD) ||
+                    (matches >= 1 && device.eDeviceClass == vr::TrackedDeviceClass::TrackedDeviceClass_HMD))) {
+                return device;
+            }
+        }
+
+        return {};
+    }
+
+    const VRDevice_t VRState::getVrDevice(const size_t index) const {
+        if (0 <= index && index < m_aDevices.size()) {
+            return m_aDevices[index];
+        }
+        ASSERT(0 <= index && index < m_aDevices.size(), "Invalid index, out of bounds read!");
+        return {};
+    }
+}

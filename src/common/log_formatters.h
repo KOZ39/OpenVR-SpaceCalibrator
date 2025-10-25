@@ -18,4 +18,16 @@ template <> struct fmtquill::formatter<ipc::protocol::Version_t> : formatter<str
     auto format(ipc::protocol::Version_t version, format_context& ctx) const ->format_context::iterator;
 };
 
+namespace vr {
+    std::string format_as(EVROverlayError overlayErr);
+    std::string format_as(EVRInitError initErr);
+    std::string format_as(ETrackedPropertyError trackedPropertyErr);
+    std::string format_as(EVRInputError inputErr);
+    std::string format_as(EVRSpatialAnchorError spatialAnchorErr);
+    std::string format_as(EVRNotificationError notificationErr);
+    std::string format_as(ETrackedDeviceProperty trackedDeviceProperty);
+    std::string format_as(EVRSettingsError settingsError);
+    std::string format_as(EVREventType eventType);
+}
+
 #pragma clang diagnostic pop
