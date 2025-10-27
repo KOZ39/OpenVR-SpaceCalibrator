@@ -19,3 +19,6 @@
 [submodule "vendor/simdjson"]
 	path = vendor/simdjson
 	url = https://github.com/simdjson/simdjson.git
+[submodule "vendor/glaze"]
+	path = vendor/glaze
+	url = https://github.com/stephenberry/glaze.git
