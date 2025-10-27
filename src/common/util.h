@@ -9,6 +9,8 @@ namespace util {
     const std::filesystem::path& getSpaceCalibratorLangsDir();
     const std::filesystem::path& getSpaceCalibratorConfigDir();
     const std::filesystem::path& getSpaceCalibratorLogsDir();
+
+    const std::filesystem::path& getSpaceCalibratorConfigPath();
 }
 
 #ifndef _DEBUG

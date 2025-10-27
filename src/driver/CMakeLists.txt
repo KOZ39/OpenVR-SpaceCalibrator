@@ -123,7 +123,7 @@ target_include_directories(SpaceCalibratorDriver
 	PUBLIC ${CMAKE_SOURCE_DIR}/vendor/minhook/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/quill/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/fmt/include
-    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/simdjson/singleheader
+    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/glaze/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/Eigen)
 
 target_link_libraries(SpaceCalibratorDriver
@@ -132,7 +132,6 @@ target_link_libraries(SpaceCalibratorDriver
 	PRIVATE minhook
     PRIVATE fmt
     PRIVATE quill
-    PRIVATE simdjson
     PRIVATE kernel32 user32 gdi32 winspool comdlg32 advapi32 shell32 ole32 oleaut32 uuid odbc32 odbccp32
 )
 

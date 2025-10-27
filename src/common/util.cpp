@@ -21,6 +21,8 @@ namespace util {
     fs::path k_spaceCalibratorConfigDirectory{};
     fs::path k_spaceCalibratorLogsDirectory{};
 
+    fs::path k_spaceCalibratorConfigFile{};
+
     void init() {
         {
 #if _WIN32
@@ -38,6 +40,7 @@ namespace util {
         }
 
         k_spaceCalibratorConfigDirectory = platform::getUserConfigDir() / k_szSpaceCalibratorDirName;
+        k_spaceCalibratorConfigFile = k_spaceCalibratorConfigDirectory / "config.json";
         k_spaceCalibratorLogsDirectory = k_spaceCalibratorConfigDirectory / "logs";
 
         k_spaceCalibratorLangsDirectory = k_spaceCalibratorInstallDirectory / "langs";
@@ -70,6 +73,13 @@ namespace util {
         assert(!k_spaceCalibratorConfigDirectory.empty());
 #endif
         return k_spaceCalibratorConfigDirectory;
+    }
+
+    const fs::path& getSpaceCalibratorConfigPath() {
+#if _DEBUG
+        assert(!k_spaceCalibratorConfigFile.empty());
+#endif
+        return k_spaceCalibratorConfigFile;
     }
 
     const fs::path& getSpaceCalibratorLogsDir() {

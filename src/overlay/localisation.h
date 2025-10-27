@@ -48,22 +48,22 @@ namespace spacecal {
     class LocalisationManager {
 
     public:
-        static inline LocalisationManager* GetInstance() { return m_instance; }
+        static inline LocalisationManager* getInstance() { return m_instance; }
 
-        void Init();
-        std::string GetString(const std::string& input) const;
-        bool LoadLocalisationStrings(const Locale locale);
-        Locale EstimateSystemLocale() const;
+        void init();
+        std::string getString(const std::string& input) const;
+        bool loadLocalisationStrings(const Locale locale);
+        Locale estimateSystemLocale() const;
 
         /// <summary>
         /// Converts a locale into a locale region in the form of en_US, en_GB, pl, etc. Used to identify which locale files to load.
         /// </summary>
         /// <param name="locale">The locale to convert</param>
         /// <returns>A string representing the unique locale code for the given Locale</returns>
-        std::string GetLocaleAsRegionString(const Locale locale) const;
+        std::string getLocaleAsRegionString(const Locale locale) const;
 
     private:
-        bool LoadLocaleFromFile(const Locale locale);
+        bool loadLocaleFromFile(const Locale locale);
 
     private:
         static LocalisationManager* m_instance;

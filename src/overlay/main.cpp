@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <windows.h>
 #include "util.h"
-#include "log.h"
 #include "window.h"
 #include "platform.h"
+#include "configuration.h"
+#include "localisation.h"
+#include "vr_core.h"
+#include "log.h"
 
 extern "C" __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 extern "C" __declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0x00000001;
@@ -20,6 +23,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     util::init();
     logging::Init(/* isOverlay */ true);
 
+    // Setup config manager
+    spacecal::ConfigurationManager configManager;
+    configManager.init();
+
+    // Load locale strings
+    spacecal::LocalisationManager localisationManager;
+    localisationManager.init();
+
     spacecal::Window* theWindow = new spacecal::Window;
     if (!theWindow) {
         platform::showMessageDialog("Failed to start Space Calibrator Nova", "Couldn't allocate enough memory for the window!");
@@ -31,6 +42,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
         platform::showMessageDialog("Failed to start Space Calibrator Nova", "Failed to initialise the overlay window!");
         LOG_FATAL("Failed to create native window");
         return -1;
+    }
+
+    // Init SteamVR
+    spacecal::VRState vrState;
+    if (!vrState.init()) {
+        // @TODO: Present error to user in friendly way
     }
 
     LOG_INFO("Started Space Calibrator Nova!");

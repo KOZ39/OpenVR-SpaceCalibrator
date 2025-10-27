@@ -3,12 +3,26 @@
 #include "log.h"
 
 namespace spacecal {
-    VRState::VRState() {
-        m_aDevices.reserve(vr::k_unMaxTrackedDeviceCount);
-        m_aTrackingSystems.reserve(4);
-    }
+
+    // @FIXME: Should this be behind an advanced on obscure toggle?
+    // these tracking systems are explicitly hidden in Space Calibrator, as it does not make sense for Space Calibrator to "calibrate" virtual trackers
+    constexpr const char* k_IGNORED_TRACKING_SYSTEMS[] = {
+        "standable",
+        "amethyst",
+    };
+
+
+    VRState* VRState::s_instance = nullptr;
 
     bool VRState::init() {
+        if (s_instance != nullptr) {
+            LOG_FATAL("Tried creating ConfigurationManager more than once! Breaking singleton. Aborting...");
+            return false;
+        }
+        s_instance = this;
+        m_aDevices.reserve(vr::k_unMaxTrackedDeviceCount);
+        m_aTrackingSystems.reserve(4);
+
         auto initError = vr::VRInitError_None;
         vr::VR_Init(&initError, vr::VRApplication_Overlay);
         if (initError != vr::VRInitError_None) {
@@ -68,6 +82,13 @@ namespace spacecal {
             return;
         }
 
+        // if the tracking system should be ignored, ignore it
+        for (size_t i = 0; i < std::size(k_IGNORED_TRACKING_SYSTEMS); i++) {
+            if (strcmp(szTrackingSystem.c_str(), k_IGNORED_TRACKING_SYSTEMS[i]) == 0) {
+                return;
+            }
+        }
+
         // QUIRKS!
 
         {
@@ -123,8 +144,10 @@ namespace spacecal {
         std::string szDeviceSerial;
         err = getSteamVrPropString(deviceId, vr::Prop_SerialNumber_String, szTrackingSystem);
         vr::ETrackedControllerRole controllerRole = (vr::ETrackedControllerRole)vr::VRSystem()->GetInt32TrackedDeviceProperty(deviceId, vr::Prop_ControllerRoleHint_Int32, &err);
+        bool isConnected = vr::VRSystem()->IsTrackedDeviceConnected(deviceId);
 
         VRDevice_t device = {
+            .isConnected = isConnected,
             .dwDeviceIndex = deviceId,
             .eControllerRole = controllerRole,
             .eDeviceClass = deviceClass,
@@ -140,9 +163,10 @@ namespace spacecal {
 
         if (m_aDevices.size() == 0 || m_aTrackingSystems.size() == 0 || m_bStateDirty) {
             // fresh poll, go through everything because we're in a fresh state
-
             for (vr::TrackedDeviceIndex_t id = 0; id < vr::k_unMaxTrackedDeviceCount; ++id) {
-                updateSteamVRDevice(id);
+                if (vr::VRSystem()->IsTrackedDeviceConnected(id)) {
+                    updateSteamVRDevice(id);
+                }
             }
 
             m_bStateDirty = false;

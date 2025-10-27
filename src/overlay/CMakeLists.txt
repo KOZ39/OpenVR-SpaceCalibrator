@@ -75,7 +75,7 @@ target_include_directories(SpaceCalibratorOverlay
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/imgui/backends
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/quill/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/fmt/include
-    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/simdjson/singleheader
+    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/glaze/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/Eigen
 )
 
@@ -88,7 +88,6 @@ target_link_libraries(SpaceCalibratorOverlay
     PRIVATE glfw
     PRIVATE fmt
     PRIVATE quill
-    PRIVATE simdjson
     PRIVATE ${CMAKE_SOURCE_DIR}/vendor/openvr/lib/win64/openvr_api.lib)
 
 target_compile_definitions(SpaceCalibratorOverlay

@@ -6,6 +6,7 @@
 
 namespace spacecal {
     struct VRDevice_t {
+        bool isConnected = false;
         vr::TrackedDeviceIndex_t dwDeviceIndex = vr::k_unTrackedDeviceIndexInvalid;
         vr::ETrackedControllerRole eControllerRole = vr::ETrackedControllerRole::TrackedControllerRole_Invalid;
         vr::TrackedDeviceClass eDeviceClass = vr::TrackedDeviceClass::TrackedDeviceClass_Invalid;
@@ -17,8 +18,6 @@ namespace spacecal {
     // wraps SteamVR stuff, and keeps track of connected devices
     class VRState {
     public:
-        VRState();
-
         bool init();
 
         // called every frame, updates m_aDevices and m_aTrackingSystems
@@ -29,12 +28,14 @@ namespace spacecal {
 
         const VRDevice_t getVrDevice(const size_t index) const;
         [[nodiscard]] size_t getTrackingSystemCount() const { return m_aTrackingSystems.size(); }
+        [[nodiscard]] static inline VRState* getInstance() { return s_instance; }
 
     private:
         vr::ETrackedPropertyError getSteamVrPropString(const vr::TrackedDeviceIndex_t deviceId, vr::ETrackedDeviceProperty deviceProperty, std::string& string);
         void updateSteamVRDevice(const vr::TrackedDeviceIndex_t deviceId);
 
     private:
+        static VRState* s_instance;
         bool m_bStateDirty = true;
         std::vector<VRDevice_t> m_aDevices;
         std::vector<std::string> m_aTrackingSystems;

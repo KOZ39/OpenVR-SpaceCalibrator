@@ -4,12 +4,12 @@
 #include "util.h"
 
 #include <filesystem>
-#include <simdjson.h>
+#include <glaze/glaze.hpp>
 
 namespace spacecal {
     LocalisationManager* LocalisationManager::m_instance = nullptr;
 
-    void LocalisationManager::Init()
+    void LocalisationManager::init()
     {
 
         if (m_instance != nullptr) {
@@ -18,14 +18,14 @@ namespace spacecal {
         }
         m_instance = this;
 
-        m_selectedLocale = EstimateSystemLocale();
+        m_selectedLocale = estimateSystemLocale();
 
         // @TODO: Check if it's defined in settings, if so, estimate, else, lmao
 
-        LoadLocalisationStrings(m_selectedLocale);
+        loadLocalisationStrings(m_selectedLocale);
     }
 
-    std::string LocalisationManager::GetString(const std::string& input) const
+    std::string LocalisationManager::getString(const std::string& input) const
     {
 
         if (m_localisedStrings.contains(input)) {
@@ -37,7 +37,7 @@ namespace spacecal {
         return input;
     }
 
-    bool LocalisationManager::LoadLocalisationStrings(const Locale locale)
+    bool LocalisationManager::loadLocalisationStrings(const Locale locale)
     {
 
         // To load locale strings we first:
@@ -47,18 +47,18 @@ namespace spacecal {
 
         m_localisedStrings.clear();
 
-        bool result = LoadLocaleFromFile(Locale::English_UK);
+        bool result = loadLocaleFromFile(Locale::English_UK);
         if (locale != Locale::English_UK) {
-            result |= LoadLocaleFromFile(locale);
+            result |= loadLocaleFromFile(locale);
         }
 
         return result;
     }
 
-    bool LocalisationManager::LoadLocaleFromFile(const Locale locale)
+    bool LocalisationManager::loadLocaleFromFile(const Locale locale)
     {
         auto rootDir = util::getSpaceCalibratorInstallDir();
-        std::string langPath = (rootDir / (GetLocaleAsRegionString(locale) + ".locale")).string();
+        std::string langPath = (rootDir / (getLocaleAsRegionString(locale) + ".locale")).string();
 
         FILE* localeFile = nullptr;
         errno_t fileErr = fopen_s(&localeFile, langPath.c_str(), "rb");
@@ -91,37 +91,34 @@ namespace spacecal {
             fclose(localeFile);
             localeFile = nullptr;
 
-            simdjson::dom::parser parser;
-
-            simdjson::dom::element doc;
-            simdjson::error_code error = parser.parse(buffer).get(doc);
-
-            if (error) {
-                LOG_WARNING("Failed to parse JSON for locale file \"{0}\". {1}.", langPath, simdjson::error_message(error));
+            glz::json_t json{};
+            glz::error_ctx jsonError = glz::read_json(json, buffer);
+            if (jsonError.ec != glz::error_code::none) {
+                LOG_WARNING("Failed to parse JSON for locale file \"{0}\". {1}.", langPath, jsonError.custom_error_message);
                 return false;
             }
-
-            if (doc.type() != simdjson::dom::element_type::OBJECT) {
+            if (json.empty()) {
+                LOG_WARNING("Failed to parse JSON for locale file \"{0}\". Expected JSON object, got empty file.", langPath);
+                return false;
+            }
+            if (!json.is_object()) {
                 LOG_WARNING("Failed to parse JSON for locale file \"{0}\". Expected JSON object, got another type.", langPath);
                 return false;
             }
 
-            for (auto [key_view, value] : doc.get_object()) {
-                std::string key = std::string(key_view);
-                if (key.empty()) {
+            // JSON is in expected format, awesome!
+            // Therefore, we should iterate through it and begin loading the key value pairs into memory
+            glz::json_t::object_t jsonObject = json.as<glz::json_t::object_t>();
+            for (std::pair<const std::string, glz::json_t> elem : jsonObject) {
+                if (elem.first.empty()) {
                     LOG_WARNING("Failed to parse JSON for locale file \"{0}\". Expected JSON key-value pair of type string, got invalid key.", langPath);
                     continue;
                 }
-                if (value.type() != simdjson::dom::element_type::STRING) {
+                if (!elem.second.is_string()) {
                     LOG_WARNING("Failed to parse JSON for locale file \"{0}\". Expected JSON key-value pair of type string, got another value type.", langPath);
                     continue;
                 }
-                std::string_view value_view;
-                if (value.get_string().get(value_view)) {
-                    continue;
-                }
-
-                m_localisedStrings[key] = std::string(value_view);
+                m_localisedStrings[elem.first] = elem.second.get_string();
             }
 
             return true;
@@ -133,7 +130,7 @@ namespace spacecal {
         return false;
     }
 
-    std::string LocalisationManager::GetLocaleAsRegionString(const Locale locale) const
+    std::string LocalisationManager::getLocaleAsRegionString(const Locale locale) const
     {
 
         switch (locale) {

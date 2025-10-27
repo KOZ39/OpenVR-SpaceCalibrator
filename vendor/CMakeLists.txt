@@ -48,12 +48,9 @@ set(QUILL_X86ARCH OFF CACHE BOOL "Enable x86-specific optimizations for cache co
 set(QUILL_DISABLE_NON_PREFIXED_MACROS ON CACHE BOOL "Enable this option to disable non-prefixed `LOG_*` macros, keeping only the `QUILL_LOG_*` macros to avoid conflicts with other logging libraries." FORCE)
 add_subdirectory(quill)
 
-# Simdjson
-message("Adding simdjson...")
-add_library(simdjson STATIC
-	${CMAKE_SOURCE_DIR}/vendor/simdjson/singleheader/simdjson.cpp
-	${CMAKE_SOURCE_DIR}/vendor/simdjson/singleheader/simdjson.h)
-target_include_directories(simdjson PUBLIC ${CMAKE_SOURCE_DIR}/vendor/simdjson)
+# glaze
+message ("Adding glaze...")
+add_subdirectory(glaze)
 
 # Assign solution dirs
 set_property(TARGET glfw PROPERTY FOLDER "vendor/glfw")
@@ -64,4 +61,3 @@ set_property(TARGET imgui PROPERTY FOLDER "vendor")
 set_property(TARGET fmt PROPERTY FOLDER "vendor")
 set_property(TARGET quill PROPERTY FOLDER "vendor")
 set_property(TARGET glad PROPERTY FOLDER "vendor")
-set_property(TARGET simdjson PROPERTY FOLDER "vendor")

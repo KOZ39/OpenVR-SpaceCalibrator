@@ -342,7 +342,7 @@ namespace spacecal {
             {L"vi-VN", Locale::Vietnamese},
     };
 
-    Locale LocalisationManager::EstimateSystemLocale() const {
+    Locale LocalisationManager::estimateSystemLocale() const {
 
         Locale estimatedLocale = Locale::English_UK;
 
