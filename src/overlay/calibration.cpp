@@ -4,6 +4,10 @@
 
 namespace spacecal {
 
+    void TrackingSystemCalibration::init() {
+        // @TODO:
+    }
+
     void CalibrationManager::init() {
         // @TODO:
     }
