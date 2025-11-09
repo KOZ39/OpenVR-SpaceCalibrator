@@ -1,3 +1,4 @@
+#include <openvr_driver.h>
 #include "log_formatters.h"
 #include <fmt/chrono.h>
 

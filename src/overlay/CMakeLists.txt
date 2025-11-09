@@ -76,7 +76,7 @@ target_include_directories(SpaceCalibratorOverlay
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/quill/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/fmt/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/glaze/include
-    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/Eigen
+    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/eigen
 )
 
 target_link_libraries(SpaceCalibratorOverlay
@@ -95,6 +95,7 @@ target_compile_definitions(SpaceCalibratorOverlay
     PRIVATE UNICODE
     PRIVATE _CRT_SECURE_NO_WARNINGS
     PRIVATE IMGUI_DEFINE_MATH_OPERATORS
+    PRIVATE IS_OVERLAY
 )
 
 # Object files are too big with spacecal sooooo

@@ -3,10 +3,14 @@
 #include <inttypes.h>
 
 #ifndef _OPENVR_API
+#ifdef IS_DRIVER
 #include <openvr_driver.h>
+#elif defined(IS_OVERLAY)
+#include <openvr.h>
+#endif
 #endif
 
-#ifdef _OPENVR_API
+#if defined(_OPENVR_API) && defined(IS_OVERLAY)
 
 namespace vr
 {

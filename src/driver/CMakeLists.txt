@@ -107,12 +107,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/${DRIVER_NAME}/bin/${
 add_library(SpaceCalibratorDriver SHARED ${SOURCES_API} ${SOURCES_HEADERS})
 GroupSourcesByFolder(SpaceCalibratorDriver)
 
-set_target_properties(SpaceCalibratorDriver PROPERTIES
-    LINK_FLAGS_DEBUG            "/SUBSYSTEM:CONSOLE"
-    LINK_FLAGS_MINSIZEREL       "/SUBSYSTEM:WINDOWS"
-    LINK_FLAGS_RELEASE          "/SUBSYSTEM:WINDOWS"
-    LINK_FLAGS_RELWITHDEBINFO   "/SUBSYSTEM:WINDOWS")
-
 target_include_directories(SpaceCalibratorDriver
 	PRIVATE ${CMAKE_SOURCE_DIR}
     PRIVATE ${CMAKE_SOURCE_DIR}/src/common
@@ -124,7 +118,7 @@ target_include_directories(SpaceCalibratorDriver
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/quill/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/fmt/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/glaze/include
-    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/Eigen)
+    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/eigen)
 
 target_link_libraries(SpaceCalibratorDriver
     PRIVATE SpaceCalibratorCommon
@@ -145,6 +139,7 @@ target_compile_definitions(SpaceCalibratorDriver
     PRIVATE EIGEN_HAS_STD_RESULT_OF=0
     PRIVATE _CRT_SECURE_NO_WARNINGS
     PRIVATE OPENVRSPACECALIBRATORDRIVER_EXPORTS
+    PRIVATE IS_DRIVER
 )
 set_target_properties(SpaceCalibratorDriver PROPERTIES OUTPUT_NAME ${DRIVER_NAME})
 
