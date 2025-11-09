@@ -58,7 +58,7 @@ namespace hooking {
             IHook::Register(&GetGenericInterfaceHook);
             LOG_HOOKING_INFO("Space Calibrator hooked into OpenVR PoseUpdate successfully");
         } else if (err == MH_ERROR_ALREADY_INITIALIZED) {
-            LOG_HOOKING_ERROR("MH_Initialize error: {}; how did this happen??? (probably SteamVR crash loop)", MH_StatusToString(err));
+            LOG_HOOKING_ERROR("MH_Initialize error: {}; how did this happen??? (probably SteamVR crash loop lol)", MH_StatusToString(err));
         } else {
             LOG_HOOKING_ERROR("MH_Initialize error: {}", MH_StatusToString(err));
         }

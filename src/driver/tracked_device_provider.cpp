@@ -52,6 +52,10 @@ namespace spacecal {
 
     bool ServerTrackedDeviceProvider::HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, const vr::DriverPose_t& newPose) {
 
+        // bounds check
+        if (!IsDeviceIndexValid(unWhichDevice))
+            return true;
+
         m_ipcServer.UpdatePose(unWhichDevice, newPose);
         
         // @TODO: Update pose with calibration
