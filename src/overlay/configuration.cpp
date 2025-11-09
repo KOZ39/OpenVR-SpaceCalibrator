@@ -10,6 +10,13 @@ namespace spacecal {
 
     ConfigurationManager* ConfigurationManager::s_instance = nullptr;
 
+#if OS_WINDOWS
+    std::string getLegacySettingsString() {
+        // Check registry for legacy config
+        // HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\OpenVR-SpaceCalibrator
+    }
+#endif
+
     void ConfigurationManager::init() {
         if (s_instance != nullptr) {
             LOG_FATAL("Tried creating ConfigurationManager more than once! Breaking singleton. Aborting...");
@@ -26,7 +33,13 @@ namespace spacecal {
 
     ConfigurationError ConfigurationManager::loadConfiguration() {
 
+        std::string jsonConfigRaw;
         if (!std::filesystem::is_regular_file(m_configPath)) {
+
+#if OS_WINDOWS
+            jsonConfigRaw = getLegacySettingsString();
+#endif
+
             LOG_WARNING("Failed to locate configuration file \"{0}\" on disk. Using default settings...", m_configPath);
             return ConfigurationError::FileNotExist;
         }
@@ -39,15 +52,15 @@ namespace spacecal {
         };
 
         // Get data version to decode config correctly
-
-        FILE* pFile = fopen(m_configPath.c_str(), "rb");
-        fseek(pFile, 0, SEEK_END);
-        size_t fileSize = ftell(pFile);
-        std::string jsonConfigRaw;
-        jsonConfigRaw.resize(fileSize);
-        rewind(pFile);
-        fread(&jsonConfigRaw[0], 1, fileSize, pFile);
-        fclose(pFile);
+        if (jsonConfigRaw.empty()) {
+            FILE* pFile = fopen(m_configPath.c_str(), "rb");
+            fseek(pFile, 0, SEEK_END);
+            size_t fileSize = ftell(pFile);
+            jsonConfigRaw.resize(fileSize);
+            rewind(pFile);
+            fread(&jsonConfigRaw[0], 1, fileSize, pFile);
+            fclose(pFile);
+        }
 
         glz::generic json{};
         glz::error_ctx deserialiseErrorVersion = glz::read<glz::set_json<options>()>(json, std::forward<std::string>(jsonConfigRaw), glz::context{});
@@ -71,6 +84,8 @@ namespace spacecal {
                 // perform upgrade on config
                 upgradeConfigToLatest(version, m_configPath);
             }
+        } else {
+            // @TOOD: Verify old config
         }
 
         glz::error_ctx deserialiseError = glz::read_file_json<options>(m_config, m_configPath, std::string{});
