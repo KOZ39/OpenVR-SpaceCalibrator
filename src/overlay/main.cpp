@@ -48,6 +48,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     spacecal::VRState vrState;
     if (!vrState.init()) {
         // @TODO: Present error to user in friendly way
+        LOG_CRITICAL("Failed to initialise VRState D:");
     }
 
     LOG_INFO("Started Space Calibrator Nova!");

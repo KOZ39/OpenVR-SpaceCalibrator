@@ -1,8 +1,9 @@
 #include "window.h"
-#include "log.h"
 #include "user_interface.h"
 #include "stb_image.h"
 #include "platform.h"
+#include "vr_core.h"
+#include "log.h"
 
 #include <filesystem>
 
@@ -173,6 +174,10 @@ namespace spacecal {
             glfwGetFramebufferSize(m_glfwWindow, &width, &height);
             const bool windowVisible = (width > 0 && height > 0);
 
+            if (VRState::getInstance()->getOverlayHandle()) {
+
+            }
+
             if (windowVisible || dashboardVisible) {
 
                 auto& io = ImGui::GetIO();
@@ -216,6 +221,9 @@ namespace spacecal {
             constexpr double dashboardInterval = 1.0 / 90.0; // fps
             // double waitEventsTimeout = std::max(CalCtx.wantedUpdateInterval, dashboardInterval);
             double waitEventsTimeout = dashboardInterval;
+            
+            if (dashboardVisible && waitEventsTimeout > dashboardInterval)
+                waitEventsTimeout = dashboardInterval;
 
             glfwWaitEventsTimeout(waitEventsTimeout);
 

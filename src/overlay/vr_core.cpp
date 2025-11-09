@@ -1,6 +1,9 @@
 #include "vr_core.h"
 #include "util.h"
 #include "log.h"
+#include "constants.h"
+#include "platform.h"
+#include <fmt/format.h>
 
 namespace spacecal {
 
@@ -11,12 +14,11 @@ namespace spacecal {
         "amethyst",
     };
 
-
     VRState* VRState::s_instance = nullptr;
 
     bool VRState::init() {
         if (s_instance != nullptr) {
-            LOG_FATAL("Tried creating ConfigurationManager more than once! Breaking singleton. Aborting...");
+            LOG_FATAL("Tried creating VRState more than once! Breaking singleton. Aborting...");
             return false;
         }
         s_instance = this;
@@ -45,6 +47,36 @@ namespace spacecal {
             return false;
         }
 
+        // create overlay
+        if (!vr::VROverlay() || m_overlayMainHandle) {
+            return false;
+        }
+
+        vr::VROverlayError error = vr::VROverlay()->CreateDashboardOverlay(
+            c_OPENVR_APPLICATION_KEY, "Space Calibrator",
+            &m_overlayMainHandle, &m_overlayThumbnailHandle
+        );
+
+        if (error == vr::VROverlayError_KeyInUse) {
+            LOG_OPENVR_CRITICAL("Another instance of Space Calibrator is already running");
+            platform::showMessageDialog("Another instance of Space Calibrator is already running", "An error occured initialising Space Calibrator Nova");
+            return false;
+        } else if (error != vr::VROverlayError_None) {
+            LOG_OPENVR_CRITICAL("Error creating VR overlay: {}", vr::VROverlay()->GetOverlayErrorNameFromEnum(error));
+            platform::showMessageDialog(
+                fmt::format("Error creating VR overlay: {}", vr::VROverlay()->GetOverlayErrorNameFromEnum(error)),
+                "An error occured initialising Space Calibrator Nova"
+            );
+            return false;
+        }
+
+        vr::VROverlay()->SetOverlayWidthInMeters(m_overlayMainHandle, 3.0f);
+        vr::VROverlay()->SetOverlayInputMethod(m_overlayMainHandle, vr::VROverlayInputMethod_Mouse);
+        vr::VROverlay()->SetOverlayFlag(m_overlayMainHandle, vr::VROverlayFlags_SendVRDiscreteScrollEvents, true);
+
+        std::string iconPath = fmt::format("{}/icon.png", util::getSpaceCalibratorInstallDir().string());
+        vr::VROverlay()->SetOverlayFromFile(m_overlayThumbnailHandle, iconPath.c_str());
+
         // @TODO: Non-steam stuff
 
         return true;
@@ -66,7 +98,7 @@ namespace spacecal {
         // we dont care about these devices types
         if (deviceClass == vr::TrackedDeviceClass_Invalid // Unset
             || deviceClass == vr::TrackedDeviceClass_TrackingReference // Base Stations
-            || deviceClass == vr::TrackedDeviceClass_DisplayRedirect) // IVRVirtualDisplay
+            || deviceClass == vr::TrackedDeviceClass_DisplayRedirect) // vr::IVRVirtualDisplay
             return;
 
         vr::ETrackedPropertyError err = vr::TrackedProp_Success;
@@ -89,7 +121,7 @@ namespace spacecal {
             }
         }
 
-        // QUIRKS!
+        // QUIRKS! ( a bunch of hardware lies about what it is :c )
 
         {
             // Check if the current HMD is a Pimax crystal

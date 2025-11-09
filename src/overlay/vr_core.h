@@ -28,6 +28,8 @@ namespace spacecal {
 
         const VRDevice_t getVrDevice(const size_t index) const;
         [[nodiscard]] size_t getTrackingSystemCount() const { return m_aTrackingSystems.size(); }
+        [[nodiscard]] vr::VROverlayHandle_t getOverlayHandle() const { return m_overlayMainHandle; }
+        [[nodiscard]] vr::VROverlayHandle_t getOverlayThumbnailHandle() const { return m_overlayThumbnailHandle; }
         [[nodiscard]] static inline VRState* getInstance() { return s_instance; }
 
     private:
@@ -39,5 +41,7 @@ namespace spacecal {
         bool m_bStateDirty = true;
         std::vector<VRDevice_t> m_aDevices;
         std::vector<std::string> m_aTrackingSystems;
+        vr::VROverlayHandle_t m_overlayMainHandle = vr::k_ulOverlayHandleInvalid;
+        vr::VROverlayHandle_t m_overlayThumbnailHandle = vr::k_ulOverlayHandleInvalid;
     };
 }
