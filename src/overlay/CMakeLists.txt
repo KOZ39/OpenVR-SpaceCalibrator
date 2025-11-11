@@ -153,6 +153,16 @@ add_custom_command(
     ${CMAKE_BINARY_DIR}/artifacts/$<CONFIG>/openvr_api.dll
 )
 
+# Copy assets to output folder
+add_custom_command(
+    TARGET SpaceCalibratorOverlay
+    PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/assets
+    ${CMAKE_BINARY_DIR}/artifacts/$<CONFIG>/assets
+    COMMENT "Copying assets"
+)
+
 # Set as startup project
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT SpaceCalibratorOverlay)
 set_property(TARGET SpaceCalibratorOverlay PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/$<CONFIG>")

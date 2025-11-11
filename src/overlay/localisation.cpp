@@ -92,7 +92,7 @@ namespace spacecal {
             localeFile = nullptr;
 
             glz::json_t json{};
-            glz::error_ctx jsonError = glz::read_json(json, buffer);
+            glz::error_ctx jsonError = glz::read_jsonc(json, buffer);
             if (jsonError.ec != glz::error_code::none) {
                 LOG_WARNING("Failed to parse JSON for locale file \"{0}\". {1}.", langPath, jsonError.custom_error_message);
                 return false;

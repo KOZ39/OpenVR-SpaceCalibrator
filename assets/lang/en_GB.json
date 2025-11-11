@@ -1,0 +1,4 @@
+{
+  "app_title": "{0} {1}", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "app_title_vr": "{0} {1} - close VR overlay to use mouse" /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+}
