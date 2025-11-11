@@ -73,5 +73,5 @@ namespace spacecal {
     };
 }
 
-#define LOCALE_GET(key) spacecal::LocalisationManager::GetInstance()->GetString(key)
-#define LOCALE_FORMAT(key, ...) fmt::vformat(spacecal::LocalisationManager::GetInstance()->GetString(key), fmt::make_format_args(__VA_ARGS__))
+#define LOCALE_GET(key) spacecal::LocalisationManager::getInstance()->getString(key)
+#define LOCALE_FORMAT(key, ...) fmt::vformat(spacecal::LocalisationManager::getInstance()->getString(key), fmt::make_format_args(__VA_ARGS__))

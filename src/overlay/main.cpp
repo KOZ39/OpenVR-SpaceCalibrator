@@ -8,7 +8,9 @@
 #include "vr_core.h"
 #include "log.h"
 
+// http://developer.download.nvidia.com/devzone/devcenter/gamegraphics/files/OptimusRenderingPolicies.pdf
 extern "C" __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+// http://developer.amd.com/community/blog/2015/10/02/amd-enduro-system-for-developers/
 extern "C" __declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0x00000001;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
