@@ -126,17 +126,30 @@ namespace ipc::protocol
     struct Command_SetDeviceTransform_t {
         // @TODO: does this make sense to perform per device or per tracking system? per system probably makes a lot more sense tbh also bc it lends itself to multiple calibrations for effectively free
         // (need to think about ux for it though lol)
-        bool enabled : 1;
-        bool updateTranslation : 1;
-        bool updateRotation : 1;
-        bool updateScale : 1;
-        bool lerpCalibrations : 1;
-        bool hideContinuousTracker : 1;
+    private:
+        uint8_t _boolFlags;
+    public:
         DeviceQuirks_t quirks;
         vr::TrackedDeviceIndex_t unOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         vr::HmdVector3d_t translation;
         vr::HmdQuaternion_t rotation;
         double scale;
+
+#define FLAG(name, bitfield) \
+        inline bool name() const { \
+            return (_boolFlags & bitfield) == bitfield; \
+        } \
+        inline void name(bool newBool) { \
+            _boolFlags = (_boolFlags & ~bitfield) | (static_cast<std::uint8_t>(newBool) * bitfield); \
+        }
+
+        FLAG(enabled,               0b00000001)
+        FLAG(updateTranslation,     0b00000010)
+        FLAG(updateRotation,        0b00000100)
+        FLAG(updateScale,           0b00001000)
+        FLAG(lerpCalibrations,      0b00010000)
+        FLAG(hideContinuousTracker, 0b00100000)
+#undef FLAG
     };
 
     struct Command_SetAlignmentSpeedParams_t {
