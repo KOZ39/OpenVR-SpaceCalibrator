@@ -110,6 +110,15 @@ namespace ipc::protocol
         IPC_COMMAND_COUNT,
     };
 
+    // these quirks enable unique behaviour depending on what device is detected, to correct for poor vendor implementations
+    enum DeviceQuirks_t : uint16_t {
+        QUIRK_NONE = 0,
+        QUIRK_SCALE = 1 << 0, // 1 unit in this playspace is not 1 meter
+        QUIRK_RECOMPUTE_VELOCITY = 1 << 1, // The velocity of this device is not considered to be reliable. We shall thus recompute it entirely from first principles.
+        QUIRK_RECOMPUTE_ANGULAR_VELOCITY = 1 << 2, // The angular velocity of this device is not considered to be reliable. We shall thus recompute it entirely from first principles.
+        QUIRK_HAS_WORLDSPACE_ANGULAR_VELOCITY = 1 << 3, // The angular velocity of this device is given in world space rather than object space by the vendor. We shall transform it to local space to improve SteamVR prediction.
+    };
+
     struct Command_Handshake_t {
         Version_t version = Version_t::IPC_PROTOCOL_CURRENT;
     };
@@ -123,6 +132,7 @@ namespace ipc::protocol
         bool updateScale : 1;
         bool lerpCalibrations : 1;
         bool hideContinuousTracker : 1;
+        DeviceQuirks_t quirks;
         vr::TrackedDeviceIndex_t unOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         vr::HmdVector3d_t translation;
         vr::HmdQuaternion_t rotation;
