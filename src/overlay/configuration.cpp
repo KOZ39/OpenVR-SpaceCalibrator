@@ -14,6 +14,33 @@ namespace spacecal {
     std::string getLegacySettingsString() {
         // Check registry for legacy config
         // HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\OpenVR-SpaceCalibrator
+        constexpr const char* RegistryKey = "Software\\OpenVR-SpaceCalibrator";
+
+        // @TODO: Read registry key
+        DWORD size = 0;
+        auto result = RegGetValueA(HKEY_CURRENT_USER_LOCAL_SETTINGS, RegistryKey, "Config", RRF_RT_REG_SZ, 0, 0, &size);
+        if (result != ERROR_SUCCESS)
+        {
+            char* message;
+            FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, 0, result, LANG_USER_DEFAULT, (LPSTR)&message, 0, NULL);
+            LOG_ERROR("{}", message);
+            return "";
+        }
+
+        std::string str;
+        str.resize(size);
+
+        result = RegGetValueA(HKEY_CURRENT_USER_LOCAL_SETTINGS, RegistryKey, "Config", RRF_RT_REG_SZ, 0, &str[0], &size);
+        if (result != ERROR_SUCCESS)
+        {
+            char* message;
+            FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, 0, result, LANG_USER_DEFAULT, (LPSTR)&message, 0, NULL);
+            LOG_ERROR("{}", result);
+            return "";
+        }
+
+        str.resize(size - 1);
+        return str;
     }
 #endif
 
@@ -38,10 +65,14 @@ namespace spacecal {
 
 #if OS_WINDOWS
             jsonConfigRaw = getLegacySettingsString();
-#endif
-
+            if (jsonConfigRaw.empty()) {
+                LOG_WARNING("Failed to locate configuration file \"{0}\" on disk, and legacy registry key was absent. Using default settings...", m_configPath);
+                return ConfigurationError::FileNotExist;
+            }
+#else
             LOG_WARNING("Failed to locate configuration file \"{0}\" on disk. Using default settings...", m_configPath);
             return ConfigurationError::FileNotExist;
+#endif
         }
 
         constexpr glz::opts options{
