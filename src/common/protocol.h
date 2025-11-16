@@ -88,6 +88,16 @@ namespace vr
 
 #endif
 
+#define ENUM_FLAG_OPERATORS(T)                                                                                                                                                  \
+    inline T operator~ (T a) { return static_cast<T>( ~static_cast<std::underlying_type<T>::type>(a) ); }                                                                       \
+    inline T operator| (T a, T b) { return static_cast<T>( static_cast<std::underlying_type<T>::type>(a) | static_cast<std::underlying_type<T>::type>(b) ); }                   \
+    inline T operator& (T a, T b) { return static_cast<T>( static_cast<std::underlying_type<T>::type>(a) & static_cast<std::underlying_type<T>::type>(b) ); }                   \
+    inline T operator^ (T a, T b) { return static_cast<T>( static_cast<std::underlying_type<T>::type>(a) ^ static_cast<std::underlying_type<T>::type>(b) ); }                   \
+    inline T& operator|= (T& a, T b) { return reinterpret_cast<T&>( reinterpret_cast<std::underlying_type<T>::type&>(a) |= static_cast<std::underlying_type<T>::type>(b) ); }   \
+    inline T& operator&= (T& a, T b) { return reinterpret_cast<T&>( reinterpret_cast<std::underlying_type<T>::type&>(a) &= static_cast<std::underlying_type<T>::type>(b) ); }   \
+    inline T& operator^= (T& a, T b) { return reinterpret_cast<T&>( reinterpret_cast<std::underlying_type<T>::type&>(a) ^= static_cast<std::underlying_type<T>::type>(b) ); }
+#define ENUM_HAS_FLAGS(val, flags) ((val & flags) == flags)
+
 namespace ipc::protocol
 {
     enum Version_t {
@@ -118,6 +128,7 @@ namespace ipc::protocol
         QUIRK_RECOMPUTE_ANGULAR_VELOCITY = 1 << 2, // The angular velocity of this device is not considered to be reliable. We shall thus recompute it entirely from first principles.
         QUIRK_HAS_WORLDSPACE_ANGULAR_VELOCITY = 1 << 3, // The angular velocity of this device is given in world space rather than object space by the vendor. We shall transform it to local space to improve SteamVR prediction.
     };
+    ENUM_FLAG_OPERATORS(DeviceQuirks_t);
 
     struct Command_Handshake_t {
         Version_t version = Version_t::IPC_PROTOCOL_CURRENT;

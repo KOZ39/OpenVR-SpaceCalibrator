@@ -63,6 +63,27 @@ namespace spacecal {
         return true;
     }
 
+    void ServerTrackedDeviceProvider::HandleQuirks(ipc::protocol::DeviceQuirks_t quirks, vr::DriverPose_t& pose) {
+
+        if (ENUM_HAS_FLAGS(quirks, ipc::protocol::DeviceQuirks_t::QUIRK_SCALE)) {
+            // m_poses->vecAngularVelocity
+        }
+
+        if (ENUM_HAS_FLAGS(quirks, ipc::protocol::DeviceQuirks_t::QUIRK_RECOMPUTE_VELOCITY)) {
+            // m_poses->vecAngularVelocity
+        }
+
+        if (ENUM_HAS_FLAGS(quirks, ipc::protocol::DeviceQuirks_t::QUIRK_RECOMPUTE_ANGULAR_VELOCITY)) {
+            // m_poses->vecAngularVelocity
+        }
+
+        // this improves pose prediction on some vendors' devices (eg Pico)
+        if (ENUM_HAS_FLAGS(quirks, ipc::protocol::DeviceQuirks_t::QUIRK_HAS_WORLDSPACE_ANGULAR_VELOCITY)) {
+            // m_poses->vecAngularVelocity
+            // pose.vecAngularVelocity = Vector3.Transform(pose.vecAngularVelocity, Quaternion.Inverse(pose.qRotation));
+        }
+    }
+
     void ServerTrackedDeviceProvider::ResetCalibration() {
 
     }

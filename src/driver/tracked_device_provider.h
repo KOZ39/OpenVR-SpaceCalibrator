@@ -26,6 +26,7 @@ namespace spacecal {
         void ResetCalibration();
         void SetAlignmentSpeedParams(ipc::protocol::Command_SetAlignmentSpeedParams_t& params);
         void SetDeviceTransform(ipc::protocol::Command_SetDeviceTransform_t& transform);
+        void HandleQuirks(ipc::protocol::DeviceQuirks_t quirks, vr::DriverPose_t& pose);
 
         inline bool IsDeviceIndexValid(const vr::TrackedDeviceIndex_t index) const {
             return index < vr::k_unMaxTrackedDeviceCount && index != vr::k_unTrackedDeviceIndexInvalid && index != vr::k_unTrackedDeviceIndexOther;
