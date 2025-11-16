@@ -34,5 +34,10 @@ namespace spacecal {
 
     private:
         ipc::Server m_ipcServer;
+        ipc::protocol::Command_SetDeviceTransform_t m_transforms[vr::k_unMaxTrackedDeviceCount] = {};
+        ipc::protocol::Command_SetAlignmentSpeedParams_t m_alignmentParams = {};
+
+        vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {};
+        friend class ipc::Server;
     };
 }

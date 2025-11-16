@@ -87,8 +87,8 @@ namespace ipc {
             LOG_IPC_FATAL("Attempted to update shared pose buffer, but got invalid device index {}...", unWhichDevice);
             return;
         }
-        m_poses[unWhichDevice] = pose;
-        if (!ipc_server_write_shared_memory(m_hIpc, m_poseDataOperation, m_poses, sizeof(m_poses))) {
+        m_driver->m_poses[unWhichDevice] = pose;
+        if (!ipc_server_write_shared_memory(m_hIpc, m_poseDataOperation, m_driver->m_poses, sizeof(m_driver->m_poses))) {
             LOG_IPC_ERROR("Tried updating shared pose buffer, but operation is invalid!");
         }
     }

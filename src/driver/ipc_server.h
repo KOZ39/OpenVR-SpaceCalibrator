@@ -27,8 +27,6 @@ private:
     ::IpcOperation_t m_poseDataOperation;
     spacecal::ServerTrackedDeviceProvider* m_driver = nullptr;
 
-    vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {};
-
     static const ::IpcFunction_t m_funcs[];
 };
 }
