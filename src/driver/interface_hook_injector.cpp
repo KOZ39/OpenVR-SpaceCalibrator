@@ -15,17 +15,27 @@ namespace hooking {
 
     static void DetourTrackedDevicePoseUpdated005(vr::IVRServerDriverHost* _this, uint32_t unWhichDevice, const vr::DriverPose_t& newPose, uint32_t unPoseStructSize) {
         // LOG_HOOKING_DEBUG("ServerTrackedDeviceProvider::DetourTrackedDevicePoseUpdated_005({})", unWhichDevice);
-        vr::DriverPose_t pose = newPose;
-        if (g_mainDriver->HandleDevicePoseUpdated(unWhichDevice, pose)) {
-            TrackedDevicePoseUpdatedHook005.originalFunc(_this, unWhichDevice, pose, unPoseStructSize);
+        const vr::DriverPose_t* pNewPose = &newPose; // somehow newPose is nullptr sometimes??????
+        if (pNewPose && unPoseStructSize == sizeof(vr::DriverPose_t)) {
+            vr::DriverPose_t pose = newPose;
+            if (g_mainDriver->HandleDevicePoseUpdated(unWhichDevice, pose)) {
+                TrackedDevicePoseUpdatedHook005.originalFunc(_this, unWhichDevice, pose, unPoseStructSize);
+            }
+        } else {
+            TrackedDevicePoseUpdatedHook006.originalFunc(_this, unWhichDevice, newPose, unPoseStructSize);
         }
     }
 
     static void DetourTrackedDevicePoseUpdated006(vr::IVRServerDriverHost* _this, uint32_t unWhichDevice, const vr::DriverPose_t& newPose, uint32_t unPoseStructSize) {
         // LOG_HOOKING_DEBUG("ServerTrackedDeviceProvider::DetourTrackedDevicePoseUpdated_006({})", unWhichDevice);
-        vr::DriverPose_t pose = newPose;
-        if (g_mainDriver->HandleDevicePoseUpdated(unWhichDevice, pose)) {
-            TrackedDevicePoseUpdatedHook006.originalFunc(_this, unWhichDevice, pose, unPoseStructSize);
+        const vr::DriverPose_t* pNewPose = &newPose; // somehow newPose is nullptr sometimes??????
+        if (pNewPose && unPoseStructSize == sizeof(vr::DriverPose_t)) {
+            vr::DriverPose_t pose = newPose;
+            if (g_mainDriver->HandleDevicePoseUpdated(unWhichDevice, pose)) {
+                TrackedDevicePoseUpdatedHook006.originalFunc(_this, unWhichDevice, pose, unPoseStructSize);
+            }
+        } else {
+            TrackedDevicePoseUpdatedHook006.originalFunc(_this, unWhichDevice, newPose, unPoseStructSize);
         }
     }
 
