@@ -88,8 +88,7 @@ namespace spacecal {
             modifiedPose.vecPosition[0] = -modifiedPose.vecWorldFromDriverTranslation[0];
             modifiedPose.vecPosition[1] = -modifiedPose.vecWorldFromDriverTranslation[1] + 9001; // put it 9001m above the origin
             modifiedPose.vecPosition[2] = -modifiedPose.vecWorldFromDriverTranslation[2];
-        }
-        else if (transform.enabled()) {
+        } else if (transform.enabled()) {
             HandleQuirks(transform.quirks, modifiedPose);
 
             modifiedPose.qWorldFromDriverRotation = transform.rotation * modifiedPose.qWorldFromDriverRotation;
@@ -131,11 +130,13 @@ namespace spacecal {
     }
 
     void ServerTrackedDeviceProvider::ResetCalibration() {
-
+        // @TODO: idk what would be more correct than "random fucking offsets"
     }
+
     void ServerTrackedDeviceProvider::SetAlignmentSpeedParams(ipc::protocol::Command_SetAlignmentSpeedParams_t& params) {
         m_alignmentParams = params;
     }
+
     void ServerTrackedDeviceProvider::SetDeviceTransform(ipc::protocol::Command_SetDeviceTransform_t& transform) {
         m_transforms[transform.unOpenvrDeviceId] = transform;
     }
