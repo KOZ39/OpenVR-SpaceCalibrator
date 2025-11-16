@@ -1,6 +1,6 @@
 #include "platform.h"
 
-#if _WIN32
+#if OS_WINDOWS
 #include "constants.h"
 
 #define WIN32_LEAN_AND_MEAN

@@ -9,7 +9,6 @@ namespace spacecal {
     struct DeviceTransformation_t {
         bool hideDevice = false;
         std::chrono::high_resolution_clock::time_point last_poll;
-
     };
 
     class ServerTrackedDeviceProvider : public vr::IServerTrackedDeviceProvider {

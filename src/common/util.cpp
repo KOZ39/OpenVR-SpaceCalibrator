@@ -3,7 +3,7 @@
 #if _DEBUG
 #include <cassert>
 #endif
-#if _WIN32
+#if OS_WINDOWS
 #include <windows.h>
 #else
 #include <unistd.h>
@@ -25,7 +25,7 @@ namespace util {
 
     void init() {
         {
-#if _WIN32
+#if OS_WINDOWS
             wchar_t path_buf[MAX_PATH];
             DWORD size = GetModuleFileNameW(NULL, path_buf, MAX_PATH);
             if (size > 0 && size <= MAX_PATH) {

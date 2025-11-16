@@ -12,13 +12,13 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 
-#if _WIN32
+#if OS_WINDOWS
 #include <dwmapi.h>
 #endif
 
 namespace spacecal {
 
-#if _WIN32
+#if OS_WINDOWS
     enum DWMA_USE_IMMSERSIVE_DARK_MODE_ENUM {
         DWMA_USE_IMMERSIVE_DARK_MODE = 20,
         DWMA_USE_IMMERSIVE_DARK_MODE_PRE_20H1 = 19,
@@ -93,7 +93,7 @@ namespace spacecal {
 
         // Minimise the window
         glfwIconifyWindow(m_glfwWindow);
-#if _WIN32
+#if OS_WINDOWS
         HWND windowHwmd = glfwGetWin32Window(m_glfwWindow);
         EnableDarkModeTopBar(windowHwmd);
 #endif

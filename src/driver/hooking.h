@@ -1,9 +1,10 @@
 #pragma once
 
 #include <MinHook.h>
-#include "log.h"
 #include <string>
 #include <map>
+#include "log.h"
+#include "platform.h"
 
 namespace hooking {
     class IHook
