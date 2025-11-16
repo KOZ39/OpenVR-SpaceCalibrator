@@ -119,7 +119,7 @@ namespace spacecal {
             // @TOOD: Verify old config
         }
 
-        glz::error_ctx deserialiseError = glz::read_file_json<options>(m_config, m_configPath, std::string{});
+        glz::error_ctx deserialiseError = glz::read_file_jsonc<options>(m_config, m_configPath, std::string{});
         if (deserialiseError.ec != glz::error_code::none) {
             // FUCK
             LOG_WARNING("Failed to parse configuration file \"{0}\". {1}", m_configPath, deserialiseError.custom_error_message);

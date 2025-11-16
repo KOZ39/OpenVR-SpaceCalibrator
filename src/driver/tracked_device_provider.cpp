@@ -52,7 +52,7 @@ namespace spacecal {
 
     bool ServerTrackedDeviceProvider::HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, const vr::DriverPose_t& newPose) {
 
-        // bounds check
+        // bounds check, as sometimes the id is invalid?
         if (!IsDeviceIndexValid(unWhichDevice))
             return true;
 
