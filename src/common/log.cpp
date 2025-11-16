@@ -138,26 +138,16 @@ namespace logging {
     }
 
 // Helper for declaring a logger
-#ifndef _DEBUG
-#define MAKE_LOGGER_OVERLAY(title)                                              \
-    quill::Frontend::create_or_get_logger(title,                                \
-    {                                                                           \
-        quill::Frontend::create_or_get_sink<quill::FileSink>(logFilePath),      \
-        quill::Frontend::create_or_get_sink<quill::FileSink>(logFilePath2),     \
-        quill::Frontend::create_or_get_sink<UiHaltOnErrorSink>("halt_on_error") \
-    });
-#define MAKE_LOGGER_DRIVER(title)                                               \
-    quill::Frontend::create_or_get_logger(title,                                \
-    {                                                                           \
-        quill::Frontend::create_or_get_sink<quill::FileSink>(logFilePath),      \
-        quill::Frontend::create_or_get_sink<quill::FileSink>(logFilePath2),     \
-        quill::Frontend::create_or_get_sink<DriverLogSink>("driverlog")         \
-    });
+#ifdef _DEBUG
+#define CONSOLE_SINK quill::Frontend::create_or_get_sink<quill::ConsoleSink>("console"),
 #else
+#define CONSOLE_SINK
+#endif
+
 #define MAKE_LOGGER_OVERLAY(title)                                              \
     quill::Frontend::create_or_get_logger(title,                                \
     {                                                                           \
-        quill::Frontend::create_or_get_sink<quill::ConsoleSink>("console"),     \
+        CONSOLE_SINK                                                            \
         quill::Frontend::create_or_get_sink<quill::FileSink>(logFilePath),      \
         quill::Frontend::create_or_get_sink<quill::FileSink>(logFilePath2),     \
         quill::Frontend::create_or_get_sink<UiHaltOnErrorSink>("halt_on_error") \
@@ -165,12 +155,11 @@ namespace logging {
 #define MAKE_LOGGER_DRIVER(title)                                               \
     quill::Frontend::create_or_get_logger(title,                                \
     {                                                                           \
-        quill::Frontend::create_or_get_sink<quill::ConsoleSink>("console"),     \
+        CONSOLE_SINK                                                            \
         quill::Frontend::create_or_get_sink<quill::FileSink>(logFilePath),      \
         quill::Frontend::create_or_get_sink<quill::FileSink>(logFilePath2),     \
         quill::Frontend::create_or_get_sink<DriverLogSink>("driverlog")         \
     });
-#endif
 
     void Init(bool isOverlay)
     {
