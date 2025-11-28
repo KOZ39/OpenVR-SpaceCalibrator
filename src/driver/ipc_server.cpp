@@ -45,6 +45,7 @@ namespace ipc {
                 }
             } else {
                 LOG_IPC_INFO("Overlay connected. Using IPC {}", pHandshakeParams->version);
+                // @TODO: invoke function in client telling it server ipc version to verify version and refuse interop
             }
         }
     }

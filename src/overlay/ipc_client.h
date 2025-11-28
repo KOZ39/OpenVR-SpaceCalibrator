@@ -21,8 +21,6 @@ namespace ipc {
         ::IpcHandle_t m_hIpc = k_hInvalidIpcHandle;
         ::IpcOperation_t m_poseDataOperation;
 
-        vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {};
-
         static const IpcFunction_t m_funcs[];
 
         friend class VRState; // for m_poses

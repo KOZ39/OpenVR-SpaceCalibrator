@@ -164,10 +164,15 @@ namespace spacecal {
     }
 
     void Window::RunLoop() {
+        CalibrationManager::getInstance()->init();
+
         double lastFrameStartTime = glfwGetTime();
         while (!glfwWindowShouldClose(m_glfwWindow))
         {
             double time = glfwGetTime();
+            m_ipcClient.PollPoses();
+            VRState::getInstance()->updateVrState();
+            CalibrationManager::getInstance()->calibrationTick(time);
 
             bool dashboardVisible = false;
             int width = 0, height = 0;
@@ -175,7 +180,7 @@ namespace spacecal {
             const bool windowVisible = (width > 0 && height > 0);
 
             if (VRState::getInstance()->getOverlayHandle()) {
-
+                // @TODO: SteamVR overlay handling
             }
 
             if (windowVisible || dashboardVisible) {
@@ -210,11 +215,25 @@ namespace spacecal {
 
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-                if (width && height)
-                {
+                // if window is not minimised
+                if (width && height) {
                     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fboHandle);
                     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
                     glfwSwapBuffers(m_glfwWindow);
+                }
+
+                // update vr dashboard if viisble
+                if (dashboardVisible) {
+                    vr::Texture_t vrTexture = {
+                        .handle = (void*) (uintptr_t) m_fboTextureHandle,
+                        .eType = vr::TextureType_OpenGL,
+                        .eColorSpace = vr::ColorSpace_Auto,
+                    };
+
+                    vr::HmdVector2_t mouseScale = { .v = { (float)m_fboTextureWidth, (float)m_fboTextureHeight } };
+
+                    vr::VROverlay()->SetOverlayTexture(VRState::getInstance()->getOverlayHandle(), &vrTexture);
+                    vr::VROverlay()->SetOverlayMouseScale(VRState::getInstance()->getOverlayHandle(), &mouseScale);
                 }
             }
 
@@ -228,12 +247,10 @@ namespace spacecal {
             glfwWaitEventsTimeout(waitEventsTimeout);
 
             // If we're minimized rendering won't limit our frame rate so we need to do it ourselves.
-            if (glfwGetWindowAttrib(m_glfwWindow, GLFW_ICONIFIED))
-            {
+            if (glfwGetWindowAttrib(m_glfwWindow, GLFW_ICONIFIED)) {
                 double targetFrameTime = 1 / k_MINIMIZED_MAX_FPS;
                 double waitTime = targetFrameTime - (glfwGetTime() - lastFrameStartTime);
-                if (waitTime > 0)
-                {
+                if (waitTime > 0) {
                     std::this_thread::sleep_for(std::chrono::duration<double>(waitTime));
                 }
 

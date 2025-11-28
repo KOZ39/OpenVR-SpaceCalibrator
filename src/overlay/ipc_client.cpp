@@ -1,6 +1,6 @@
-#define IPC_IMPLEMENTATION
 #include "ipc_client.h"
 #include "log.h"
+#include "calibration.h"
 
 namespace ipc {
     const IpcFunction_t IpcClient::m_funcs[] = {
@@ -64,6 +64,6 @@ namespace ipc {
         ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_RESET_CALIBRATION, nullptr, 0);
     }
     void IpcClient::PollPoses() {
-        ipc_client_read_shared_memory(m_hIpc, m_poseDataOperation, m_poses, sizeof(m_poses));
+        ipc_client_read_shared_memory(m_hIpc, m_poseDataOperation, spacecal::CalibrationManager::getInstance()->m_poses, sizeof(spacecal::CalibrationManager::getInstance()->m_poses));
     }
 }

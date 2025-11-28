@@ -6,7 +6,7 @@
 
 namespace spacecal {
     struct VRDevice_t {
-        bool isConnected = false;
+        bool bIsConnected = false;
         vr::TrackedDeviceIndex_t dwDeviceIndex = vr::k_unTrackedDeviceIndexInvalid;
         vr::ETrackedControllerRole eControllerRole = vr::ETrackedControllerRole::TrackedControllerRole_Invalid;
         vr::TrackedDeviceClass eDeviceClass = vr::TrackedDeviceClass::TrackedDeviceClass_Invalid;
@@ -22,8 +22,6 @@ namespace spacecal {
 
         // called every frame, updates m_aDevices and m_aTrackingSystems
         void updateVrState();
-        
-        // @TODO: Make trackingSystem of type OpenvrTrackingSystemHandle_t
         const VRDevice_t findVrDevice(const std::string& trackingSystem, const std::string& model, const std::string& serial) const;
 
         const VRDevice_t getVrDevice(const size_t index) const;
@@ -39,7 +37,7 @@ namespace spacecal {
     private:
         static VRState* s_instance;
         bool m_bStateDirty = true;
-        std::vector<VRDevice_t> m_aDevices;
+        VRDevice_t m_aDevices[vr::k_unMaxTrackedDeviceCount] = {};
         std::vector<std::string> m_aTrackingSystems;
         vr::VROverlayHandle_t m_overlayMainHandle = vr::k_ulOverlayHandleInvalid;
         vr::VROverlayHandle_t m_overlayThumbnailHandle = vr::k_ulOverlayHandleInvalid;

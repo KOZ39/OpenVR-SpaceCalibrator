@@ -11,7 +11,6 @@ namespace spacecal {
     // these tracking systems are explicitly hidden in Space Calibrator, as it does not make sense for Space Calibrator to "calibrate" virtual trackers
     constexpr const char* k_IGNORED_TRACKING_SYSTEMS[] = {
         "standable",
-        "amethyst",
     };
 
     VRState* VRState::s_instance = nullptr;
@@ -22,7 +21,6 @@ namespace spacecal {
             return false;
         }
         s_instance = this;
-        m_aDevices.reserve(vr::k_unMaxTrackedDeviceCount);
         m_aTrackingSystems.reserve(4);
 
         auto initError = vr::VRInitError_None;
@@ -122,7 +120,6 @@ namespace spacecal {
         }
 
         // QUIRKS! ( a bunch of hardware lies about what it is :c )
-
         {
             // Check if the current HMD is a Pimax crystal
             if (deviceClass == vr::TrackedDeviceClass_HMD && szTrackingSystem == "aapvr") {
@@ -138,8 +135,7 @@ namespace spacecal {
                     // Move it outside the aapvr system ; we treat aapvr as if it were lighthouse
                     szTrackingSystem = "Pimax Crystal HMD";
                 }
-            }
-            else if (deviceClass == vr::TrackedDeviceClass_Controller && szTrackingSystem == "oculus") {
+            } else if (deviceClass == vr::TrackedDeviceClass_Controller && szTrackingSystem == "oculus") {
                 std::string renderModel;
                 std::string connectedWirelessDongle;
                 err = getSteamVrPropString(deviceId, vr::Prop_RenderModelName_String, renderModel);
@@ -157,16 +153,12 @@ namespace spacecal {
         // track new tracking systems, prioritise HMD one at front of list
         {
             auto existing = std::find(m_aTrackingSystems.begin(), m_aTrackingSystems.end(), szTrackingSystem);
-            if (existing != m_aTrackingSystems.end())
-            {
-                if (deviceClass == vr::TrackedDeviceClass_HMD)
-                {
+            if (existing != m_aTrackingSystems.end()) {
+                if (deviceClass == vr::TrackedDeviceClass_HMD) {
                     m_aTrackingSystems.erase(existing);
                     m_aTrackingSystems.insert(m_aTrackingSystems.begin(), szTrackingSystem);
                 }
-            }
-            else
-            {
+            } else {
                 m_aTrackingSystems.push_back(szTrackingSystem);
             }
         }
@@ -178,8 +170,8 @@ namespace spacecal {
         vr::ETrackedControllerRole controllerRole = (vr::ETrackedControllerRole)vr::VRSystem()->GetInt32TrackedDeviceProperty(deviceId, vr::Prop_ControllerRoleHint_Int32, &err);
         bool isConnected = vr::VRSystem()->IsTrackedDeviceConnected(deviceId);
 
-        VRDevice_t device = {
-            .isConnected = isConnected,
+        m_aDevices[deviceId] = {
+            .bIsConnected = isConnected,
             .dwDeviceIndex = deviceId,
             .eControllerRole = controllerRole,
             .eDeviceClass = deviceClass,
@@ -187,17 +179,17 @@ namespace spacecal {
             .szModel = szDeviceModel,
             .szSerial = szDeviceSerial,
         };
-
-        m_aDevices.push_back(device);
     }
 
     void VRState::updateVrState() {
 
-        if (m_aDevices.size() == 0 || m_aTrackingSystems.size() == 0 || m_bStateDirty) {
+        if (m_aTrackingSystems.size() == 0 || m_bStateDirty) {
             // fresh poll, go through everything because we're in a fresh state
             for (vr::TrackedDeviceIndex_t id = 0; id < vr::k_unMaxTrackedDeviceCount; ++id) {
                 if (vr::VRSystem()->IsTrackedDeviceConnected(id)) {
                     updateSteamVRDevice(id);
+                } else {
+                    m_aDevices[id].bIsConnected = false;
                 }
             }
 
@@ -226,8 +218,12 @@ namespace spacecal {
     const VRDevice_t VRState::findVrDevice(const std::string& trackingSystem, const std::string& model, const std::string& serial) const {
 
         // Find the device with the matching tracking system, model and serial
-        for (int i = 0; i < m_aDevices.size(); i++) {
+        for (int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
             const auto& device = m_aDevices[i];
+
+            if (device.bIsConnected) {
+                continue;
+            }
 
             uint8_t matches = 0;
 
@@ -257,10 +253,10 @@ namespace spacecal {
     }
 
     const VRDevice_t VRState::getVrDevice(const size_t index) const {
-        if (0 <= index && index < m_aDevices.size()) {
+        if (0 <= index && index < vr::k_unMaxTrackedDeviceCount) {
             return m_aDevices[index];
         }
-        ASSERT(0 <= index && index < m_aDevices.size(), "Invalid index, out of bounds read!");
+        ASSERT(0 <= index && index < vr::k_unMaxTrackedDeviceCount, "Invalid index, out of bounds read!");
         return {};
     }
 }

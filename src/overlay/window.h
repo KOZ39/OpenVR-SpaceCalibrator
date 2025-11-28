@@ -4,7 +4,9 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+
 #include "ipc_client.h"
+#include "calibration.h"
 
 namespace spacecal {
     // handles window creation, setting the icon, and initialising a renderer for UI, also handles connecting it to SteamVR as an overlay
