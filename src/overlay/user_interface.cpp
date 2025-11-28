@@ -1,5 +1,6 @@
 #include "user_interface.h"
 #include "constants.h"
+#include "localisation.h"
 
 namespace spacecal {
 
@@ -8,11 +9,10 @@ namespace spacecal {
     inline void BuildVersionInfo() {
         ImGui::SetNextWindowPos(ImVec2(10.0f, ImGui::GetWindowHeight() - ImGui::GetFrameHeightWithSpacing()));
         ImGui::BeginChild("spacecal_version_box", ImVec2(ImGui::GetWindowWidth() - 20.0f, ImGui::GetFrameHeightWithSpacing() * 2), ImGuiChildFlags_None);
-        ImGui::Text("Space Calibrator Nova v" SPACECAL_VERSION_STRING);
-        if (bIsRunningInOverlay)
-        {
-            ImGui::SameLine();
-            ImGui::Text(" - close VR overlay to use mouse");
+        if (bIsRunningInOverlay) {
+            ImGui::Text(LOCALE_FORMAT("app_title_vr", "Space Calibrator Nova", SPACECAL_VERSION_STRING).c_str());
+        } else {
+            ImGui::Text(LOCALE_FORMAT("app_title", "Space Calibrator Nova", SPACECAL_VERSION_STRING).c_str());
         }
         ImGui::EndChild();
     }
@@ -20,6 +20,9 @@ namespace spacecal {
     void DrawInterface(bool isOverlay) {
         bIsRunningInOverlay = isOverlay;
         auto& io = ImGui::GetIO();
+
+        // disable ctrl + tab, pointless in a VR overlay https://github.com/ocornut/imgui/issues/7987
+        ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Tab, ImGuiInputFlags_RouteGlobal);
 
         constexpr ImGuiWindowFlags k_bareWindowFlags =
             ImGuiWindowFlags_NoTitleBar |
@@ -33,6 +36,8 @@ namespace spacecal {
         ImGui::SetNextWindowSize(io.DisplaySize, ImGuiCond_Always);
 
         ImGui::Begin("Space Calibrator", nullptr, k_bareWindowFlags);
+
+        // @TODO: Build ui
 
         BuildVersionInfo();
         ImGui::End();
