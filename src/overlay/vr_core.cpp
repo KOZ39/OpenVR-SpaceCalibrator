@@ -7,10 +7,11 @@
 
 namespace spacecal {
 
-    // @FIXME: Should this be behind an advanced on obscure toggle?
-    // these tracking systems are explicitly hidden in Space Calibrator, as it does not make sense for Space Calibrator to "calibrate" virtual trackers
+    // @FIXME: Should this be behind an advanced or obscure toggle?
+    // these tracking systems are explicitly hidden in Space Calibrator, as it does not make sense for Space Calibrator to "calibrate" such trackers
     constexpr const char* k_IGNORED_TRACKING_SYSTEMS[] = {
-        "standable",
+        "null", // only actual hardware is supported, null driver is a debug device and will not be accepted with space calibrator
+        "standable", // virtual trackers will likely interfere with space calibrator
     };
 
     VRState* VRState::s_instance = nullptr;
@@ -91,7 +92,7 @@ namespace spacecal {
     }
 
     void VRState::updateSteamVRDevice(const vr::TrackedDeviceIndex_t deviceId) {
-        auto deviceClass = vr::VRSystem()->GetTrackedDeviceClass(deviceId);
+        vr::ETrackedDeviceClass deviceClass = vr::VRSystem()->GetTrackedDeviceClass(deviceId);
 
         // we dont care about these devices types
         if (deviceClass == vr::TrackedDeviceClass_Invalid // Unset
@@ -147,6 +148,9 @@ namespace spacecal {
                     connectedWirelessDongle.find("lighthouse") != std::string::npos) {
                     szTrackingSystem = "Pimax Crystal Controllers";
                 }
+            } else if (deviceClass == vr::TrackedDeviceClass_HMD && szTrackingSystem == "oculus") {
+                // Possibly Virtual Desktop on a non Meta HMD
+                // @TODO: figure out how to determine what the HMD ACTUALLY is in such a scenario
             }
         }
 
@@ -163,10 +167,11 @@ namespace spacecal {
             }
         }
 
+        // update tracking state
         std::string szDeviceModel;
-        err = getSteamVrPropString(deviceId, vr::Prop_ModelNumber_String, szTrackingSystem);
         std::string szDeviceSerial;
-        err = getSteamVrPropString(deviceId, vr::Prop_SerialNumber_String, szTrackingSystem);
+        err = getSteamVrPropString(deviceId, vr::Prop_ModelNumber_String, szDeviceModel);
+        err = getSteamVrPropString(deviceId, vr::Prop_SerialNumber_String, szDeviceSerial);
         vr::ETrackedControllerRole controllerRole = (vr::ETrackedControllerRole)vr::VRSystem()->GetInt32TrackedDeviceProperty(deviceId, vr::Prop_ControllerRoleHint_Int32, &err);
         bool isConnected = vr::VRSystem()->IsTrackedDeviceConnected(deviceId);
 

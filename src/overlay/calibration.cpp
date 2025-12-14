@@ -41,13 +41,14 @@ namespace spacecal {
 
         // original code checks hmd specifically, we should check that the hmd and ref arent at 0 0 0
         // check that ref is not at origin
-        auto p = m_ipcServer.devicePoses[vr::k_unTrackedDeviceIndex_Hmd].vecPosition;
+        auto p = CalibrationManager::getInstance()->m_poses[vr::k_unTrackedDeviceIndex_Hmd].vecPosition;
         if (hmdIsInSameTrackingSystem) {
             
         }
         m_xPrev = (float)p[0];
         m_yPrev = (float)p[1];
         m_zPrev = (float)p[2];
+
 
     }
     
@@ -56,8 +57,54 @@ namespace spacecal {
 
     }
     
+    // applies calibration to all devices under this tracking system
     void TrackingSystemCalibration::apply() {
-        // @TODO: 
+        this->isActive = isValidCalibration;
+
+        for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
+            auto device = VRState::getInstance()->getVrDevice(i);
+            if (device.eDeviceClass != vr::TrackedDeviceClass_Invalid) {
+
+                if (i == vr::k_unTrackedDeviceIndex_Hmd) {
+                    if (device.szTrackingSystemId != referenceDevice.trackingSystem) {
+                        // if the hmd the hmd's tracking system is not what was saved, handles users changing streamer / VR headset properly by not applying calibration
+                        isActive = false;
+                    }
+                    continue;
+                }
+
+                // if this is not the target tracking system
+                if (device.szTrackingSystemId != targetDevice.trackingSystem) {
+                    continue;
+                }
+
+                ipc::protocol::Command_SetDeviceTransform_t args = {};
+
+                args.unOpenvrDeviceId = i;
+                args.enabled(device.bIsConnected);
+
+                if (device.bIsConnected) {
+                    args.quirks = ipc::protocol::DeviceQuirks_t::QUIRK_NONE;
+
+                    args.updateTranslation(true);
+                    args.translation.v[0] = calibratedTranslation.x();
+                    args.translation.v[1] = calibratedTranslation.y();
+                    args.translation.v[2] = calibratedTranslation.z();
+
+                    args.updateRotation(true);
+                    args.rotation.x = calibratedRotation.x();
+                    args.rotation.y = calibratedRotation.y();
+                    args.rotation.z = calibratedRotation.z();
+                    args.rotation.w = calibratedRotation.w();
+
+                    args.updateScale(true);
+                    args.scale = calibratedScale;
+                }
+
+                CalibrationManager::getInstance()->m_ipcClient.SetDeviceTransform(args);
+            }
+        }
+
 
     }
 
@@ -88,6 +135,7 @@ namespace spacecal {
 
     void CalibrationManager::calibrationTick(const double deltaTime) {
         // @TODO: 
+        m_ipcClient.PollPoses();
 
 
         for (auto& calibration : m_calibrations) {

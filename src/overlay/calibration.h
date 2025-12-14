@@ -2,12 +2,8 @@
 
 #include "protocol.h"
 #include "vr_core.h"
+#include "ipc_client.h"
 #include <Eigen/Dense>
-
-// forward decl
-namespace ipc {
-    class IpcClient;
-}
 
 namespace spacecal {
 
@@ -53,7 +49,7 @@ namespace spacecal {
     struct Sample_t {
         Pose_t reference; // what we are calibrating TO
         Pose_t target;    // the object that shall be calibrated
-        double timestamp; // @FIXME: seems to be unused with existing algorithm?
+        double timestamp = 0; // @FIXME: seems to be unused with existing algorithm?
     };
 
     struct CalibrationDevice {
@@ -88,12 +84,16 @@ namespace spacecal {
         CalibrationDevice targetDevice; // what we are calibrating (ie this tracking system will be manipulated to match the ref)
 
         // the calibrated pose
-        Eigen::Vector3d calibratedRotation;
+        Eigen::Quaterniond calibratedRotation;
         Eigen::Vector3d calibratedTranslation;
-        double calibratedScale;
+        double calibratedScale = 1.0;
 
     private:
-        double m_lastTick;
+        double m_lastTick = 0;
+        float m_xPrev = 0;
+        float m_yPrev = 0;
+        float m_zPrev = 0;
+
         std::vector<Sample_t> m_samples;
 
         friend class CalibrationManager;
@@ -121,7 +121,10 @@ namespace spacecal {
         std::vector<TrackingSystemCalibration> m_calibrations;
         VRState m_vrState;
 
+        ipc::IpcClient m_ipcClient;
+
         static CalibrationManager* s_instance;
         friend class ::ipc::IpcClient;
+        friend class TrackingSystemCalibration;
     };
 } // namespace spacecal

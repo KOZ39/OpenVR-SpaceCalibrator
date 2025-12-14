@@ -24,7 +24,5 @@ namespace spacecal {
         int m_fboTextureHeight = 800;
 
         const float k_MINIMIZED_MAX_FPS = 60.0f;
-
-        ipc::IpcClient m_ipcClient;
     };
 }

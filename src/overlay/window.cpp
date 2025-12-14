@@ -238,7 +238,7 @@ namespace spacecal {
             }
 
             constexpr double dashboardInterval = 1.0 / 90.0; // fps
-            // double waitEventsTimeout = std::max(CalCtx.wantedUpdateInterval, dashboardInterval);
+            // double waitEventsTimeout = std::max(CalibrationManager::getInstance()->wantedUpdateInterval, dashboardInterval);
             double waitEventsTimeout = dashboardInterval;
             
             if (dashboardVisible && waitEventsTimeout > dashboardInterval)
