@@ -91,7 +91,7 @@ namespace spacecal {
             fclose(localeFile);
             localeFile = nullptr;
 
-            glz::json_t json{};
+            glz::generic json{};
             glz::error_ctx jsonError = glz::read_jsonc(json, buffer);
             if (jsonError.ec != glz::error_code::none) {
                 LOG_WARNING("Failed to parse JSON for locale file \"{0}\". {1}.", langPath, jsonError.custom_error_message);
@@ -108,8 +108,8 @@ namespace spacecal {
 
             // JSON is in expected format, awesome!
             // Therefore, we should iterate through it and begin loading the key value pairs into memory
-            glz::json_t::object_t jsonObject = json.as<glz::json_t::object_t>();
-            for (std::pair<const std::string, glz::json_t> elem : jsonObject) {
+            glz::generic::object_t jsonObject = json.as<glz::generic::object_t>();
+            for (std::pair<const std::string, glz::generic> elem : jsonObject) {
                 if (elem.first.empty()) {
                     LOG_WARNING("Failed to parse JSON for locale file \"{0}\". Expected JSON key-value pair of type string, got invalid key.", langPath);
                     continue;
