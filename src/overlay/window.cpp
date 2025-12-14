@@ -167,10 +167,13 @@ namespace spacecal {
         CalibrationManager::getInstance()->init();
 
         double lastFrameStartTime = glfwGetTime();
+        bool bKeyboardOpen = false;
+        bool bKeyboardJustClosed = false;
+        char textBuf[0x400] = {};
+
         while (!glfwWindowShouldClose(m_glfwWindow))
         {
             double time = glfwGetTime();
-            m_ipcClient.PollPoses();
             VRState::getInstance()->updateVrState();
             CalibrationManager::getInstance()->calibrationTick(time);
 
@@ -180,7 +183,83 @@ namespace spacecal {
             const bool windowVisible = (width > 0 && height > 0);
 
             if (VRState::getInstance()->getOverlayHandle()) {
+                vr::VROverlayHandle_t hOverlayHandle = VRState::getInstance()->getOverlayHandle();
                 // @TODO: SteamVR overlay handling
+                auto& io = ImGui::GetIO();
+                dashboardVisible = vr::VROverlay()->IsActiveDashboardOverlay(hOverlayHandle);
+
+                // @FIXME: This is currently hard-coded for windows as i copy pasted this from the 1.5.1 codebase
+                //         need to figure out if imgui handles UTF8 directly and SteamVR does UTF8 directly, and adjust code accordingly
+                //         also abstract the code into platform_win32 and platform_linux
+
+                // After closing the keyboard, this code waits one frame for ImGui to pick up the new text from SetActiveText
+                // before clearing the active widget. Then it waits another frame before allowing the keyboard to open again,
+                // otherwise it will do so instantly since WantTextInput is still true on the second frame.
+                if (bKeyboardJustClosed && bKeyboardOpen) {
+                    ImGui::ClearActiveID();
+                    bKeyboardOpen = false;
+                } else if (bKeyboardJustClosed) {
+                    bKeyboardJustClosed = false;
+                } else if (!io.WantTextInput) {
+                    // User might close the keyboard without hitting Done, so we unset the flag to allow it to open again.
+                    bKeyboardOpen = false;
+                } else if (io.WantTextInput && !bKeyboardOpen && !bKeyboardJustClosed) {
+                    int id = ImGui::GetActiveID();
+                    auto textInfo = ImGui::GetInputTextState(id);
+
+                    if (textInfo != nullptr) {
+                        textBuf[0] = 0;
+                        int len = WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)textInfo->TextA.Data, textInfo->TextA.Size, textBuf, sizeof(textBuf), nullptr, nullptr);
+                        textBuf[std::min(static_cast<size_t>(len), sizeof(textBuf) - 1)] = 0;
+
+                        uint32_t unFlags = 0; // EKeyboardFlags 
+
+                        vr::VROverlay()->ShowKeyboardForOverlay(
+                            hOverlayHandle, vr::k_EGamepadTextInputModeNormal, vr::k_EGamepadTextInputLineModeSingleLine,
+                            unFlags, "Space Calibrator Overlay", sizeof(textBuf), textBuf, 0
+                        );
+                        bKeyboardOpen = true;
+                    }
+                }
+
+                vr::VREvent_t vrEvent;
+                while (vr::VROverlay()->PollNextOverlayEvent(hOverlayHandle, &vrEvent, sizeof(vrEvent)))
+                {
+                    switch (vrEvent.eventType) {
+                    case vr::VREvent_MouseMove:
+                        io.AddMousePosEvent(vrEvent.data.mouse.x, vrEvent.data.mouse.y);
+                        break;
+                    case vr::VREvent_MouseButtonDown:
+                        io.AddMouseButtonEvent((vrEvent.data.mouse.button & vr::VRMouseButton_Left) == vr::VRMouseButton_Left ? 0 : 1, true);
+                        break;
+                    case vr::VREvent_MouseButtonUp:
+                        io.AddMouseButtonEvent((vrEvent.data.mouse.button & vr::VRMouseButton_Left) == vr::VRMouseButton_Left ? 0 : 1, false);
+                        break;
+                    case vr::VREvent_ScrollDiscrete:
+                    {
+                        float x = vrEvent.data.scroll.xdelta * 360.0f * 8.0f;
+                        float y = vrEvent.data.scroll.ydelta * 360.0f * 8.0f;
+                        io.AddMouseWheelEvent(x, y);
+                        break;
+                    }
+                    case vr::VREvent_KeyboardDone: {
+                        vr::VROverlay()->GetKeyboardText(textBuf, sizeof(textBuf));
+
+                        int id = ImGui::GetActiveID();
+                        auto textInfo = ImGui::GetInputTextState(id);
+                        int bufSize = MultiByteToWideChar(CP_UTF8, 0, textBuf, -1, nullptr, 0);
+                        textInfo->TextA.resize(bufSize);
+                        MultiByteToWideChar(CP_UTF8, 0, textBuf, -1, (LPWSTR)textInfo->TextA.Data, bufSize);
+                        textInfo->TextLen = bufSize;
+                        textInfo->TextLen = WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)textInfo->TextA.Data, textInfo->TextA.Size, nullptr, 0, nullptr, nullptr);
+
+                        bKeyboardJustClosed = true;
+                        break;
+                    }
+                    case vr::VREvent_Quit:
+                        return;
+                    }
+                }
             }
 
             if (windowVisible || dashboardVisible) {
