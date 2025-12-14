@@ -20,6 +20,7 @@ namespace logging {
     ::quill::Logger* s_loggerOpenVr = nullptr;
     ::quill::Logger* s_loggerIpc = nullptr;
     ::quill::Logger* s_loggerHooking = nullptr;
+    ::quill::Logger* s_loggerCalibration = nullptr;
 
     class UiHaltOnErrorSink final : public quill::Sink {
     public:
@@ -179,15 +180,17 @@ namespace logging {
         DeleteOldLogFiles(util::getSpaceCalibratorLogsDir());
 
         if (isOverlay) {
-            s_logger = MAKE_LOGGER_OVERLAY("overlay");
+            s_logger = MAKE_LOGGER_OVERLAY("driver");
             s_loggerOpenVr = MAKE_LOGGER_OVERLAY("openvr");
             s_loggerIpc = MAKE_LOGGER_OVERLAY("ipc");
             s_loggerHooking = MAKE_LOGGER_OVERLAY("hooking");
+            s_loggerCalibration = MAKE_LOGGER_OVERLAY("calibration");
         } else {
             s_logger = MAKE_LOGGER_DRIVER("overlay");
             s_loggerOpenVr = MAKE_LOGGER_DRIVER("openvr");
             s_loggerIpc = MAKE_LOGGER_DRIVER("ipc");
             s_loggerHooking = MAKE_LOGGER_DRIVER("hooking");
+            s_loggerCalibration = MAKE_LOGGER_DRIVER("calibration");
         }
     }
 }

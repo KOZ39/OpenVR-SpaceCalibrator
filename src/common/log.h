@@ -12,6 +12,7 @@ namespace logging {
     extern ::quill::Logger* s_loggerOpenVr;
     extern ::quill::Logger* s_loggerIpc;
     extern ::quill::Logger* s_loggerHooking;
+    extern ::quill::Logger* s_loggerCalibration;
     void Init(bool isOverlay);
 #ifndef _DEBUG
     constexpr uint32_t CLEAR_LOG_FILES_AFTER_DAYS = 30;
@@ -61,3 +62,13 @@ namespace logging {
 #define LOG_HOOKING_CRITICAL(fmt, ...) QUILL_LOG_CRITICAL(::logging::s_loggerHooking, fmt, ##__VA_ARGS__)
 #define LOG_HOOKING_FATAL(fmt, ...) QUILL_LOG_CRITICAL(::logging::s_loggerHooking, fmt, ##__VA_ARGS__)
 #define LOG_HOOKING_DYNAMIC(log_level, fmt, ...) QUILL_LOG_DYNAMIC(::logging::s_loggerHooking, log_level, fmt, ##__VA_ARGS__)
+
+#define LOG_CALIB_DEBUG(fmt, ...) QUILL_LOG_DEBUG(::logging::s_loggerCalibration, fmt, ##__VA_ARGS__)
+#define LOG_CALIB_INFO(fmt, ...) QUILL_LOG_INFO(::logging::s_loggerCalibration, fmt, ##__VA_ARGS__)
+#define LOG_CALIB_NOTICE(fmt, ...) QUILL_LOG_NOTICE(::logging::s_loggerCalibration, fmt, ##__VA_ARGS__)
+#define LOG_CALIB_WARNING(fmt, ...) QUILL_LOG_WARNING(::logging::s_loggerCalibration, fmt, ##__VA_ARGS__)
+#define LOG_CALIB_WARN(fmt, ...) QUILL_LOG_WARNING(::logging::s_loggerCalibration, fmt, ##__VA_ARGS__)
+#define LOG_CALIB_ERROR(fmt, ...) QUILL_LOG_ERROR(::logging::s_loggerCalibration, fmt, ##__VA_ARGS__)
+#define LOG_CALIB_CRITICAL(fmt, ...) QUILL_LOG_CRITICAL(::logging::s_loggerCalibration, fmt, ##__VA_ARGS__)
+#define LOG_CALIB_FATAL(fmt, ...) QUILL_LOG_CRITICAL(::logging::s_loggerCalibration, fmt, ##__VA_ARGS__)
+#define LOG_CALIB_DYNAMIC(log_level, fmt, ...) QUILL_LOG_DYNAMIC(::logging::s_loggerCalibration, log_level, fmt, ##__VA_ARGS__)
