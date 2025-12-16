@@ -43,9 +43,9 @@ namespace ipc {
                     // overlay too new
                     LOG_IPC_CRITICAL("The overlay is newer than the driver! Expected IPC version {}, got {}.", protocol::IPC_PROTOCOL_CURRENT, pHandshakeParams->version);
                 }
+                // @TODO: invoke function in client telling it server ipc version to verify version and refuse interop
             } else {
                 LOG_IPC_INFO("Overlay connected. Using IPC {}", pHandshakeParams->version);
-                // @TODO: invoke function in client telling it server ipc version to verify version and refuse interop
             }
         }
     }

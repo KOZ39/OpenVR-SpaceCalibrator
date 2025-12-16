@@ -14,7 +14,7 @@ namespace spacecal {
         util::init();
         logging::Init(/* isOverlay */ false);
 
-        LOG_OPENVR_INFO("Starting SpaceCalibrator-Nova. Linked with OpenVR driver API {}.{}.{}", vr::k_nSteamVRVersionMajor, vr::k_nSteamVRVersionMinor, vr::k_nSteamVRVersionBuild);
+        LOG_OPENVR_INFO("Starting SpaceCalibrator-Nova. Compiled against OpenVR driver API {}.{}.{}", vr::k_nSteamVRVersionMajor, vr::k_nSteamVRVersionMinor, vr::k_nSteamVRVersionBuild);
 
         m_alignmentParams.thr_rot_tiny = 0.1f * (EIGEN_PI / 180.0f);
         m_alignmentParams.thr_rot_small = 1.0f * (EIGEN_PI / 180.0f);
