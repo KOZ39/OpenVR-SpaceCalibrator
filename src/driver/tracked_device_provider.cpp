@@ -109,6 +109,7 @@ namespace spacecal {
     }
 
     void ServerTrackedDeviceProvider::HandleQuirks(ipc::protocol::DeviceQuirks_t quirks, vr::DriverPose_t& pose) {
+        // @TOOD: implement quirks handling
 
         if (ENUM_HAS_FLAGS(quirks, ipc::protocol::DeviceQuirks_t::QUIRK_SCALE)) {
             // m_poses->vecAngularVelocity
@@ -138,6 +139,24 @@ namespace spacecal {
     }
 
     void ServerTrackedDeviceProvider::SetDeviceTransform(ipc::protocol::Command_SetDeviceTransform_t& transform) {
-        m_transforms[transform.unOpenvrDeviceId] = transform;
+        m_transforms[transform.unOpenvrDeviceId].unOpenvrDeviceId = transform.unOpenvrDeviceId;
+        m_transforms[transform.unOpenvrDeviceId].enabled(transform.enabled());
+        m_transforms[transform.unOpenvrDeviceId].hideContinuousTracker(transform.hideContinuousTracker());
+        m_transforms[transform.unOpenvrDeviceId].lerpCalibrations(transform.lerpCalibrations());
+        m_transforms[transform.unOpenvrDeviceId].quirks = transform.quirks;
+
+        // @FIXME: i dont like how much this branches, we can probably make this branchless but thats a problem for future me
+        if (transform.updateRotation()) {
+            m_transforms[transform.unOpenvrDeviceId].updateRotation(transform.updateRotation());
+            m_transforms[transform.unOpenvrDeviceId].rotation = transform.rotation;
+        }
+        if (transform.updateTranslation()) {
+            m_transforms[transform.unOpenvrDeviceId].updateTranslation(transform.updateTranslation());
+            m_transforms[transform.unOpenvrDeviceId].translation = transform.translation;
+        }
+        if (transform.updateScale()) {
+            m_transforms[transform.unOpenvrDeviceId].updateScale(transform.updateScale());
+            m_transforms[transform.unOpenvrDeviceId].scale = transform.scale;
+        }
     }
 }

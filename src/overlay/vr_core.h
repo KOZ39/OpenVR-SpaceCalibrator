@@ -30,7 +30,7 @@ namespace spacecal {
         [[nodiscard]] vr::VROverlayHandle_t getOverlayThumbnailHandle() const { return m_overlayThumbnailHandle; }
         [[nodiscard]] static inline VRState* getInstance() { return s_instance; }
 
-        vr::ETrackedPropertyError getSteamVrPropString(const vr::TrackedDeviceIndex_t deviceId, vr::ETrackedDeviceProperty deviceProperty, std::string& string);
+        vr::ETrackedPropertyError getSteamVrPropString(const vr::TrackedDeviceIndex_t deviceId, vr::ETrackedDeviceProperty deviceProperty, std::string& string) const;
     private:
         void updateSteamVRDevice(const vr::TrackedDeviceIndex_t deviceId);
 

@@ -13,7 +13,6 @@ namespace platform {
     std::filesystem::path getUserConfigDir() {
 
         PWSTR path_pwstr = NULL;
-
         HRESULT hr = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &path_pwstr);
 
         if (SUCCEEDED(hr)) {

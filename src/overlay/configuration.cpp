@@ -4,7 +4,10 @@
 #include "platform.h"
 
 #include <filesystem>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
 #include <glaze/glaze.hpp>
+#pragma clang diagnostic pop
 
 namespace spacecal {
 

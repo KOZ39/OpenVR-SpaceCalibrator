@@ -138,13 +138,13 @@ namespace ipc::protocol
         // @TODO: does this make sense to perform per device or per tracking system? per system probably makes a lot more sense tbh also bc it lends itself to multiple calibrations for effectively free
         // (need to think about ux for it though lol)
     private:
-        uint8_t _boolFlags;
+        uint8_t _boolFlags = 0;
     public:
         DeviceQuirks_t quirks;
         vr::TrackedDeviceIndex_t unOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         vr::HmdVector3d_t translation;
         vr::HmdQuaternion_t rotation;
-        double scale;
+        double scale = 1.0;
 
 #define FLAG(name, bitfield) \
         inline bool name() const { \

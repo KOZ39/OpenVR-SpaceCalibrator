@@ -6,7 +6,7 @@ namespace spacecal {
 
     CalibrationManager* CalibrationManager::s_instance = nullptr;
 
-    // pose -> hmdmatrix
+    // hmdmatrix -> pose
     Pose_t::Pose_t(const vr::HmdMatrix34_t hmdMatrix) {
         // [r] [r] [r] [t]
         // [r] [r] [r] [t]
@@ -30,14 +30,14 @@ namespace spacecal {
 
     }
     
-    void TrackingSystemCalibration::calibrationTick(const double deltaTime) {
+    void TrackingSystemCalibration::calibrationTick(const double currentTime) {
         if (!vr::VRSystem())
             return;
 
-        if ((deltaTime - m_lastTick) < 0.05)
+        if ((currentTime - m_lastTick) < (1.0 / k_TICK_RATE_HZ))
             return;
 
-        m_lastTick = deltaTime;
+        m_lastTick = currentTime;
 
         // original code checks hmd specifically, we should check that the hmd and ref arent at 0 0 0
         // check that ref is not at origin
@@ -104,8 +104,6 @@ namespace spacecal {
                 CalibrationManager::getInstance()->m_ipcClient.SetDeviceTransform(args);
             }
         }
-
-
     }
 
     CalibrationManager::CalibrationManager() {
@@ -133,13 +131,23 @@ namespace spacecal {
         }
     }
 
-    void CalibrationManager::calibrationTick(const double deltaTime) {
+    void CalibrationManager::calibrationTick(const double currentTime) {
         // @TODO: 
         m_ipcClient.PollPoses();
 
+        double wantedInterval = 0;
+        size_t countedCalibrations = 0;
 
         for (auto& calibration : m_calibrations) {
-            calibration.calibrationTick(deltaTime);
+            calibration.calibrationTick(currentTime);
+            if (calibration.isActive) {
+                wantedInterval += calibration.wantedUpdateInterval;
+                countedCalibrations++;
+            }
+        }
+
+        if (countedCalibrations > 0) {
+            m_wantedUpdateInterval = wantedInterval / countedCalibrations;
         }
     }
 
@@ -149,5 +157,9 @@ namespace spacecal {
 
     size_t CalibrationManager::getCalibrationCount() const {
         return m_calibrations.size();
+    }
+
+    const double CalibrationManager::getWantedUpdateInterval() const {
+        return m_wantedUpdateInterval;
     }
 }

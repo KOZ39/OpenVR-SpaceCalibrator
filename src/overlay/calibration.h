@@ -69,7 +69,7 @@ namespace spacecal {
     public:
         void init();
         void start();
-        void calibrationTick(const double deltaTime);
+        void calibrationTick(const double currentTime);
         void reset();
         // applies the calibration to the VR runtime
         void apply();
@@ -87,6 +87,8 @@ namespace spacecal {
         Eigen::Quaterniond calibratedRotation;
         Eigen::Vector3d calibratedTranslation;
         double calibratedScale = 1.0;
+
+        double wantedUpdateInterval = 1.0;
 
     private:
         double m_lastTick = 0;
@@ -112,6 +114,8 @@ namespace spacecal {
         // @TODO: Better getter? idk how a calibration should be defined in terms of ui
         TrackingSystemCalibration& getCalibration(const size_t index);
         size_t getCalibrationCount() const;
+
+        const double getWantedUpdateInterval() const;
 
         [[nodiscard]] static inline CalibrationManager* getInstance() { return s_instance; }
 

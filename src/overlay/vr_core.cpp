@@ -81,7 +81,7 @@ namespace spacecal {
         return true;
     }
 
-    vr::ETrackedPropertyError VRState::getSteamVrPropString(const vr::TrackedDeviceIndex_t deviceId, vr::ETrackedDeviceProperty deviceProperty, std::string& string) {
+    vr::ETrackedPropertyError VRState::getSteamVrPropString(const vr::TrackedDeviceIndex_t deviceId, vr::ETrackedDeviceProperty deviceProperty, std::string& string) const {
         char buffer[vr::k_unMaxPropertyStringSize] = {};
         vr::ETrackedPropertyError err = vr::TrackedProp_Success;
         vr::VRSystem()->GetStringTrackedDeviceProperty(deviceId, deviceProperty, buffer, vr::k_unMaxPropertyStringSize, &err);
