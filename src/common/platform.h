@@ -13,6 +13,33 @@
 #error "Unsupported OS"
 #endif
 
+// warning guards for various compilers
+#if defined(__clang__)
+#define BEGIN_EXTERNAL_HEADERS \
+    __pragma(clang diagnostic push) \
+    __pragma(clang diagnostic ignored "-Weverything") \
+    __pragma(warning(push, 0))
+#define END_EXTERNAL_HEADERS \
+    __pragma(warning(pop)) \
+    __pragma(clang diagnostic pop)
+#elif defined(_MSC_VER)
+#define BEGIN_EXTERNAL_HEADERS \
+    __pragma(warning(push, 0)) \
+    __pragma(warning(disable : 4668))
+#define END_EXTERNAL_HEADERS \
+    __pragma(warning(pop))
+#elif defined(__GNUC__)
+#define BEGIN_EXTERNAL_HEADERS \
+    _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Wall\"") \
+    _Pragma("GCC diagnostic ignored \"-Wextra\"")
+#define END_EXTERNAL_HEADERS \
+    _Pragma("GCC diagnostic pop")
+#else
+#define BEGIN_EXTERNAL_HEADERS
+#define END_EXTERNAL_HEADERS
+#endif
+
 namespace platform {
     // %APPDATA% or ~/.config
     std::filesystem::path getUserConfigDir();

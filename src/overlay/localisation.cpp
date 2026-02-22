@@ -3,8 +3,10 @@
 #include "platform.h"
 #include "util.h"
 
+BEGIN_EXTERNAL_HEADERS
 #include <filesystem>
 #include <glaze/glaze.hpp>
+END_EXTERNAL_HEADERS
 
 namespace spacecal {
     LocalisationManager* LocalisationManager::m_instance = nullptr;

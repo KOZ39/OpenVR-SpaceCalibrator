@@ -1,5 +1,6 @@
 #pragma once
 
+#include "platform.h"
 #include <fmt/args.h>
 #include <string>
 #include <unordered_map>

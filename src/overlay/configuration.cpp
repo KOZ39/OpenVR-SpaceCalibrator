@@ -3,11 +3,10 @@
 #include "util.h"
 #include "platform.h"
 
+BEGIN_EXTERNAL_HEADERS
 #include <filesystem>
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
 #include <glaze/glaze.hpp>
-#pragma clang diagnostic pop
+END_EXTERNAL_HEADERS
 
 namespace spacecal {
 
