@@ -64,7 +64,7 @@ struct IpcOperation_t {
 
 struct IpcCreateArguments_t {
     const char* szSharedMemoryName = nullptr; // name used for the shared memory
-    size_t dwSharedBufferSizeBytes = 0; // size in bytes of the shared memory thats not used for function invocation. function invocation reserves 4KB of data.
+    size_t dwSharedBufferSizeBytes = 0; // size in bytes of the shared memory thats not used for function invocation. function invocation reserves 4KB of data. on windows is bound by DWORD
     const IpcFunction_t* aFunctions = nullptr;
     size_t dwFunctionCount = 0;
     IpcOperation_t* aOperations = nullptr;
@@ -185,7 +185,7 @@ IpcHandle_t ipc_server_init(IpcCreateArguments_t args) {
     size_t totalSharedMemSize = IPC_FUNCTION_ARGS_TOTAL_SIZE + args.dwSharedBufferSizeBytes;
 
 #if _WIN32
-    handleInternal->hSharedMemory = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, totalSharedMemSize, args.szSharedMemoryName);
+    handleInternal->hSharedMemory = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)totalSharedMemSize, args.szSharedMemoryName);
     if (handleInternal->hSharedMemory == NULL) {
         free(handleInternal);
         return k_hInvalidIpcHandle;
