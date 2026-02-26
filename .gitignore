@@ -7,3 +7,4 @@ ipch
 .code
 /install/*.exe
 [bB]in
+[oO]ut
