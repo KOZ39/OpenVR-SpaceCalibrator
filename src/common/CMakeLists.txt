@@ -77,9 +77,8 @@ target_compile_definitions(SpaceCalibratorCommon
 )
 
 if (MSVC)
-    add_compile_options(/EHs-)
-else()
-    add_compile_options(-fno-exceptions)
+    target_compile_options(SpaceCalibratorCommon
+        PRIVATE -fno-exceptions)
 endif()
 
 # Compile definitions
@@ -94,16 +93,19 @@ target_compile_definitions(SpaceCalibratorCommon
 )
 
 # optimisations
-target_compile_options(SpaceCalibratorCommon
-    PRIVATE
-        $<$<CONFIG:RELEASE>:/Ob2 /Zc:inline>
-        $<$<CONFIG:RELWITHDEBINFO>:/Ob2 /Zc:inline>
-        $<$<CONFIG:MINSIZEREL>:/Ob2 /Zc:inline>
-)
+if (MSVC)
+    target_compile_options(SpaceCalibratorCommon
+        PRIVATE
+            /EHs-
+            $<$<CONFIG:RELEASE>:/Ob2 /Zc:inline>
+            $<$<CONFIG:RELWITHDEBINFO>:/Ob2 /Zc:inline>
+            $<$<CONFIG:MINSIZEREL>:/Ob2 /Zc:inline>
+    )
 
-target_link_options(SpaceCalibratorCommon
-    PRIVATE
-        $<$<CONFIG:RELEASE>:/LTCG /OPT:REF /OPT:ICF>
-        $<$<CONFIG:RELWITHDEBINFO>:/LTCG /OPT:REF /OPT:ICF>
-        $<$<CONFIG:MINSIZEREL>:/LTCG /OPT:REF /OPT:ICF>
-)
+    target_link_options(SpaceCalibratorCommon
+        PRIVATE
+            $<$<CONFIG:RELEASE>:/LTCG /OPT:REF /OPT:ICF>
+            $<$<CONFIG:RELWITHDEBINFO>:/LTCG /OPT:REF /OPT:ICF>
+            $<$<CONFIG:MINSIZEREL>:/LTCG /OPT:REF /OPT:ICF>
+    )
+endif()

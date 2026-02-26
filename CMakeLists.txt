@@ -19,15 +19,13 @@ endfunction()
 
 project("SpaceCalibrator")
 
-# Include project
-add_subdirectory ("src")
-
 # 3rd party stuff
 add_subdirectory ("vendor")
 
+# warnings for our code
 if ("${CMAKE_CXX_COMPILER}" MATCHES "Clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
 	# add_compile_options(-Werror=return-type -Wall -Wextra -Wpedantic /MP)
-	add_compile_options(-Werror=return-type /MP)
+	add_compile_options(-Werror=return-type)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 	# add_compile_options(-Werror=return-type -Wall -Wextra -Wpedantic)
 	add_compile_options(-Werror=return-type)
@@ -58,3 +56,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC" OR "${CMAKE_C_COMPILER_ID}" S
 		/utf-8 # utf-8 source & exec
 		/GF) # eliminate duplicate strings
 endif()
+
+# Include project
+add_subdirectory ("src")

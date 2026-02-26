@@ -11,8 +11,10 @@
 #include <quill/bundled/fmt/format.h>
 #include <quill/bundled/fmt/chrono.h>
 
+#if (__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch"
+#endif // __clang__
 
 template <> struct fmtquill::formatter<ipc::protocol::Version_t> : formatter<string_view> {
     auto format(ipc::protocol::Version_t version, format_context& ctx) const ->format_context::iterator;
@@ -30,4 +32,6 @@ namespace vr {
     std::string format_as(EVREventType eventType);
 }
 
+#if (__clang__)
 #pragma clang diagnostic pop
+#endif // __clang__

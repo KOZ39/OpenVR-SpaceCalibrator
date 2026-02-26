@@ -105,12 +105,14 @@ else ()
     target_compile_options(SpaceCalibratorOverlay PRIVATE -Wa,-mbig-obj)
 endif ()
 
+set(OVERLAY_BIN_DIR "$<TARGET_FILE_DIR:SpaceCalibratorOverlay>")
+
 # Copy vrmanifest
 add_custom_command(
     TARGET SpaceCalibratorOverlay POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/src/overlay/manifest.vrmanifest
-    ${CMAKE_BINARY_DIR}/artifacts/$<CONFIG>/manifest.vrmanifest
+    ${OVERLAY_BIN_DIR}/manifest.vrmanifest
 )
 
 # Copy dashboard icon
@@ -118,7 +120,7 @@ add_custom_command(
     TARGET SpaceCalibratorOverlay POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/src/overlay/icon.png
-    ${CMAKE_BINARY_DIR}/artifacts/$<CONFIG>/icon.png
+    ${OVERLAY_BIN_DIR}/icon.png
 )
 
 # Copy taskbar icon
@@ -126,7 +128,7 @@ add_custom_command(
     TARGET SpaceCalibratorOverlay POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/src/overlay/taskbar_icon.png
-    ${CMAKE_BINARY_DIR}/artifacts/$<CONFIG>/taskbar_icon.png
+    ${OVERLAY_BIN_DIR}/taskbar_icon.png
 )
 
 # Copy LICENSE
@@ -134,7 +136,7 @@ add_custom_command(
     TARGET SpaceCalibratorOverlay POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/LICENSE
-    ${CMAKE_BINARY_DIR}/artifacts/$<CONFIG>/LICENSE
+    ${OVERLAY_BIN_DIR}/LICENSE
 )
 
 # Copy NOTICE
@@ -142,7 +144,7 @@ add_custom_command(
     TARGET SpaceCalibratorOverlay POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/NOTICE
-    ${CMAKE_BINARY_DIR}/artifacts/$<CONFIG>/README
+    ${OVERLAY_BIN_DIR}/README
 )
 
 # Copy openvr_api.dll
@@ -150,7 +152,7 @@ add_custom_command(
     TARGET SpaceCalibratorOverlay POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_SOURCE_DIR}/vendor/openvr/bin/win64/openvr_api.dll
-    ${CMAKE_BINARY_DIR}/artifacts/$<CONFIG>/openvr_api.dll
+    ${OVERLAY_BIN_DIR}/openvr_api.dll
 )
 
 # Copy assets to output folder
@@ -159,11 +161,11 @@ add_custom_command(
     PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/assets
-    ${CMAKE_BINARY_DIR}/artifacts/$<CONFIG>/assets
+    ${OVERLAY_BIN_DIR}/assets
     COMMENT "Copying assets"
 )
 
 # Set as startup project
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT SpaceCalibratorOverlay)
-set_property(TARGET SpaceCalibratorOverlay PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/artifacts/$<CONFIG>")
+set_property(TARGET SpaceCalibratorOverlay PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${OVERLAY_BIN_DIR}")
 set_target_properties(SpaceCalibratorOverlay PROPERTIES OUTPUT_NAME "SpaceCalibrator")
