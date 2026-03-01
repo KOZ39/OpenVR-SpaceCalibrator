@@ -76,7 +76,7 @@ target_compile_definitions(SpaceCalibratorCommon
         $<$<NOT:$<CONFIG:Debug>>:QUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_INFO>
 )
 
-if (MSVC)
+if(NOT MSVC)
     target_compile_options(SpaceCalibratorCommon
         PRIVATE -fno-exceptions)
 endif()
@@ -96,7 +96,7 @@ target_compile_definitions(SpaceCalibratorCommon
 if (MSVC)
     target_compile_options(SpaceCalibratorCommon
         PRIVATE
-            /EHs-
+            /EHsc
             $<$<CONFIG:RELEASE>:/Ob2 /Zc:inline>
             $<$<CONFIG:RELWITHDEBINFO>:/Ob2 /Zc:inline>
             $<$<CONFIG:MINSIZEREL>:/Ob2 /Zc:inline>

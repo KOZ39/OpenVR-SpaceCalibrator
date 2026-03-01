@@ -17,6 +17,11 @@ function(adjust_bin_paths lib)
 	)
 endfunction()
 
+# windows prefers win8.1 sdk instead of win 10 sdk for some god forsaken reason
+if(WIN32)
+    set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "Forcing Win10 SDK" FORCE)
+endif()
+
 project("SpaceCalibrator")
 
 # 3rd party stuff
@@ -55,6 +60,13 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC" OR "${CMAKE_C_COMPILER_ID}" S
 		/MP # multiprocessor compilation
 		/utf-8 # utf-8 source & exec
 		/GF) # eliminate duplicate strings
+endif()
+
+# Match SteamVR build flags on MSVC
+if(MSVC)
+    add_compile_options(/guard:cf /GS)
+    add_link_options("/GUARD:CF")
+    add_compile_options($<$<CONFIG:Release>:/Ot> $<$<CONFIG:Release>:/Oi> $<$<CONFIG:Release>:/Gy>)
 endif()
 
 # Include project
