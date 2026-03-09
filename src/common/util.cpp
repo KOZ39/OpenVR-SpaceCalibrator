@@ -43,7 +43,7 @@ namespace util {
         k_spaceCalibratorConfigFile = k_spaceCalibratorConfigDirectory / "config.json";
         k_spaceCalibratorLogsDirectory = k_spaceCalibratorConfigDirectory / "logs";
 
-        k_spaceCalibratorLangsDirectory = k_spaceCalibratorInstallDirectory / "langs";
+        k_spaceCalibratorLangsDirectory = k_spaceCalibratorInstallDirectory / "assets" / "lang";
 
         // create dirs if they dont exist
         if (!std::filesystem::is_directory(k_spaceCalibratorConfigDirectory)) {
