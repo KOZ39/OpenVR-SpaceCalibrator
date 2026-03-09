@@ -7,6 +7,8 @@
 
 namespace spacecal {
 
+    constexpr double k_TICK_RATE_HZ = 20.0; // tick rate spacecal's internal logic runs at
+
     enum class CalibrationState {
         // calibration is inactive
         NONE,
@@ -40,7 +42,10 @@ namespace spacecal {
     struct Pose_t {
         Eigen::Matrix3d rot;
         Eigen::Vector3d trans;
+        inline Pose_t() {}
         Pose_t(const vr::HmdMatrix34_t hmdMatrix);
+        Pose_t(const Eigen::AffineCompact3d& transform);
+        Pose_t(const vr::DriverPose_t& driverPose);
     };
 
     // An instantaneous sample. Several of these are collected and passed into the
@@ -50,10 +55,12 @@ namespace spacecal {
         Pose_t reference; // what we are calibrating TO
         Pose_t target;    // the object that shall be calibrated
         double timestamp = 0; // @FIXME: seems to be unused with existing algorithm?
+        bool isPoseValid = false; // whether or not the pose is usable for calibrating. this is filled based on multiple data points in vr::DriverPose_t for accuracy
     };
 
     struct CalibrationDevice {
         vr::TrackedDeviceIndex_t deviceId = vr::k_unTrackedDeviceIndexInvalid;
+        ipc::protocol::DeviceQuirks_t quirks = ipc::protocol::DeviceQuirks_t::QUIRK_NONE;
         std::string trackingSystem;
         std::string deviceModel;
         std::string deviceSerialNumber;
@@ -70,9 +77,16 @@ namespace spacecal {
         void init();
         void start();
         void calibrationTick(const double currentTime);
-        void reset();
+        void resetCalibrationForDevice(const CalibrationDevice& device); // resets the given device's pose to the raw pose
         // applies the calibration to the VR runtime
         void apply();
+
+        // finds the device id given props, if and only if device id is invalid
+        void assignTarget(CalibrationDevice& device);
+        // marks a device as invalid; space calibrator will attempt reassigning an id next frame to it
+        inline void unassignTarget(CalibrationDevice& device) {
+            device.deviceId = vr::k_unTrackedDeviceIndexInvalid;
+        }
 
         bool isActive = false; // enabled in the UI
         bool isValidCalibration = false; // whether we can even use this calibration
@@ -91,7 +105,12 @@ namespace spacecal {
         double wantedUpdateInterval = 1.0;
 
     private:
+        Sample_t collectSample() const;
+        inline size_t getSampleCount() const { return (size_t) calibrationSpeed; }
+
+    private:
         double m_lastTick = 0;
+        double m_lastScan = 0;
         float m_xPrev = 0;
         float m_yPrev = 0;
         float m_zPrev = 0;
@@ -106,10 +125,11 @@ namespace spacecal {
     public:
         explicit CalibrationManager();
         void init();
-        void start(); // how do i even define a calibration????
+        void start(); // @FIXME: how do i even define a calibration????
+        void shutdown();
 
         // handles updating pending calibrations every frame
-        void calibrationTick(const double deltaTime);
+        void calibrationTick(const double currentTime);
 
         // @TODO: Better getter? idk how a calibration should be defined in terms of ui
         TrackingSystemCalibration& getCalibration(const size_t index);
@@ -118,8 +138,11 @@ namespace spacecal {
         const double getWantedUpdateInterval() const;
 
         [[nodiscard]] static inline CalibrationManager* getInstance() { return s_instance; }
+        [[nodiscard]] inline ipc::IpcClient& getIpcClient() { return m_ipcClient; }
 
     private:
+
+        double m_wantedUpdateInterval = 1.0;
 
         vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {};
         std::vector<TrackingSystemCalibration> m_calibrations;

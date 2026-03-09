@@ -111,7 +111,7 @@ namespace ipc {
         };
 
         if (!ipc_server_register_operation(m_hIpc, &m_poseDataOperation)) {
-            LOG_IPC_ERROR("Failed to registered pose data shared memory operation!");
+            LOG_IPC_ERROR("Failed to register pose data shared memory operation!");
         }
 
         m_driver = driver;

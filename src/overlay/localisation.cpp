@@ -11,9 +11,7 @@ END_EXTERNAL_HEADERS
 namespace spacecal {
     LocalisationManager* LocalisationManager::m_instance = nullptr;
 
-    void LocalisationManager::init()
-    {
-
+    void LocalisationManager::init() {
         if (m_instance != nullptr) {
             LOG_FATAL("Tried creating LocalisationManager more than once! Breaking singleton. Aborting...");
             return;
@@ -27,9 +25,12 @@ namespace spacecal {
         loadLocalisationStrings(m_selectedLocale);
     }
 
-    std::string LocalisationManager::getString(const std::string& input) const
-    {
+    bool LocalisationManager::setLocale(const Locale locale) {
+        m_selectedLocale = locale;
+        return loadLocalisationStrings(m_selectedLocale);
+    }
 
+    std::string LocalisationManager::getString(const std::string& input) const {
         if (m_localisedStrings.contains(input)) {
             return m_localisedStrings.at(input);
         }
@@ -39,9 +40,7 @@ namespace spacecal {
         return input;
     }
 
-    bool LocalisationManager::loadLocalisationStrings(const Locale locale)
-    {
-
+    bool LocalisationManager::loadLocalisationStrings(const Locale locale) {
         // To load locale strings we first:
         //   - Unload all existing locales
         //   - Load the en_GB locale
@@ -59,8 +58,8 @@ namespace spacecal {
 
     bool LocalisationManager::loadLocaleFromFile(const Locale locale)
     {
-        auto rootDir = util::getSpaceCalibratorInstallDir();
-        std::string langPath = (rootDir / (getLocaleAsRegionString(locale) + ".locale")).string();
+        auto rootDir = util::getSpaceCalibratorLangsDir();
+        std::string langPath = (rootDir / (getLocaleAsRegionString(locale) + ".json")).string();
 
         FILE* localeFile = nullptr;
         errno_t fileErr = fopen_s(&localeFile, langPath.c_str(), "rb");
@@ -82,7 +81,6 @@ namespace spacecal {
             break;
         }
         if (localeFile) {
-
             // Read to std::string
             fseek(localeFile, 0, SEEK_END);
             size_t localeFileSize = ftell(localeFile);
@@ -124,7 +122,8 @@ namespace spacecal {
             }
 
             return true;
-        } else {
+        }
+        else {
             LOG_WARNING("The locale file \"{0}\" could not be found on the disk.", langPath);
             return false;
         }

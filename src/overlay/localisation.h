@@ -55,6 +55,7 @@ namespace spacecal {
         std::string getString(const std::string& input) const;
         bool loadLocalisationStrings(const Locale locale);
         Locale estimateSystemLocale() const;
+        bool setLocale(const Locale locale);
 
         /// <summary>
         /// Converts a locale into a locale region in the form of en_US, en_GB, pl, etc. Used to identify which locale files to load.
