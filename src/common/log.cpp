@@ -60,29 +60,37 @@ namespace logging {
             std::string szLogLevel;
             switch (log_level) {
             case quill::LogLevel::TraceL3:
-                szLogLevel = "TraceL3";
             case quill::LogLevel::TraceL2:
-                szLogLevel = "TraceL2";
             case quill::LogLevel::TraceL1:
-                szLogLevel = "TraceL1";
+                szLogLevel = "Trace";
+                break;
             case quill::LogLevel::Debug:
                 szLogLevel = "Debug";
+                break;
             case quill::LogLevel::Info:
                 szLogLevel = "Info";
+                break;
             case quill::LogLevel::Notice:
                 szLogLevel = "Notice";
+                break;
             case quill::LogLevel::Warning:
                 szLogLevel = "Warning";
+                break;
             case quill::LogLevel::Error:
                 szLogLevel = "Error";
+                break;
             case quill::LogLevel::Critical:
                 szLogLevel = "Critical";
+                break;
             case quill::LogLevel::Backtrace:
                 szLogLevel = "Backtrace";
+                break;
             case quill::LogLevel::None:
                 szLogLevel = "None";
+                break;
             default:
                 szLogLevel = fmt::format("LogLevel_{}", (uint32_t)log_level);
+                break;
             }
 
             std::string vrLogMsg = fmt::format("[{} : {}] {}", logger_name, szLogLevel, log_message);
