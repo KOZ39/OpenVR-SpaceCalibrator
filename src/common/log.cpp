@@ -164,7 +164,6 @@ namespace logging {
 #define MAKE_LOGGER_DRIVER(title)                                               \
     quill::Frontend::create_or_get_logger(title,                                \
     {                                                                           \
-        CONSOLE_SINK                                                            \
         quill::Frontend::create_or_get_sink<quill::FileSink>(logFilePath),      \
         quill::Frontend::create_or_get_sink<quill::FileSink>(logFilePath2),     \
         quill::Frontend::create_or_get_sink<DriverLogSink>("driverlog")         \
