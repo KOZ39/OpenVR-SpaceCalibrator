@@ -335,5 +335,7 @@ namespace spacecal {
                 lastFrameStartTime += targetFrameTime;
             }
         }
+
+        CalibrationManager::getInstance()->shutdown();
     }
 }

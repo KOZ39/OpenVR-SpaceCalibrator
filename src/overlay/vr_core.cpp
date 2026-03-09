@@ -22,12 +22,13 @@ namespace spacecal {
             return false;
         }
         s_instance = this;
+        m_bIsSteamVrAvailable = false;
         m_aTrackingSystems.reserve(4);
 
-        auto initError = vr::VRInitError_None;
-        vr::VR_Init(&initError, vr::VRApplication_Overlay);
-        if (initError != vr::VRInitError_None) {
-            auto error = vr::VR_GetVRInitErrorAsEnglishDescription(initError);
+        m_eVrInitError = vr::VRInitError_None;
+        vr::VR_Init(&m_eVrInitError, vr::VRApplication_Overlay);
+        if (m_eVrInitError != vr::VRInitError_None) {
+            auto error = vr::VR_GetVRInitErrorAsEnglishDescription(m_eVrInitError);
             LOG_OPENVR_CRITICAL("vr::VR_Init failed, got {}", error);
             return false;
         }
@@ -78,6 +79,7 @@ namespace spacecal {
 
         // @TODO: Non-steam stuff
 
+        m_bIsSteamVrAvailable = true;
         return true;
     }
 
@@ -188,6 +190,9 @@ namespace spacecal {
 
     void VRState::updateVrState() {
 
+        if (!m_bIsSteamVrAvailable)
+            return;
+
         if (m_aTrackingSystems.size() == 0 || m_bStateDirty) {
             // fresh poll, go through everything because we're in a fresh state
             for (vr::TrackedDeviceIndex_t id = 0; id < vr::k_unMaxTrackedDeviceCount; ++id) {
@@ -218,6 +223,19 @@ namespace spacecal {
                 break;
             }
         }
+    }
+
+    bool VRState::isHmdVirtualDesktop() const {
+        // VD sets ResourceRoot as "virtualdesktop" on the HMD device
+        std::string szResourceRoot;
+        vr::ETrackedPropertyError err = getSteamVrPropString(vr::k_unTrackedDeviceIndex_Hmd, vr::ETrackedDeviceProperty::Prop_ResourceRoot_String, szResourceRoot);
+        if (err == vr::ETrackedPropertyError::TrackedProp_Success) {
+            if (szResourceRoot == "virtualdesktop") {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     const VRDevice_t VRState::findVrDevice(const std::string& trackingSystem, const std::string& model, const std::string& serial) const {

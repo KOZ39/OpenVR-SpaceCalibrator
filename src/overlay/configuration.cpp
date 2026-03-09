@@ -104,7 +104,7 @@ namespace spacecal {
         }
 
         uint32_t version = (uint32_t)spacecal::config::versioned::DataVersions::Current;
-        if (!json.at("dataVersion").is_null() && json.at("dataVersion").is_number()) {
+        if (json.contains("dataVersion") && !json.at("dataVersion").is_null() && json.at("dataVersion").is_number()) {
             version = (uint32_t)json.at("dataVersion").get_number();
             // Legacy is the u32 max, so treat it as a special case here
             if (version == (uint32_t)spacecal::config::versioned::DataVersions::Legacy) {
@@ -118,6 +118,7 @@ namespace spacecal {
                 upgradeConfigToLatest(version, m_configPath);
             }
         } else {
+            LOG_WARNING("Configuration file at \"{0}\" did not have a dataVersion field, is it malformed?", m_configPath);
             // @TOOD: Verify old config
         }
 

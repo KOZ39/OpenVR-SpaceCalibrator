@@ -31,15 +31,20 @@ namespace spacecal {
         [[nodiscard]] static inline VRState* getInstance() { return s_instance; }
 
         vr::ETrackedPropertyError getSteamVrPropString(const vr::TrackedDeviceIndex_t deviceId, vr::ETrackedDeviceProperty deviceProperty, std::string& string) const;
+        [[nodiscard]] bool isHmdVirtualDesktop() const;
+        [[nodiscard]] inline bool isSteamVrAvailable() const { return m_bIsSteamVrAvailable; }
+        [[nodiscard]] inline vr::EVRInitError getVrInitError() const { return m_eVrInitError; }
     private:
         void updateSteamVRDevice(const vr::TrackedDeviceIndex_t deviceId);
 
     private:
         static VRState* s_instance;
+        bool m_bIsSteamVrAvailable = true;
         bool m_bStateDirty = true;
+        vr::EVRInitError m_eVrInitError = vr::EVRInitError::VRInitError_None;
         VRDevice_t m_aDevices[vr::k_unMaxTrackedDeviceCount] = {};
-        std::vector<std::string> m_aTrackingSystems;
         vr::VROverlayHandle_t m_overlayMainHandle = vr::k_ulOverlayHandleInvalid;
         vr::VROverlayHandle_t m_overlayThumbnailHandle = vr::k_ulOverlayHandleInvalid;
+        std::vector<std::string> m_aTrackingSystems;
     };
 }

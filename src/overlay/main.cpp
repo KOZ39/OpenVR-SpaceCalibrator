@@ -4,6 +4,7 @@
 #include "window.h"
 #include "platform.h"
 #include "configuration.h"
+#include "calibration.h"
 #include "localisation.h"
 #include "vr_core.h"
 #include "log.h"
@@ -53,11 +54,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
         LOG_CRITICAL("Failed to initialise VRState D:");
     }
 
+    // init calibration manager or else instance will be nullptr
+    spacecal::CalibrationManager* pCalibrationManager = new spacecal::CalibrationManager;
+
     LOG_INFO("Started Space Calibrator Nova!");
 
     theWindow->RunLoop();
 
+    // close window and save settings to disk
     theWindow->Shutdown();
+    spacecal::ConfigurationManager::getInstance()->saveConfiguration();
+
+    delete pCalibrationManager;
     delete theWindow;
 
     // releases global mutex, ie allows other instances to run
