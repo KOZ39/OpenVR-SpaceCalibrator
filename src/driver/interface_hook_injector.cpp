@@ -13,29 +13,31 @@ namespace hooking {
     static Hook<void(*)(vr::IVRServerDriverHost*, uint32_t, const vr::DriverPose_t&, uint32_t)>
         TrackedDevicePoseUpdatedHook006("IVRServerDriverHost006::TrackedDevicePoseUpdated");
 
-    static void DetourTrackedDevicePoseUpdated005(vr::IVRServerDriverHost* _this, uint32_t unWhichDevice, const vr::DriverPose_t& newPose, uint32_t unPoseStructSize) {
+    static void DetourTrackedDevicePoseUpdated005(vr::IVRServerDriverHost* _this, uint32_t unWhichDevice, const vr::DriverPose_t* newPose, uint32_t unPoseStructSize) {
         // LOG_HOOKING_DEBUG("ServerTrackedDeviceProvider::DetourTrackedDevicePoseUpdated_005({})", unWhichDevice);
-        const vr::DriverPose_t* pNewPose = &newPose; // somehow newPose is nullptr sometimes??????
+        const vr::DriverPose_t* pNewPose = newPose; // somehow newPose is nullptr sometimes??????
         if (pNewPose && unPoseStructSize == sizeof(vr::DriverPose_t)) {
-            vr::DriverPose_t pose = newPose;
+            vr::DriverPose_t pose = *newPose;
             if (g_mainDriver->HandleDevicePoseUpdated(unWhichDevice, pose)) {
                 TrackedDevicePoseUpdatedHook005.originalFunc(_this, unWhichDevice, pose, unPoseStructSize);
             }
         } else {
-            TrackedDevicePoseUpdatedHook006.originalFunc(_this, unWhichDevice, newPose, unPoseStructSize);
+            if (newPose)
+                TrackedDevicePoseUpdatedHook005.originalFunc(_this, unWhichDevice, *newPose, unPoseStructSize);
         }
     }
 
-    static void DetourTrackedDevicePoseUpdated006(vr::IVRServerDriverHost* _this, uint32_t unWhichDevice, const vr::DriverPose_t& newPose, uint32_t unPoseStructSize) {
+    static void DetourTrackedDevicePoseUpdated006(vr::IVRServerDriverHost* _this, uint32_t unWhichDevice, const vr::DriverPose_t* newPose, uint32_t unPoseStructSize) {
         // LOG_HOOKING_DEBUG("ServerTrackedDeviceProvider::DetourTrackedDevicePoseUpdated_006({})", unWhichDevice);
-        const vr::DriverPose_t* pNewPose = &newPose; // somehow newPose is nullptr sometimes??????
+        const vr::DriverPose_t* pNewPose = newPose; // somehow newPose is nullptr sometimes??????
         if (pNewPose && unPoseStructSize == sizeof(vr::DriverPose_t)) {
-            vr::DriverPose_t pose = newPose;
+            vr::DriverPose_t pose = *newPose;
             if (g_mainDriver->HandleDevicePoseUpdated(unWhichDevice, pose)) {
                 TrackedDevicePoseUpdatedHook006.originalFunc(_this, unWhichDevice, pose, unPoseStructSize);
             }
         } else {
-            TrackedDevicePoseUpdatedHook006.originalFunc(_this, unWhichDevice, newPose, unPoseStructSize);
+            if (newPose)
+                TrackedDevicePoseUpdatedHook006.originalFunc(_this, unWhichDevice, *newPose, unPoseStructSize);
         }
     }
 
