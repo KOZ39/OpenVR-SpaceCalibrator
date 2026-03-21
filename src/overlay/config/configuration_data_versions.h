@@ -74,6 +74,8 @@ namespace spacecal {
             };
 
             struct Configuration_0 {
+                spacecal::config::versioned::DataVersions dataVersion = spacecal::config::versioned::DataVersions::_0;
+
                 struct TrackingDevice {
                     std::string model;
                     std::string serial;
