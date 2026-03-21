@@ -3,6 +3,7 @@
 #include <openvr.h>
 #include <vector>
 #include <string>
+#include "protocol.h"
 
 namespace spacecal {
     struct VRDevice_t {
@@ -26,6 +27,7 @@ namespace spacecal {
 
         const VRDevice_t getVrDevice(const size_t index) const;
         [[nodiscard]] size_t getTrackingSystemCount() const { return m_aTrackingSystems.size(); }
+        [[nodiscard]] const std::string& getTrackingSystem(size_t index) const { return m_aTrackingSystems[index]; }
         [[nodiscard]] vr::VROverlayHandle_t getOverlayHandle() const { return m_overlayMainHandle; }
         [[nodiscard]] vr::VROverlayHandle_t getOverlayThumbnailHandle() const { return m_overlayThumbnailHandle; }
         [[nodiscard]] static inline VRState* getInstance() { return s_instance; }

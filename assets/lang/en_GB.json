@@ -5,8 +5,9 @@
 
   "ipc_unavailable": "Failed to connect to Space Calibrator SteamVR driver. Please verify file integrity in properties, installed files, or re-install the app.",
   "steamvr_unavailable": "Failed to connect to SteamVR.",
+  "vr_troubleshooting_hmd_not_found": "Please connect your VR headset and launch SteamVR first.",
   "vr_troubleshooting_connect_steamlink": "Please open SteamLink on your VR headset and connect to SteamVR first.",
-  "vr_troubleshooting_generic": "Please connect your VR headset and launch SteamVR first.",
+  "vr_troubleshooting_generic": "Please connect your VR headset and launch SteamVR first. ({0} {1})",
 
   // space here refers to a tracking space / tracking system.
   "reference_space": "Reference space",

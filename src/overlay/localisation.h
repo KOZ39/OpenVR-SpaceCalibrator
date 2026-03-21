@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "log_formatters.h"
 #include <fmt/args.h>
 #include <string>
 #include <unordered_map>
