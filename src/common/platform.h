@@ -49,6 +49,8 @@ namespace platform {
     bool isAnotherInstanceRunning(bool& bIsRunningViaSteam);
     void shutdownCurrentInstance();
 
+    // title -> window title in the window decoration
+    // message -> text in the dialog box
     void showMessageDialog(const std::string& title, const std::string& message);
 
     void setThreadName(const std::string& threadName);

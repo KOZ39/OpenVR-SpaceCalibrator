@@ -141,7 +141,7 @@ namespace spacecal {
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
             LOG_FATAL("OpenGL framebuffer incomplete.");
-            platform::showMessageDialog("OpenGL framebuffer incomplete", "An error occured initialising Space Calibrator Nova");
+            platform::showMessageDialog("An error occured initialising Space Calibrator Nova", "OpenGL framebuffer incomplete");
             return false;
         }
 

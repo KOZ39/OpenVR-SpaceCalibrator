@@ -5,9 +5,11 @@
 #endif
 #if OS_WINDOWS
 #include <windows.h>
-#else
+#elif OS_LINUX
 #include <unistd.h>
 #include <limits.h>
+#else
+#error "Unsupported platform"
 #endif
 
 namespace util {

@@ -31,28 +31,31 @@ namespace spacecal {
             auto szError = vr::VR_GetVRInitErrorAsEnglishDescription(m_eVrInitError);
             LOG_OPENVR_CRITICAL("vr::VR_Init failed, got {}", szError);
             platform::showMessageDialog(
-                fmt::format("Error initialising SteamVR: {}", szError),
-                "An error occured initialising Space Calibrator Nova"
+                "An error occured initialising Space Calibrator Nova",
+                fmt::format("Error initialising SteamVR: {}", szError)
             );
             return false;
         }
 
         // ensure the interfaces we use are valid and correct
         if (!vr::VR_IsInterfaceVersionValid(vr::IVRSystem_Version)) {
+            // @TODO: ui should show this
             LOG_OPENVR_CRITICAL("OpenVR interface vr::IVRSystem version is invalid! Aborting...");
             return false;
         }
         else if (!vr::VR_IsInterfaceVersionValid(vr::IVRSettings_Version)) {
+            // @TODO: ui should show this
             LOG_OPENVR_CRITICAL("OpenVR interface vr::IVRSettings version is invalid! Aborting...");
             return false;
         }
         else if (!vr::VR_IsInterfaceVersionValid(vr::IVROverlay_Version)) {
+            // @TODO: ui should show this
             LOG_OPENVR_CRITICAL("OpenVR interface vr::IVROverlay version is invalid! Aborting...");
             return false;
         }
 
         // create overlay
-        if (!vr::VROverlay() || m_overlayMainHandle) {
+        if (!vr::VROverlay() || m_overlayMainHandle != vr::k_ulOverlayHandleInvalid) {
             return false;
         }
 
@@ -63,13 +66,13 @@ namespace spacecal {
 
         if (error == vr::VROverlayError_KeyInUse) {
             LOG_OPENVR_CRITICAL("Another instance of Space Calibrator is already running");
-            platform::showMessageDialog("Another instance of Space Calibrator is already running", "An error occured initialising Space Calibrator Nova");
+            platform::showMessageDialog("An error occured initialising Space Calibrator Nova", "Another instance of Space Calibrator is already running");
             return false;
         } else if (error != vr::VROverlayError_None) {
             LOG_OPENVR_CRITICAL("Error creating VR overlay: {}", vr::VROverlay()->GetOverlayErrorNameFromEnum(error));
             platform::showMessageDialog(
-                fmt::format("Error creating VR overlay: {}", vr::VROverlay()->GetOverlayErrorNameFromEnum(error)),
-                "An error occured initialising Space Calibrator Nova"
+                "An error occured initialising Space Calibrator Nova",
+                fmt::format("Error creating VR overlay: {}", vr::VROverlay()->GetOverlayErrorNameFromEnum(error))
             );
             return false;
         }
@@ -82,6 +85,8 @@ namespace spacecal {
         vr::VROverlay()->SetOverlayFromFile(m_overlayThumbnailHandle, iconPath.c_str());
 
         // @TODO: Non-steam stuff
+        
+        // @TODO: log hmd info
 
         m_bIsSteamVrAvailable = true;
         return true;

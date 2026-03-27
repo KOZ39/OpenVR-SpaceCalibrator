@@ -36,7 +36,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
     spacecal::Window* theWindow = new spacecal::Window;
     if (!theWindow) {
-        platform::showMessageDialog("Failed to start Space Calibrator Nova", "Couldn't allocate enough memory for the window!");
+        platform::showMessageDialog("An error occured initialising Space Calibrator Nova", "Couldn't allocate enough memory for the window!");
         LOG_FATAL("Failed to allocate memory for the main window!");
         return -1;
     }
