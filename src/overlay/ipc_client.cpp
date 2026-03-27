@@ -37,6 +37,7 @@ namespace ipc {
             .szIdentifier = "SpaceCalibratorNova_PoseSharedBuffer",
             .dwSharedMemoryOffset = 0,
         };
+        
         if (!ipc_server_register_operation(m_hIpc, &m_poseDataOperation)) {
             LOG_IPC_ERROR("Failed to register pose data shared memory operation!");
         }

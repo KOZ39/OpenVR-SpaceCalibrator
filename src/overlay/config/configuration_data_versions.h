@@ -76,6 +76,11 @@ namespace spacecal {
             struct Configuration_0 {
                 spacecal::config::versioned::DataVersions dataVersion = spacecal::config::versioned::DataVersions::_0;
 
+                enum class AnchorMode : uint32_t {
+                    FixedWorld = 0,         // Static offset (Legacy style)
+                    HmdRelative = 1         // Dynamic: Entire System follows the HMD
+                };
+
                 struct TrackingDevice {
                     std::string model;
                     std::string serial;
@@ -86,8 +91,15 @@ namespace spacecal {
                     float yaw, pitch, roll; // rot
                 };
 
+                bool isActive = false;
+
                 Transform refToTargetTransform;
                 Transform calibratedTransform;
+
+                Transform anchorTransform;
+                AnchorMode anchorMode = AnchorMode::FixedWorld;
+
+                std::string hmdTrackingSystem;
 
                 TrackingDevice referenceDevice;
                 TrackingDevice targetDevice;

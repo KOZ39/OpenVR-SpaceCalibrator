@@ -32,6 +32,7 @@ namespace spacecal {
         [[nodiscard]] vr::VROverlayHandle_t getOverlayThumbnailHandle() const { return m_overlayThumbnailHandle; }
         [[nodiscard]] static inline VRState* getInstance() { return s_instance; }
 
+        void identifyDevice(const vr::TrackedDeviceIndex_t deviceId) const;
         vr::ETrackedPropertyError getSteamVrPropString(const vr::TrackedDeviceIndex_t deviceId, vr::ETrackedDeviceProperty deviceProperty, std::string& string) const;
         [[nodiscard]] bool isHmdVirtualDesktop() const;
         [[nodiscard]] inline bool isSteamVrAvailable() const { return m_bIsSteamVrAvailable; }

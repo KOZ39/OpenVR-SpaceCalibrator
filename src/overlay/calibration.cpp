@@ -229,6 +229,10 @@ namespace spacecal {
         // @TODO: 
 
     }
+    
+    void TrackingSystemCalibration::reset() {
+        // @TODO: 
+    }
 
     void TrackingSystemCalibration::start() {
         state = CalibrationState::START;
@@ -488,8 +492,7 @@ namespace spacecal {
     }
 
     void CalibrationManager::start() {
-        // @TODO: 
-
+        // @TODO: maybe more logic here?
 
         for (auto& calibration : m_calibrations) {
             calibration.start();
@@ -498,6 +501,7 @@ namespace spacecal {
 
     void CalibrationManager::calibrationTick(const double currentTime) {
         m_ipcClient.PollPoses();
+        m_ipcClient.RequestVirtualDesktopProps();
 
         double wantedInterval = 0;
         size_t countedCalibrations = 0;
@@ -511,6 +515,7 @@ namespace spacecal {
         }
 
         if (countedCalibrations > 0) {
+            // @NOTE: is max better here?
             m_wantedUpdateInterval = wantedInterval / countedCalibrations;
         }
     }

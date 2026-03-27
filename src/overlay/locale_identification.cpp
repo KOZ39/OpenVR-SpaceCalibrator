@@ -357,7 +357,7 @@ namespace spacecal {
             wchar_t* langViewPtr = langBuffer;
 
             // We get a null separated string array from winapi. Iterate through it
-            for (int i = 0; i < numLangs; i++) {
+            for (DWORD i = 0; i < numLangs; i++) {
                 size_t langSize = wcslen(langViewPtr);
 
                 // Getting this number took an hour because microsoft thought it would be

@@ -76,6 +76,7 @@ namespace spacecal {
     public:
         void init();
         void start();
+        void reset();
         void calibrationTick(const double currentTime);
         void resetCalibrationForDevice(const CalibrationDevice& device); // resets the given device's pose to the raw pose
         // applies the calibration to the VR runtime

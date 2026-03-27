@@ -42,7 +42,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     }
 
     if (!theWindow->CreateNativeWindow()) {
-        platform::showMessageDialog("Failed to start Space Calibrator Nova", "Failed to initialise the overlay window!");
         LOG_FATAL("Failed to create native window");
         return -1;
     }

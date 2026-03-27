@@ -23,13 +23,17 @@ namespace spacecal {
         }
         s_instance = this;
         m_bIsSteamVrAvailable = false;
-        m_aTrackingSystems.reserve(4);
+        m_aTrackingSystems.reserve(8); // conservative amount, should account for 99.9% of cases with ease
 
         m_eVrInitError = vr::VRInitError_None;
         vr::VR_Init(&m_eVrInitError, vr::VRApplication_Overlay);
         if (m_eVrInitError != vr::VRInitError_None) {
-            auto error = vr::VR_GetVRInitErrorAsEnglishDescription(m_eVrInitError);
-            LOG_OPENVR_CRITICAL("vr::VR_Init failed, got {}", error);
+            auto szError = vr::VR_GetVRInitErrorAsEnglishDescription(m_eVrInitError);
+            LOG_OPENVR_CRITICAL("vr::VR_Init failed, got {}", szError);
+            platform::showMessageDialog(
+                fmt::format("Error initialising SteamVR: {}", szError),
+                "An error occured initialising Space Calibrator Nova"
+            );
             return false;
         }
 
@@ -217,6 +221,7 @@ namespace spacecal {
                 updateSteamVRDevice(vrEvent.trackedDeviceIndex);
                 break;
 
+                // @TODO: inform the calibration algorithm about this state? need to test
             case vr::EVREventType::VREvent_EnterStandbyMode:
                 break;
             case vr::EVREventType::VREvent_LeaveStandbyMode:
@@ -281,5 +286,10 @@ namespace spacecal {
         }
         ASSERT(0 <= index && index < vr::k_unMaxTrackedDeviceCount, "Invalid index, out of bounds read!");
         return {};
+    }
+
+    void VRState::identifyDevice(const vr::TrackedDeviceIndex_t deviceId) const {
+        // @TODO: implement another method of identifying the selected device! not everything has LEDs or haptic motors, and viewing LEDs is challenging in VR!
+        vr::VRSystem()->TriggerHapticPulse(deviceId, 0, 2000);
     }
 }

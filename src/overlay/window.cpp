@@ -61,7 +61,7 @@ namespace spacecal {
             const char* szGlfwError = nullptr;
             glfwGetError(&szGlfwError);
             LOG_FATAL("Failed to initialise GLFW, got {}.", szGlfwError);
-            platform::showMessageDialog("Failed to initialize GLFW", "An error occured initialising Space Calibrator Nova");
+            platform::showMessageDialog("An error occured initialising Space Calibrator Nova", "Failed to initialize GLFW");
             return false;
         }
 
@@ -79,7 +79,7 @@ namespace spacecal {
         m_glfwWindow = glfwCreateWindow(m_fboTextureWidth, m_fboTextureHeight, "Space Calibrator", nullptr, nullptr);
         if (!m_glfwWindow) {
             LOG_FATAL("Failed to create GLFW window");
-            platform::showMessageDialog("Failed to create GLFW window", "An error occured initialising Space Calibrator Nova");
+            platform::showMessageDialog("An error occured initialising Space Calibrator Nova", "Failed to create GLFW window");
             return false;
         }
 
@@ -87,7 +87,7 @@ namespace spacecal {
         glfwSwapInterval(1);
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
             LOG_FATAL("Failed to load OpenGL");
-            platform::showMessageDialog("Failed to load OpenGL", "An error occured initialising Space Calibrator Nova");
+            platform::showMessageDialog("An error occured initialising Space Calibrator Nova", "Failed to load OpenGL");
             return false;
         }
 
@@ -280,7 +280,7 @@ namespace spacecal {
 
                 ImGui::NewFrame();
 
-                spacecal::DrawInterface(dashboardVisible);
+                spacecal::drawInterface(dashboardVisible);
 
                 ImGui::EndFrame();
                 ImGui::Render();

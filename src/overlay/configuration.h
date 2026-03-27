@@ -16,13 +16,11 @@ namespace spacecal {
 
     // A config that defines the parameters used to deduce a calibration
     struct CalibrationConfig {
-
-
-        std::vector<SystemCalibrationMap> trackingSystems;
+        SystemCalibrationMap calibrationMapping;
     };
 
     struct Configuration {
-        CalibrationConfig calibrations;
+        std::vector<CalibrationConfig> calibrations;
     };
 
     enum class ConfigurationError {
