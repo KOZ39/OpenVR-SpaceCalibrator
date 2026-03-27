@@ -26,21 +26,7 @@ namespace util {
     fs::path k_spaceCalibratorConfigFile{};
 
     void init() {
-        {
-#if OS_WINDOWS
-            wchar_t path_buf[MAX_PATH];
-            DWORD size = GetModuleFileNameW(NULL, path_buf, MAX_PATH);
-            if (size > 0 && size <= MAX_PATH) {
-                k_spaceCalibratorInstallDirectory = fs::path(path_buf).parent_path();
-            }
-#else
-            try {
-                k_spaceCalibratorInstallDirectory = fs::canonical("/proc/self/exe");
-            }
-            catch (const fs::filesystem_error& e) {}
-#endif
-        }
-
+        k_spaceCalibratorInstallDirectory = platform::getExeDir();
         k_spaceCalibratorConfigDirectory = platform::getUserConfigDir() / k_szSpaceCalibratorDirName;
         k_spaceCalibratorConfigFile = k_spaceCalibratorConfigDirectory / "config.json";
         k_spaceCalibratorLogsDirectory = k_spaceCalibratorConfigDirectory / "logs";

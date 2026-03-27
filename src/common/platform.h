@@ -43,6 +43,7 @@
 namespace platform {
     // %APPDATA% or ~/.config
     std::filesystem::path getUserConfigDir();
+    std::filesystem::path getExeDir();
 
     std::string getEnvVariable(const std::string& szEnvVarName);
 

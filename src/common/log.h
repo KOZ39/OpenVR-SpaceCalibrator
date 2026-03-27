@@ -4,7 +4,9 @@
 #include <quill/Logger.h>
 #include <quill/LogMacros.h>
 
+#if defined(IS_DRIVER) || defined(IS_OVERLAY)
 #include "log_formatters.h"
+#endif
 #include <string>
 
 namespace logging {

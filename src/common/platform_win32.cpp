@@ -1,7 +1,9 @@
 #include "platform.h"
 
 #if OS_WINDOWS
+#include "log.h"
 #include "constants.h"
+#include <filesystem>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -19,6 +21,16 @@ namespace platform {
             auto thePath = std::filesystem::path(path_pwstr);
             CoTaskMemFree(path_pwstr);
             return thePath;
+        }
+
+        return std::filesystem::path();
+    }
+
+    std::filesystem::path getExeDir() {
+        wchar_t path_buf[MAX_PATH] = {};
+        DWORD size = GetModuleFileNameW(NULL, path_buf, MAX_PATH);
+        if (size > 0 && size <= MAX_PATH) {
+            return std::filesystem::path(path_buf).parent_path();
         }
 
         return std::filesystem::path();
@@ -70,6 +82,7 @@ namespace platform {
     }
 
     void showMessageDialog(const std::string& title, const std::string& message) {
+        LOG_INFO("displaying dialog [{}]: {}", title, message);
         MessageBoxA(nullptr, message.c_str(), title.c_str(), 0);
     }
 
