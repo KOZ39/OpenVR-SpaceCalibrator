@@ -47,56 +47,47 @@ namespace spacecal {
         ImGui::SameLine();
         ImGui::TextWithWidth("TargetSystemLabel", LOCALE_GET("target_space").c_str(), paneWidth);
 
-        int currentReferenceSystem = -1;
-        int currentTargetSystem = -1;
-        int firstReferenceSystemNotTargetSystem = -1;
+        std::string refPreview = calibration.referenceDevice.trackingSystem.empty() ? LOCALE_GET("select_reference_device") : getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
+        if (ImGui::BeginCombo("##ReferenceTrackingSystem", refPreview.c_str())) {
+            for (size_t i = 0; i < VRState::getInstance()->getTrackingSystemCount(); i++) {
+                const std::string& szTrackingSystemName = VRState::getInstance()->getTrackingSystem(i);
+                const std::string szFriendlyName = getTrackingSystemFriendlyName(szTrackingSystemName);
 
-        // build ui table for ref tracking systems
-        std::vector<const char*> referenceSystems;
-        std::vector<const char*> referenceSystemsUi;
-        for (size_t i = 0; i < VRState::getInstance()->getTrackingSystemCount(); i++) {
-            const std::string szTrackingSystemName = VRState::getInstance()->getTrackingSystem(i);
-            const std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(szTrackingSystemName);
+                bool isSelected = (calibration.referenceDevice.trackingSystem == szTrackingSystemName);
+                if (ImGui::Selectable(szFriendlyName.c_str(), isSelected)) {
+                    calibration.referenceDevice.trackingSystem = szTrackingSystemName;
+                    // if ref space is now the target space, target should be unset
+                    // @TODO: should we pick the first tracking system that makes sense instead?
+                    if (calibration.referenceDevice.trackingSystem == calibration.targetDevice.trackingSystem)
+                        calibration.targetDevice.trackingSystem = "";
+                }
 
-            if (szTrackingSystemName == calibration.referenceDevice.trackingSystem)
-                currentReferenceSystem = (int)referenceSystems.size();
-            else if (firstReferenceSystemNotTargetSystem == -1 && szTrackingSystemName != calibration.targetDevice.trackingSystem)
-                firstReferenceSystemNotTargetSystem = (int)referenceSystems.size();
-
-            referenceSystems.push_back(szTrackingSystemName.c_str());
-            referenceSystemsUi.push_back(szTrackingSystemUiName.c_str());
-        }
-
-        ImGui::PushItemWidth(paneWidth);
-        ImGui::Combo("##ReferenceTrackingSystem", &currentReferenceSystem, &referenceSystemsUi[0], (int)referenceSystemsUi.size());
-
-        // if we have an entry selected assign to reference
-        if (currentReferenceSystem != -1 && currentReferenceSystem < (int)referenceSystems.size()) {
-            calibration.referenceDevice.trackingSystem = std::string(referenceSystems[currentReferenceSystem]);
-            if (calibration.referenceDevice.trackingSystem == calibration.targetDevice.trackingSystem)
-                calibration.targetDevice.trackingSystem = "";
+                if (isSelected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
         }
 
         // target tracking system list is tracking system list EXCLUDING reference tracking system. one may NOT calibrate two devices of the same tracking system!
-        std::vector<const char*> targetSystems;
-        std::vector<const char*> targetSystemsUi;
-        for (size_t i = 0; i < VRState::getInstance()->getTrackingSystemCount(); i++) {
-            const std::string szTrackingSystemName = VRState::getInstance()->getTrackingSystem(i);
-            if (szTrackingSystemName != calibration.referenceDevice.trackingSystem)
-            {
-                if (szTrackingSystemName != "" && szTrackingSystemName == calibration.targetDevice.trackingSystem)
-                    currentTargetSystem = (int)targetSystems.size();
-                targetSystems.push_back(szTrackingSystemName.c_str());
-                targetSystemsUi.push_back(getTrackingSystemFriendlyName(szTrackingSystemName).c_str());
+        std::string targetPreview = calibration.targetDevice.trackingSystem.empty() ? LOCALE_GET("select_target_device") : getTrackingSystemFriendlyName(calibration.targetDevice.trackingSystem);
+        if (ImGui::BeginCombo("##TargetTrackingSystem", targetPreview.c_str())) {
+            for (size_t i = 0; i < VRState::getInstance()->getTrackingSystemCount(); i++) {
+                const std::string& szTrackingSystemName = VRState::getInstance()->getTrackingSystem(i);
+
+                // target cannot be the reference space
+                if (szTrackingSystemName == calibration.referenceDevice.trackingSystem)
+                    continue;
+
+                const std::string szFriendlyName = getTrackingSystemFriendlyName(szTrackingSystemName);
+                bool isSelected = (calibration.targetDevice.trackingSystem == szTrackingSystemName);
+
+                if (ImGui::Selectable(szFriendlyName.c_str(), isSelected)) {
+                    calibration.targetDevice.trackingSystem = szTrackingSystemName;
+                }
+
+                if (isSelected) ImGui::SetItemDefaultFocus();
             }
+            ImGui::EndCombo();
         }
-
-        ImGui::SameLine();
-        ImGui::Combo("##TargetTrackingSystem", &currentTargetSystem, &targetSystemsUi[0], (int)targetSystemsUi.size());
-
-        // if we have an entry selected assign to target
-        if (currentTargetSystem != -1 && currentTargetSystem < targetSystems.size())
-            calibration.targetDevice.trackingSystem = std::string(targetSystems[currentTargetSystem]);
 
         ImGui::PopItemWidth();
     }
