@@ -6,7 +6,7 @@
 #ifdef _WIN32
 #define OS_WINDOWS 1
 #define OS_LINUX 0
-#elif defined(__linux__)
+#elif (defined(__gnu_linux__) || defined(__linux__))
 #define OS_WINDOWS 0
 #define OS_LINUX 1
 #else
