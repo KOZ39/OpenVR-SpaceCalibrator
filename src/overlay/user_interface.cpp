@@ -46,6 +46,7 @@ namespace spacecal {
         ImGui::TextWithWidth("ReferenceSystemLabel", LOCALE_GET("reference_space").c_str(), paneWidth);
         ImGui::SameLine();
         ImGui::TextWithWidth("TargetSystemLabel", LOCALE_GET("target_space").c_str(), paneWidth);
+        ImGui::PushItemWidth(paneWidth);
 
         std::string refPreview = calibration.referenceDevice.trackingSystem.empty() ? LOCALE_GET("select_reference_device") : getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
         if (ImGui::BeginCombo("##ReferenceTrackingSystem", refPreview.c_str())) {
@@ -66,6 +67,8 @@ namespace spacecal {
             }
             ImGui::EndCombo();
         }
+
+        ImGui::SameLine();
 
         // target tracking system list is tracking system list EXCLUDING reference tracking system. one may NOT calibrate two devices of the same tracking system!
         std::string targetPreview = calibration.targetDevice.trackingSystem.empty() ? LOCALE_GET("select_target_device") : getTrackingSystemFriendlyName(calibration.targetDevice.trackingSystem);
