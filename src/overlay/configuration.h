@@ -7,22 +7,6 @@
 
 namespace spacecal {
 
-    // A mapping from some tracking system A to some other tracking system B
-    struct SystemCalibrationMap {
-        std::string referenceTrackingSystem; // from playspace
-        std::string targetTrackingSystem; // to playspace
-
-    };
-
-    // A config that defines the parameters used to deduce a calibration
-    struct CalibrationConfig {
-        SystemCalibrationMap calibrationMapping;
-    };
-
-    struct Configuration {
-        std::vector<CalibrationConfig> calibrations;
-    };
-
     enum class ConfigurationError {
         Ok,
         FileNotExist,
@@ -30,6 +14,8 @@ namespace spacecal {
         SerialiseFail,
         Count,
     };
+
+    typedef spacecal::config::versioned::Configuration_Latest Configuration;
 
     class ConfigurationManager {
     public:
