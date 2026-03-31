@@ -26,7 +26,7 @@
   "save_calibration_profile": "Save Profile",
 
   "calibration_progress": "Calibration Progress",
-  "calibration_progress_placeholder": "Calibration in progress",
+  "calibration_progress_placeholder": "Calibration in progress...",
 
   "calibration_speed": "Calibration Speed",
   "calibration_speed_fast": "Fast",

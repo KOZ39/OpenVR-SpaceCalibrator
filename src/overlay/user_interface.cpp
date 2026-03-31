@@ -362,6 +362,8 @@ namespace spacecal {
         else
         {
             ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2));
+            float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
+            ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
         }
     }
 

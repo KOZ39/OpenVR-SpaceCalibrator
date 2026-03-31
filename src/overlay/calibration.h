@@ -89,6 +89,10 @@ namespace spacecal {
             device.deviceId = vr::k_unTrackedDeviceIndexInvalid;
         }
 
+        [[nodiscard]] inline const float getCalibrationProgress() const {
+            return (float)((double)m_samples.size() / (double)getSampleCount());
+        }
+
         bool isActive = false; // enabled in the UI
         bool isValidCalibration = false; // whether we can even use this calibration
         bool hmdIsInSameTrackingSystem = false; // whether the hmd is part of the tracking systems involved in this calibration
