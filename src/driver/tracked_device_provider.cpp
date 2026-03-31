@@ -4,6 +4,7 @@
 #include "log.h"
 #include "interface_hook_injector.h"
 #include "vrmath.h"
+#include "virtual_desktop.h"
 #include <Eigen/Dense>
 #include <openvr_driver.h>
 
@@ -13,6 +14,7 @@ namespace spacecal {
 
         util::init();
         logging::Init(/* isOverlay */ false);
+        hmd::initVD();
 
         LOG_OPENVR_INFO("Starting SpaceCalibrator-Nova. Compiled against OpenVR driver API {}.{}.{}", vr::k_nSteamVRVersionMajor, vr::k_nSteamVRVersionMinor, vr::k_nSteamVRVersionBuild);
 
@@ -132,6 +134,16 @@ namespace spacecal {
 
     void ServerTrackedDeviceProvider::ResetCalibration() {
         // @TODO: idk what would be more correct than "random fucking offsets"
+    }
+    
+    void ServerTrackedDeviceProvider::RequestVirtualDesktopProps() {
+        // this simply states whether or not the vd driver is loaded
+        // @TODO: verify this works
+        m_hmdMetaData.isVirtualDesktopAvailable = vr::VRDriverManager()->GetDriverHandle("virtualdesktop") != vr::k_ulInvalidDriverHandle;
+        if (m_hmdMetaData.isVirtualDesktopAvailable) {
+            m_hmdMetaData.VD_hmdModel = hmd::VD_getHmdModel();
+            m_hmdMetaData.VD_stageTrackingEnabled = hmd::VD_isStageTrackingEnabled();
+        }
     }
 
     void ServerTrackedDeviceProvider::SetAlignmentSpeedParams(ipc::protocol::Command_SetAlignmentSpeedParams_t& params) {

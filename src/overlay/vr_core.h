@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "protocol.h"
+#include "ipc_client.h"
 
 namespace spacecal {
     struct VRDevice_t {
@@ -37,6 +38,7 @@ namespace spacecal {
         [[nodiscard]] bool isHmdVirtualDesktop() const;
         [[nodiscard]] inline bool isSteamVrAvailable() const { return m_bIsSteamVrAvailable; }
         [[nodiscard]] inline vr::EVRInitError getVrInitError() const { return m_eVrInitError; }
+        [[nodiscard]] inline ipc::protocol::SharedData_HmdMetadata getHmdMeta() const { return m_hmdMetadata; }
     private:
         void updateSteamVRDevice(const vr::TrackedDeviceIndex_t deviceId);
 
@@ -48,6 +50,10 @@ namespace spacecal {
         VRDevice_t m_aDevices[vr::k_unMaxTrackedDeviceCount] = {};
         vr::VROverlayHandle_t m_overlayMainHandle = vr::k_ulOverlayHandleInvalid;
         vr::VROverlayHandle_t m_overlayThumbnailHandle = vr::k_ulOverlayHandleInvalid;
+        ipc::protocol::SharedData_HmdMetadata m_hmdMetadata = {};
+        ipc::protocol::SharedData_HmdMetadata m_lastHmdMetaState = {};
         std::vector<std::string> m_aTrackingSystems;
+
+        friend class ::ipc::IpcClient; // for m_hmdMetadata
     };
 }

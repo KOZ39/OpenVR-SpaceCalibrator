@@ -478,6 +478,10 @@ namespace spacecal {
         // @TODO: 
         if (!m_ipcClient.IsConnected()) {
             m_ipcClient.Connect();
+
+            // initialise memory properly
+            m_ipcClient.RequestVirtualDesktopProps();
+            m_ipcClient.PollPoses();
         }
 
         for (auto& calibration : m_calibrations) {

@@ -117,6 +117,7 @@ namespace ipc::protocol
         IPC_COMMAND_SET_DEVICE_TRANSFORM,
         IPC_COMMAND_SET_ALIGNMENT_SPEED_PARAMS,
         IPC_COMMAND_RESET_CALIBRATION,
+        IPC_COMMAND_REQUEST_VIRTUAL_DESKTOP_PROPS,
         IPC_COMMAND_COUNT,
     };
 
@@ -129,6 +130,25 @@ namespace ipc::protocol
         QUIRK_HAS_WORLDSPACE_ANGULAR_VELOCITY = 1 << 3, // The angular velocity of this device is given in world space rather than object space by the vendor. We shall transform it to local space to improve SteamVR prediction.
     };
     ENUM_FLAG_OPERATORS(DeviceQuirks_t);
+
+    enum VirtualDesktop_HmdModel
+    {
+        VD_HmdModel_None,
+        VD_HmdModel_GearVR,
+        VD_HmdModel_OculusGo,
+        VD_HmdModel_OculusQuest,
+        VD_HmdModel_OculusQuest2,
+        VD_HmdModel_MetaQuestPro,
+        VD_HmdModel_Pico4,
+        VD_HmdModel_MetaQuest3,
+        VD_HmdModel_MetaQuest3S,
+        VD_HmdModel_Pico4Ultra,
+        VD_HmdModel_SamsungMoohan,
+        VD_HmdModel_PlayForDreamMR,
+        // xre, focus 3, focus vision ???
+        // Pico Neo 3, pico 4 pro
+        VD_HmdModel_Count,
+    };
 
     struct Command_Handshake_t {
         Version_t version = Version_t::IPC_PROTOCOL_CURRENT;
@@ -185,8 +205,14 @@ namespace ipc::protocol
         double align_speed_tiny, align_speed_small, align_speed_large;
     };
 
+    struct SharedData_HmdMetadata {
+        bool isVirtualDesktopAvailable = false;
+        bool VD_stageTrackingEnabled = false;
+        VirtualDesktop_HmdModel VD_hmdModel = VD_HmdModel_None;
+    };
+
     constexpr uint32_t k_unSharedMemoryPoseCount = vr::k_unMaxTrackedDeviceCount;
     constexpr uint32_t k_unSharedMemoryFrameCount = 512; // @ 90Hz => 5.7s of history, @ 120Hz => 4.2s of history
-    constexpr uint32_t k_unSharedMemoryElementCount = k_unSharedMemoryPoseCount * k_unSharedMemoryFrameCount;
+    constexpr uint32_t k_unSharedMemoryElementCount = k_unSharedMemoryPoseCount * k_unSharedMemoryFrameCount + sizeof(SharedData_HmdMetadata);
     constexpr const char* k_szIpcIdentifier = "SPACE_CALIBRATOR_NOVA";
 }

@@ -1,6 +1,7 @@
 #include "ipc_client.h"
 #include "log.h"
 #include "calibration.h"
+#include "vr_core.h"
 
 namespace ipc {
     const IpcFunction_t IpcClient::m_funcs[] = {
@@ -19,6 +20,10 @@ namespace ipc {
         {
             .commandType = protocol::IPC_COMMAND_RESET_CALIBRATION,
             .szFunctionName = "SpaceCalibratorNova_ResetCalibration",
+        },
+        {
+            .commandType = protocol::IPC_COMMAND_REQUEST_VIRTUAL_DESKTOP_PROPS,
+            .szFunctionName = "SpaceCalibratorNova_RequestVirtualDesktopProps",
         },
     };
 
@@ -40,6 +45,14 @@ namespace ipc {
         
         if (!ipc_server_register_operation(m_hIpc, &m_poseDataOperation)) {
             LOG_IPC_ERROR("Failed to register pose data shared memory operation!");
+        }
+
+        m_hmdMetaDataOperation = {
+            .szIdentifier = "SpaceCalibratorNova_HmdMetaData",
+            .dwSharedMemoryOffset = sizeof(ipc::protocol::SharedData_HmdMetadata),
+        };
+        if (!ipc_server_register_operation(m_hIpc, &m_hmdMetaDataOperation)) {
+            LOG_IPC_ERROR("Failed to register hmd metadata shared memory operation!");
         }
 
         // send handshake to driver
@@ -64,7 +77,11 @@ namespace ipc {
     void IpcClient::ResetCalibration() {
         ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_RESET_CALIBRATION, nullptr, 0);
     }
+    void IpcClient::RequestVirtualDesktopProps() {
+        ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_REQUEST_VIRTUAL_DESKTOP_PROPS, nullptr, 0);
+    }
     void IpcClient::PollPoses() {
         ipc_client_read_shared_memory(m_hIpc, m_poseDataOperation, spacecal::CalibrationManager::getInstance()->m_poses, sizeof(spacecal::CalibrationManager::getInstance()->m_poses));
+        ipc_client_read_shared_memory(m_hIpc, m_hmdMetaDataOperation, &spacecal::VRState::getInstance()->m_hmdMetadata, sizeof(spacecal::VRState::getInstance()->m_hmdMetadata));
     }
 }

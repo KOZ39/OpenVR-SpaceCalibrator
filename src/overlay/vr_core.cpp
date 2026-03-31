@@ -3,6 +3,7 @@
 #include "log.h"
 #include "constants.h"
 #include "platform.h"
+#include "localisation.h"
 #include <fmt/format.h>
 
 namespace spacecal {
@@ -12,6 +13,22 @@ namespace spacecal {
     constexpr const char* k_IGNORED_TRACKING_SYSTEMS[] = {
         "null", // only actual hardware is supported, null driver is a debug device and will not be accepted with space calibrator
         "standable", // virtual trackers will likely interfere with space calibrator
+    };
+
+    // keys for localisation
+    constexpr const char* k_VIRTUAL_DESKTOP_HMD_NAMES[] = {
+        "virtual_desktop_hmd_none", // should never be displayed but you never know
+        "virtual_desktop_hmd_gearvr",
+        "virtual_desktop_hmd_oculus_go",
+        "virtual_desktop_hmd_oculus_quest_1",
+        "virtual_desktop_hmd_oculus_quest_2",
+        "virtual_desktop_hmd_meta_quest_pro",
+        "virtual_desktop_hmd_pico_4",
+        "virtual_desktop_hmd_meta_quest_3",
+        "virtual_desktop_hmd_meta_quest_3s",
+        "virtual_desktop_hmd_pico_4_ultra",
+        "virtual_desktop_hmd_samsung_galaxy_xr",
+        "virtual_desktop_hmd_play_for_dream_mr",
     };
 
     VRState* VRState::s_instance = nullptr;
@@ -68,7 +85,8 @@ namespace spacecal {
             LOG_OPENVR_CRITICAL("Another instance of Space Calibrator is already running");
             platform::showMessageDialog("An error occured initialising Space Calibrator Nova", "Another instance of Space Calibrator is already running");
             return false;
-        } else if (error != vr::VROverlayError_None) {
+        }
+        else if (error != vr::VROverlayError_None) {
             LOG_OPENVR_CRITICAL("Error creating VR overlay: {}", vr::VROverlay()->GetOverlayErrorNameFromEnum(error));
             platform::showMessageDialog(
                 "An error occured initialising Space Calibrator Nova",
@@ -85,7 +103,7 @@ namespace spacecal {
         vr::VROverlay()->SetOverlayFromFile(m_overlayThumbnailHandle, iconPath.c_str());
 
         // @TODO: Non-steam stuff
-        
+
         // @TODO: log hmd info
 
         m_bIsSteamVrAvailable = true;
@@ -131,6 +149,11 @@ namespace spacecal {
             }
         }
 
+        std::string szDeviceModel;
+        std::string szDeviceSerial;
+        err = getSteamVrPropString(deviceId, vr::Prop_ModelNumber_String, szDeviceModel);
+        err = getSteamVrPropString(deviceId, vr::Prop_SerialNumber_String, szDeviceSerial);
+
         // QUIRKS! ( a bunch of hardware lies about what it is :c )
         {
             // Check if the current HMD is a Pimax crystal
@@ -147,7 +170,8 @@ namespace spacecal {
                     // Move it outside the aapvr system ; we treat aapvr as if it were lighthouse
                     szTrackingSystem = "Pimax Crystal HMD";
                 }
-            } else if (deviceClass == vr::TrackedDeviceClass_Controller && szTrackingSystem == "oculus") {
+            }
+            else if (deviceClass == vr::TrackedDeviceClass_Controller && szTrackingSystem == "oculus") {
                 std::string renderModel;
                 std::string connectedWirelessDongle;
                 err = getSteamVrPropString(deviceId, vr::Prop_RenderModelName_String, renderModel);
@@ -159,9 +183,14 @@ namespace spacecal {
                     connectedWirelessDongle.find("lighthouse") != std::string::npos) {
                     szTrackingSystem = "Pimax Crystal Controllers";
                 }
-            } else if (deviceClass == vr::TrackedDeviceClass_HMD && szTrackingSystem == "oculus") {
+            }
+            else if (deviceClass == vr::TrackedDeviceClass_HMD && szTrackingSystem == "oculus") {
                 // Possibly Virtual Desktop on a non Meta HMD
-                // @TODO: figure out how to determine what the HMD ACTUALLY is in such a scenario
+                if (m_hmdMetadata.isVirtualDesktopAvailable && isHmdVirtualDesktop()) {
+                    if (m_hmdMetadata.VD_hmdModel > ipc::protocol::VD_HmdModel_None && m_hmdMetadata.VD_hmdModel < ipc::protocol::VD_HmdModel_Count) {
+                        szDeviceModel = LOCALE_GET(k_VIRTUAL_DESKTOP_HMD_NAMES[m_hmdMetadata.VD_hmdModel]);
+                    }
+                }
             }
         }
 
@@ -173,16 +202,13 @@ namespace spacecal {
                     m_aTrackingSystems.erase(existing);
                     m_aTrackingSystems.insert(m_aTrackingSystems.begin(), szTrackingSystem);
                 }
-            } else {
+            }
+            else {
                 m_aTrackingSystems.push_back(szTrackingSystem);
             }
         }
 
         // update tracking state
-        std::string szDeviceModel;
-        std::string szDeviceSerial;
-        err = getSteamVrPropString(deviceId, vr::Prop_ModelNumber_String, szDeviceModel);
-        err = getSteamVrPropString(deviceId, vr::Prop_SerialNumber_String, szDeviceSerial);
         vr::ETrackedControllerRole controllerRole = (vr::ETrackedControllerRole)vr::VRSystem()->GetInt32TrackedDeviceProperty(deviceId, vr::Prop_ControllerRoleHint_Int32, &err);
         bool isConnected = vr::VRSystem()->IsTrackedDeviceConnected(deviceId);
 
@@ -207,7 +233,8 @@ namespace spacecal {
             for (vr::TrackedDeviceIndex_t id = 0; id < vr::k_unMaxTrackedDeviceCount; ++id) {
                 if (vr::VRSystem()->IsTrackedDeviceConnected(id)) {
                     updateSteamVRDevice(id);
-                } else {
+                }
+                else {
                     m_aDevices[id].bIsConnected = false;
                 }
             }
@@ -224,6 +251,12 @@ namespace spacecal {
             case vr::EVREventType::VREvent_TrackedDeviceUpdated:
             case vr::EVREventType::VREvent_TrackedDeviceRoleChanged:
                 updateSteamVRDevice(vrEvent.trackedDeviceIndex);
+                m_bStateDirty = true;
+                break;
+            case vr::EVREventType::VREvent_TrackedDeviceUserInteractionStarted: // something may have happened
+            case vr::EVREventType::VREvent_TrackedDeviceUserInteractionEnded: // something may have happened
+            case vr::EVREventType::VREvent_TrackersSectionSettingChanged: // tracker role
+                m_bStateDirty = true;
                 break;
 
                 // @TODO: inform the calibration algorithm about this state? need to test
@@ -232,6 +265,14 @@ namespace spacecal {
             case vr::EVREventType::VREvent_LeaveStandbyMode:
                 break;
             }
+        }
+
+        if (m_hmdMetadata.isVirtualDesktopAvailable != m_lastHmdMetaState.isVirtualDesktopAvailable ||
+            m_hmdMetadata.VD_hmdModel != m_lastHmdMetaState.VD_hmdModel ||
+            m_hmdMetadata.VD_stageTrackingEnabled != m_lastHmdMetaState.VD_stageTrackingEnabled)
+        {
+            m_bStateDirty = true;
+            m_lastHmdMetaState = m_hmdMetadata;
         }
     }
 

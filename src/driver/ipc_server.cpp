@@ -1,3 +1,4 @@
+#include "openvr_driver.h"
 #define IPC_IMPLEMENTATION
 #include "ipc_server.h"
 #include "log.h"
@@ -25,6 +26,11 @@ namespace ipc {
             .commandType = protocol::IPC_COMMAND_RESET_CALIBRATION,
             .szFunctionName = "SpaceCalibratorNova_ResetCalibration",
             .callback = &Server::Callback_ResetCalibration,
+        },
+        {
+            .commandType = protocol::IPC_COMMAND_REQUEST_VIRTUAL_DESKTOP_PROPS,
+            .szFunctionName = "SpaceCalibratorNova_RequestVirtualDesktopProps",
+            .callback = &Server::Callback_RequestVirtualDesktopProps,
         },
     };
 
@@ -79,18 +85,32 @@ namespace ipc {
             Server* pThis = reinterpret_cast<Server*>(userdata);
             pThis->m_driver->ResetCalibration();
 
-            LOG_IPC_INFO("Server::Callback_ResetCalibration");
+            // LOG_IPC_INFO("Server::Callback_ResetCalibration");
+        }
+    }
+    
+    void Server::Callback_RequestVirtualDesktopProps(::IpcCommandType_t cmdType, ::IpcHandle_t hIpcServer, void* pArguments, void* userdata) {
+        if (pArguments) {
+            Server* pThis = reinterpret_cast<Server*>(userdata);
+            pThis->m_driver->RequestVirtualDesktopProps();
+
+            // LOG_IPC_INFO("Server::Callback_RequestVirtualDesktopProps");
         }
     }
 
     void Server::UpdatePose(vr::TrackedDeviceIndex_t unWhichDevice, const vr::DriverPose_t& pose) {
-        if (unWhichDevice < 0 || unWhichDevice > vr::k_unMaxTrackedDeviceCount) {
+        if (unWhichDevice < 0 || unWhichDevice >= vr::k_unMaxTrackedDeviceCount) {
             LOG_IPC_FATAL("Attempted to update shared pose buffer, but got invalid device index {}...", unWhichDevice);
             return;
         }
         m_driver->m_poses[unWhichDevice] = pose;
         if (!ipc_server_write_shared_memory(m_hIpc, m_poseDataOperation, m_driver->m_poses, sizeof(m_driver->m_poses))) {
             LOG_IPC_ERROR("Tried updating shared pose buffer, but operation is invalid!");
+        }
+        if (unWhichDevice == vr::k_unTrackedDeviceIndex_Hmd) {
+            if (!ipc_server_write_shared_memory(m_hIpc, m_hmdMetaOperation, &m_driver->m_hmdMetaData, sizeof(m_driver->m_hmdMetaData))) {
+                LOG_IPC_ERROR("Tried updating HMD metadata, but operation is invalid!");
+            }
         }
     }
 
@@ -109,9 +129,17 @@ namespace ipc {
             .szIdentifier = "SpaceCalibratorNova_PoseSharedBuffer",
             .dwSharedMemoryOffset = 0,
         };
+        m_hmdMetaOperation = {
+            .szIdentifier = "SpaceCalibratorNova_HmdMetaData",
+            .dwSharedMemoryOffset = sizeof(ipc::protocol::SharedData_HmdMetadata),
+        };
 
         if (!ipc_server_register_operation(m_hIpc, &m_poseDataOperation)) {
             LOG_IPC_ERROR("Failed to register pose data shared memory operation!");
+        }
+
+        if (!ipc_server_register_operation(m_hIpc, &m_hmdMetaOperation)) {
+            LOG_IPC_ERROR("Failed to register hmd metadata shared memory operation!");
         }
 
         m_driver = driver;

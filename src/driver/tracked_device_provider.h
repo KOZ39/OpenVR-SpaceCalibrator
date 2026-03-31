@@ -24,6 +24,7 @@ namespace spacecal {
         void BlendTransform(const DeviceTransformation_t device) const;
         bool HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, const vr::DriverPose_t& newPose);
         void ResetCalibration();
+        void RequestVirtualDesktopProps();
         void SetAlignmentSpeedParams(ipc::protocol::Command_SetAlignmentSpeedParams_t& params);
         void SetDeviceTransform(ipc::protocol::Command_SetDeviceTransform_t& transform);
         void HandleQuirks(ipc::protocol::DeviceQuirks_t quirks, vr::DriverPose_t& pose);
@@ -37,6 +38,7 @@ namespace spacecal {
         ipc::protocol::Command_SetDeviceTransform_t m_transforms[vr::k_unMaxTrackedDeviceCount] = {};
         ipc::protocol::Command_SetAlignmentSpeedParams_t m_alignmentParams = {};
 
+        ipc::protocol::SharedData_HmdMetadata m_hmdMetaData = {};
         vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {};
         friend class ipc::Server;
     };
