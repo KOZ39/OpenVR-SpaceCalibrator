@@ -18,7 +18,6 @@ namespace spacecal {
         // HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\OpenVR-SpaceCalibrator
         constexpr const char* RegistryKey = "Software\\OpenVR-SpaceCalibrator";
 
-        // @TODO: Read registry key
         DWORD size = 0;
         auto result = RegGetValueA(HKEY_CURRENT_USER_LOCAL_SETTINGS, RegistryKey, "Config", RRF_RT_REG_SZ, 0, 0, &size);
         if (result != ERROR_SUCCESS)
