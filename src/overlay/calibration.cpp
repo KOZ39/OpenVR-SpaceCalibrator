@@ -178,10 +178,8 @@ namespace spacecal {
         }
 
         Eigen::Vector3d trans = coefficients.bdcSvd<Eigen::ComputeThinU | Eigen::ComputeThinV>().solve(constants);
-        auto transcm = trans * 100.0;
-
-        LOG_CALIB_INFO("Calibrated translation: x={:.2f} y={:.2f} z={:.2f}", transcm[0], transcm[1], transcm[2]);
-        return transcm;
+        LOG_CALIB_INFO("Calibrated translation (cm): x={:.2f} y={:.2f} z={:.2f}", trans[0] * 100.0, trans[1] * 100.0, trans[2] * 100.0);
+        return trans;
     }
 
 
