@@ -145,8 +145,6 @@ namespace ipc::protocol
         VD_HmdModel_Pico4Ultra,
         VD_HmdModel_SamsungMoohan,
         VD_HmdModel_PlayForDreamMR,
-        // xre, focus 3, focus vision ???
-        // Pico Neo 3, pico 4 pro
         VD_HmdModel_Count,
     };
 

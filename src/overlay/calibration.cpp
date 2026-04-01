@@ -143,7 +143,7 @@ namespace spacecal {
 
         Eigen::Vector3d euler = rot.canonicalEulerAngles(2, 1, 0) * (180.0 / EIGEN_PI);
 
-        LOG_CALIB_INFO("Calibrated rotation: yaw={.2f} pitch={.2f} roll={.2f}", euler[1], euler[2], euler[0]);
+        LOG_CALIB_INFO("Calibrated rotation: yaw={:.2f} pitch={:.2f} roll={:.2f}", euler[1], euler[2], euler[0]);
         return rotQuat;
     }
 
@@ -180,7 +180,7 @@ namespace spacecal {
         Eigen::Vector3d trans = coefficients.bdcSvd<Eigen::ComputeThinU | Eigen::ComputeThinV>().solve(constants);
         auto transcm = trans * 100.0;
 
-        LOG_CALIB_INFO("Calibrated translation: x={.2f} y={.2f} z={.2f}", transcm[0], transcm[1], transcm[2]);
+        LOG_CALIB_INFO("Calibrated translation: x={:.2f} y={:.2f} z={:.2f}", transcm[0], transcm[1], transcm[2]);
         return transcm;
     }
 
@@ -194,20 +194,20 @@ namespace spacecal {
 
         if (referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
             reference = CalibrationManager::getInstance()->m_poses[this->referenceDevice.deviceId];
-            if (!(reference.deviceIsConnected && reference.poseIsValid && reference.result != vr::ETrackingResult::TrackingResult_Running_OK)) {
+            if (!(reference.deviceIsConnected && reference.poseIsValid && reference.result == vr::ETrackingResult::TrackingResult_Running_OK)) {
                 // dont spam logs
                 if (reference.deviceIsConnected) {
-                    LOG_CALIB_WARN("Reference device is not tracking\n");
+                    LOG_CALIB_WARN("Reference device is not tracking");
                 }
                 bIsTrackingOk = false;
             }
         }
         if (targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
             target = CalibrationManager::getInstance()->m_poses[this->targetDevice.deviceId];
-            if (!(target.deviceIsConnected && target.poseIsValid && target.result != vr::ETrackingResult::TrackingResult_Running_OK)) {
+            if (!(target.deviceIsConnected && target.poseIsValid && target.result == vr::ETrackingResult::TrackingResult_Running_OK)) {
                 // dont spam logs
                 if (target.deviceIsConnected) {
-                    LOG_CALIB_WARN("Target device is not tracking\n");
+                    LOG_CALIB_WARN("Target device is not tracking");
                 }
                 bIsTrackingOk = false;
             }
@@ -375,6 +375,8 @@ namespace spacecal {
                 isValidCalibration = true;
                 // SaveProfile(ctx);
                 LOG_CALIB_INFO("Finished calibration, profile saved");
+
+                apply();
 
                 state = CalibrationState::NONE;
             }

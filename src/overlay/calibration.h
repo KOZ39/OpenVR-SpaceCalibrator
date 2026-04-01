@@ -90,7 +90,7 @@ namespace spacecal {
         }
 
         [[nodiscard]] inline const float getCalibrationProgress() const {
-            return (float)((double)m_samples.size() / (double)getSampleCount());
+            return getSampleCount() == 0 ? 0.0f : (float)((double)m_samples.size() / (double)getSampleCount());
         }
 
         bool isActive = false; // enabled in the UI
