@@ -230,9 +230,11 @@ namespace spacecal {
     
     void TrackingSystemCalibration::reset() {
         // @TODO: 
+        m_samples.clear();
     }
 
     void TrackingSystemCalibration::start() {
+        reset();
         state = CalibrationState::START;
         wantedUpdateInterval = 0.0;
         assignTarget(referenceDevice);
