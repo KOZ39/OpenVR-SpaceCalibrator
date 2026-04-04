@@ -274,6 +274,8 @@ namespace spacecal {
             if (ImGui::Button(LOCALE_GET("calibration_action_start").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
             {
                 // ImGui::OpenPopup("calibration_progress");
+                // clear calibration then start
+                calibration.reset();
                 calibration.start();
             }
 
