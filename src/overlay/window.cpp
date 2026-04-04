@@ -26,10 +26,8 @@ namespace spacecal {
 
     const bool EnableDarkModeTopBar(const HWND windowHwmd) {
         const BOOL darkBorder = TRUE;
-        const bool ok =
-            SUCCEEDED(DwmSetWindowAttribute(windowHwmd, DWMA_USE_IMMERSIVE_DARK_MODE, &darkBorder, sizeof(darkBorder)))
+        return SUCCEEDED(DwmSetWindowAttribute(windowHwmd, DWMA_USE_IMMERSIVE_DARK_MODE, &darkBorder, sizeof(darkBorder)))
             || SUCCEEDED(DwmSetWindowAttribute(windowHwmd, DWMA_USE_IMMERSIVE_DARK_MODE_PRE_20H1, &darkBorder, sizeof(darkBorder)));
-        return ok;
     }
 #endif
 
