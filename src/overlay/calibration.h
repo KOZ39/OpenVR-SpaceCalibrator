@@ -113,12 +113,36 @@ namespace spacecal {
         Sample_t collectSample() const;
         inline size_t getSampleCount() const { return (size_t) calibrationSpeed; }
 
+        // a delta sample, used for calibration internal maths
+        struct DeltaSample_t {
+            bool valid = false;
+            Eigen::Vector3d reference;
+            Eigen::Vector3d target;
+        };
+
+        // math funcs
+        inline Eigen::Vector3d axisFromRotationMatrix3(Eigen::Matrix3d rot) {
+            return Eigen::Vector3d(rot(2, 1) - rot(1, 2), rot(0, 2) - rot(2, 0), rot(1, 0) - rot(0, 1));
+        }
+
+        inline double angleFromRotationMatrix3(Eigen::Matrix3d rot) {
+            return acos((rot(0, 0) + rot(1, 1) + rot(2, 2) - 1.0) / 2.0);
+        }
+        DeltaSample_t deltaRotationSamples(const Sample_t& s1, const Sample_t& s2);
+        Eigen::Quaterniond calibrateRotation(const std::vector<Sample_t>& samples);
+        Eigen::Vector3d calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& R);
+
     private:
-        double m_lastTick = 0;
-        double m_lastScan = 0;
-        float m_xPrev = 0;
-        float m_yPrev = 0;
-        float m_zPrev = 0;
+        double m_lastTick = 0.0;
+        double m_lastScan = 0.0;
+        
+        float m_xTargetPrev = 0.0f;
+        float m_yTargetPrev = 0.0f;
+        float m_zTargetPrev = 0.0f;
+        
+        float m_xRefPrev = 0.0f;
+        float m_yRefPrev = 0.0f;
+        float m_zRefPrev = 0.0f;
 
         std::vector<Sample_t> m_samples;
 

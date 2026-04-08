@@ -59,21 +59,7 @@ namespace spacecal {
         trans = xform.translation();
     }
 
-    inline Eigen::Vector3d axisFromRotationMatrix3(Eigen::Matrix3d rot) {
-        return Eigen::Vector3d(rot(2, 1) - rot(1, 2), rot(0, 2) - rot(2, 0), rot(1, 0) - rot(0, 1));
-    }
-
-    inline double angleFromRotationMatrix3(Eigen::Matrix3d rot) {
-        return acos((rot(0, 0) + rot(1, 1) + rot(2, 2) - 1.0) / 2.0);
-    }
-
-    struct DeltaSample_t {
-        bool valid = false;
-        Eigen::Vector3d reference;
-        Eigen::Vector3d target;
-    };
-
-    DeltaSample_t deltaRotationSamples(const Sample_t& s1, const Sample_t& s2) {
+    TrackingSystemCalibration::DeltaSample_t TrackingSystemCalibration::deltaRotationSamples(const Sample_t& s1, const Sample_t& s2) {
         // Difference in rotation between samples.
         auto dref = s1.reference.rot * s2.reference.rot.transpose();
         auto dtarget = s1.target.rot * s2.target.rot.transpose();
@@ -87,15 +73,16 @@ namespace spacecal {
         // Reject samples that were too close to each other.
         double refA = angleFromRotationMatrix3(dref);
         double targetA = angleFromRotationMatrix3(dtarget);
-        ds.valid = refA > 0.4 && targetA > 0.4 && ds.reference.norm() > 0.01 && ds.target.norm() > 0.01;
+        constexpr double k_ROTATION_ANGLE_THRESHOLD = 0.4;
+        constexpr double k_ROTATION_MAGNITUDE_THRESHOLD = 0.1;
+        ds.valid = refA > k_ROTATION_ANGLE_THRESHOLD && targetA > k_ROTATION_ANGLE_THRESHOLD && ds.reference.norm() > k_ROTATION_MAGNITUDE_THRESHOLD && ds.target.norm() > k_ROTATION_MAGNITUDE_THRESHOLD;
 
         ds.reference.normalize();
         ds.target.normalize();
         return ds;
     }
 
-    Eigen::Quaterniond calibrateRotation(const std::vector<Sample_t>& samples)
-    {
+    Eigen::Quaterniond TrackingSystemCalibration::calibrateRotation(const std::vector<Sample_t>& samples) {
         std::vector<DeltaSample_t> deltas;
 
         for (size_t i = 0; i < samples.size(); i++) {
@@ -143,26 +130,34 @@ namespace spacecal {
 
         Eigen::Vector3d euler = rot.canonicalEulerAngles(2, 1, 0) * (180.0 / EIGEN_PI);
 
-        LOG_CALIB_INFO("Calibrated rotation: yaw={:.2f} pitch={:.2f} roll={:.2f}", euler[1], euler[2], euler[0]);
+        LOG_CALIB_INFO("Calibrated rotation (rad): yaw={:.2f} pitch={:.2f} roll={:.2f}", euler[1], euler[2], euler[0]);
         return rotQuat;
     }
 
-    Eigen::Vector3d calibrateTranslation(const std::vector<Sample_t>& samples)
-    {
+    Eigen::Vector3d TrackingSystemCalibration::calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& R) {
         std::vector<std::pair<Eigen::Vector3d, Eigen::Matrix3d>> deltas;
 
+        // rotation is only applied to the target tracking system, as that's the tracking system the calibration is targeting! we do not need to modify the reference pose!
         for (size_t i = 0; i < samples.size(); i++) {
+            Sample_t sample_i = samples[i];
+            sample_i.target.rot = R * sample_i.target.rot;
+            sample_i.target.trans = R * sample_i.target.trans;
+
             for (size_t j = 0; j < i; j++) {
-                auto QAi = samples[i].reference.rot.transpose();
-                auto QAj = samples[j].reference.rot.transpose();
+                Sample_t sample_j = samples[j];
+                sample_j.target.rot = R * sample_j.target.rot;
+                sample_j.target.trans = R * sample_j.target.trans;
+
+                auto QAi = sample_i.reference.rot.transpose();
+                auto QAj = sample_j.reference.rot.transpose();
                 auto dQA = QAj - QAi;
-                auto CA = QAj * (samples[j].reference.trans - samples[j].target.trans) - QAi * (samples[i].reference.trans - samples[i].target.trans);
+                auto CA = QAj * (sample_j.reference.trans - sample_j.target.trans) - QAi * (sample_i.reference.trans - sample_i.target.trans);
                 deltas.push_back(std::make_pair(CA, dQA));
 
-                auto QBi = samples[i].target.rot.transpose();
-                auto QBj = samples[j].target.rot.transpose();
+                auto QBi = sample_i.target.rot.transpose();
+                auto QBj = sample_j.target.rot.transpose();
                 auto dQB = QBj - QBi;
-                auto CB = QBj * (samples[j].reference.trans - samples[j].target.trans) - QBi * (samples[i].reference.trans - samples[i].target.trans);
+                auto CB = QBj * (sample_j.reference.trans - sample_j.target.trans) - QBi * (sample_i.reference.trans - sample_i.target.trans);
                 deltas.push_back(std::make_pair(CB, dQB));
             }
         }
@@ -181,7 +176,6 @@ namespace spacecal {
         LOG_CALIB_INFO("Calibrated translation (cm): x={:.2f} y={:.2f} z={:.2f}", trans[0] * 100.0, trans[1] * 100.0, trans[2] * 100.0);
         return trans;
     }
-
 
     Sample_t TrackingSystemCalibration::collectSample() const {
         vr::DriverPose_t reference, target;
@@ -252,49 +246,52 @@ namespace spacecal {
 
         // original code checks hmd specifically, we should check that the hmd and ref arent at 0 0 0
         // check that ref is not at origin
-        auto p = CalibrationManager::getInstance()->m_poses[vr::k_unTrackedDeviceIndex_Hmd].vecPosition;
         if (hmdIsInSameTrackingSystem) {
             if (targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
                 auto targetPose = CalibrationManager::getInstance()->m_poses[targetDevice.deviceId].vecPosition;
-                if ((targetPose[0] == 0.0 && targetPose[1] == 0.0 && targetPose[2] == 0.0) || (m_xPrev == targetPose[0] && m_yPrev == targetPose[1] && m_zPrev == targetPose[2])) {
-                    // std::cerr << "HMD tracking didn't update, skipping update" << std::endl;
+                if ((targetPose[0] == 0.0 && targetPose[1] == 0.0 && targetPose[2] == 0.0) ||
+                    (m_xTargetPrev == targetPose[0] && m_yTargetPrev == targetPose[1] && m_zTargetPrev == targetPose[2])) {
+                    // LOG_CALIB_WARN("HMD tracking didn't update, skipping update");
                     return;
                 }
+                m_xTargetPrev = (float)targetPose[0];
+                m_yTargetPrev = (float)targetPose[1];
+                m_zTargetPrev = (float)targetPose[2];
             }
             if (referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
                 auto refPose = CalibrationManager::getInstance()->m_poses[referenceDevice.deviceId].vecPosition;
-                if ((refPose[0] == 0.0 && refPose[1] == 0.0 && refPose[2] == 0.0) || (m_xPrev == refPose[0] && m_yPrev == refPose[1] && m_zPrev == refPose[2])) {
-                    // std::cerr << "HMD tracking didn't update, skipping update" << std::endl;
+                if ((refPose[0] == 0.0 && refPose[1] == 0.0 && refPose[2] == 0.0) ||
+                    (m_xRefPrev == refPose[0] && m_yRefPrev == refPose[1] && m_zRefPrev == refPose[2])) {
+                    // LOG_CALIB_WARN("HMD tracking didn't update, skipping update");
                     return;
                 }
+                m_xRefPrev = (float)refPose[0];
+                m_yRefPrev = (float)refPose[1];
+                m_zRefPrev = (float)refPose[2];
             }
         }
-        m_xPrev = (float)p[0];
-        m_yPrev = (float)p[1];
-        m_zPrev = (float)p[2];
 
         if (state == CalibrationState::NONE) {
             wantedUpdateInterval = 1.0;
-            if ((currentTime - m_lastTick) >= 1.0) {
+            if ((currentTime - m_lastScan) >= 1.0) {
                 assignTarget(referenceDevice);
                 assignTarget(targetDevice);
-                m_lastTick = currentTime;
+                m_lastScan = currentTime;
             }
             return;
         }
 
         if (state == CalibrationState::EDITING) {
             wantedUpdateInterval = 0.1;
-            if ((currentTime - m_lastTick) >= 0.1) {
+            if ((currentTime - m_lastScan) >= 0.1) {
                 assignTarget(referenceDevice);
                 assignTarget(targetDevice);
-                m_lastTick = currentTime;
+                m_lastScan = currentTime;
             }
             return;
         }
 
         if (state == CalibrationState::START) {
-
             bool ok = true;
 
             LOG_CALIB_INFO("Beginning calibration...");
@@ -310,7 +307,7 @@ namespace spacecal {
                 ok = false;
             }
             
-            auto sample = collectSample();
+            Sample_t sample = collectSample();
             if (!sample.isPoseValid) {
                 ok = false;
             }
@@ -329,19 +326,18 @@ namespace spacecal {
             return;
         }
 
-        auto sample = collectSample();
-        if (sample.isPoseValid) {
-            // we want to completely ignore poor samples during calibration
-            m_samples.push_back(sample);
+        // prevent overfitting with possibly poor data
+        if (m_samples.size() < getSampleCount()) {
+            auto sample = collectSample();
+            if (sample.isPoseValid) {
+                // we want to completely ignore poor samples during calibration
+                m_samples.push_back(sample);
+            }
         }
 
-        // @TODO: progress tracking
-
-        // @TODO: rest of calibration algorithm
         if (m_samples.size() == getSampleCount()) {
-            // @TODO: handle calibrating now
-
-            if (state == CalibrationState::ROTATION)
+            switch (state) {
+            case CalibrationState::ROTATION:
             {
                 calibratedRotation = calibrateRotation(m_samples);
 
@@ -357,10 +353,12 @@ namespace spacecal {
                 CalibrationManager::getInstance()->m_ipcClient.SetDeviceTransform(args);
 
                 state = CalibrationState::TRANSLATION;
+                break;
             }
-            else if (state == CalibrationState::TRANSLATION)
+            case CalibrationState::TRANSLATION:
             {
-                calibratedTranslation = calibrateTranslation(m_samples);
+                // apply samples to avoid sampling twice
+                calibratedTranslation = calibrateTranslation(m_samples, calibratedRotation);
 
                 ipc::protocol::Command_SetDeviceTransform_t args = {};
                 args.unOpenvrDeviceId = targetDevice.deviceId;
@@ -379,12 +377,34 @@ namespace spacecal {
                 apply();
 
                 state = CalibrationState::NONE;
+                break;
             }
+            case CalibrationState::SCALE:
+            {
+                // @TODO: robust measure of scale algorithm?
+                // apply samples to avoid sampling twice
+                calibratedTranslation = calibrateTranslation(m_samples, calibratedRotation);
 
-            // @TODO: see if we can omit this; bc this make the algorithm a two-step alg
-            //        ideally we should re-use the samples, especially because we're going
-            //        to introduce another phase later for scale calibration
-            m_samples.clear();
+                ipc::protocol::Command_SetDeviceTransform_t args = {};
+                args.unOpenvrDeviceId = targetDevice.deviceId;
+                args.enabled(true);
+                args.quirks = targetDevice.quirks;
+                args.updateScale(true);
+                args.scale = calibratedScale;
+                CalibrationManager::getInstance()->m_ipcClient.SetDeviceTransform(args);
+
+                isValidCalibration = true;
+                // SaveProfile(ctx);
+                LOG_CALIB_INFO("Finished calibration, profile saved");
+
+                apply();
+
+                state = CalibrationState::NONE;
+                break;
+            }
+            default:
+                break;
+            }
         }
     }
     
