@@ -60,11 +60,13 @@ set(IMGUI_FILES
 add_executable(SpaceCalibratorOverlay ${SOURCES_API} ${SOURCES_HEADERS} ${IMGUI_FILES} ${WIN32_RESOURCES})
 GroupSourcesByFolder(SpaceCalibratorOverlay)
 # Disable console window
-set_target_properties(SpaceCalibratorOverlay PROPERTIES
-    LINK_FLAGS_DEBUG            "/SUBSYSTEM:CONSOLE /ENTRY:wWinMainCRTStartup /NODEFAULTLIB:library"
-    LINK_FLAGS_MINSIZEREL       "/SUBSYSTEM:WINDOWS /ENTRY:wWinMainCRTStartup /NODEFAULTLIB:library"
-    LINK_FLAGS_RELEASE          "/SUBSYSTEM:WINDOWS /ENTRY:wWinMainCRTStartup /NODEFAULTLIB:library"
-    LINK_FLAGS_RELWITHDEBINFO   "/SUBSYSTEM:WINDOWS /ENTRY:wWinMainCRTStartup /NODEFAULTLIB:library")
+if (WIN32)
+    set_target_properties(SpaceCalibratorOverlay PROPERTIES
+        LINK_FLAGS_DEBUG            "/SUBSYSTEM:CONSOLE /ENTRY:wWinMainCRTStartup /NODEFAULTLIB:library /MANIFEST:NO"
+        LINK_FLAGS_MINSIZEREL       "/SUBSYSTEM:WINDOWS /ENTRY:wWinMainCRTStartup /NODEFAULTLIB:library /MANIFEST:NO"
+        LINK_FLAGS_RELEASE          "/SUBSYSTEM:WINDOWS /ENTRY:wWinMainCRTStartup /NODEFAULTLIB:library /MANIFEST:NO"
+        LINK_FLAGS_RELWITHDEBINFO   "/SUBSYSTEM:WINDOWS /ENTRY:wWinMainCRTStartup /NODEFAULTLIB:library /MANIFEST:NO")
+endif()
 
 target_include_directories(SpaceCalibratorOverlay
     PUBLIC ${CMAKE_SOURCE_DIR}
