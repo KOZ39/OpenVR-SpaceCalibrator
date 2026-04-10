@@ -2,6 +2,7 @@
 
 #include <inttypes.h>
 #include <string>
+#include <vector>
 
 namespace spacecal {
     namespace config {
@@ -90,18 +91,22 @@ namespace spacecal {
                     float yaw = 0.0f, pitch = 0.0f, roll = 0.0f; // rot
                 };
 
-                bool isActive = false;
+                struct Calibration_t {
+                    bool isActive = false;
 
-                Transform refToTargetTransform;
-                Transform calibratedTransform;
+                    Transform refToTargetTransform;
+                    Transform calibratedTransform;
 
-                Transform anchorTransform;
-                AnchorMode anchorMode = AnchorMode::FixedWorld;
+                    Transform anchorTransform;
+                    AnchorMode anchorMode = AnchorMode::FixedWorld;
 
-                std::string hmdTrackingSystem;
+                    std::string hmdTrackingSystem;
 
-                TrackingDevice referenceDevice;
-                TrackingDevice targetDevice;
+                    TrackingDevice referenceDevice;
+                    TrackingDevice targetDevice;
+                };
+
+                std::vector<Calibration_t> calibrations;
             };
 
             typedef Configuration_0 Configuration_Latest;
