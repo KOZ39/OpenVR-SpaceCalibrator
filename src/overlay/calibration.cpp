@@ -130,7 +130,7 @@ namespace spacecal {
 
         Eigen::Vector3d euler = rot.canonicalEulerAngles(2, 1, 0) * (180.0 / EIGEN_PI);
 
-        LOG_CALIB_INFO("Calibrated rotation (rad): yaw={:.2f} pitch={:.2f} roll={:.2f}", euler[1], euler[2], euler[0]);
+        LOG_CALIB_INFO("Calibrated rotation (deg): yaw={:.2f} pitch={:.2f} roll={:.2f}", euler[1], euler[2], euler[0]);
         return rotQuat;
     }
 
