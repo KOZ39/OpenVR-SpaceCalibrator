@@ -526,8 +526,8 @@ namespace spacecal {
     }
 
     void CalibrationManager::calibrationTick(const double currentTime) {
-        m_ipcClient.PollPoses();
         m_ipcClient.RequestVirtualDesktopProps();
+        m_ipcClient.PollPoses();
 
         double wantedInterval = 0;
         size_t countedCalibrations = 0;
