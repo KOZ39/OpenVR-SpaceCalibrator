@@ -44,7 +44,7 @@ namespace spacecal {
         // To load locale strings we first:
         //   - Unload all existing locales
         //   - Load the en_GB locale
-        //   - If the locale is not en_GB, load the desired locale, replacing all missing entries with the new data
+        //   - If the locale is not en_GB, load the desired locale, replacing all entries with the new data. This enables english fallback strings
 
         m_localisedStrings.clear();
 
@@ -120,6 +120,7 @@ namespace spacecal {
                 }
                 m_localisedStrings[elem.first] = elem.second.get_string();
             }
+            LOG_INFO("Loaded locale file \"{0}\"...", langPath);
 
             return true;
         }
