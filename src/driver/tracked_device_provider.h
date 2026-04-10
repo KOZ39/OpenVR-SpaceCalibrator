@@ -22,7 +22,7 @@ namespace spacecal {
         void LeaveStandby() override;
 
         void BlendTransform(const DeviceTransformation_t device) const;
-        bool HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, const vr::DriverPose_t& newPose);
+        bool HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, vr::DriverPose_t& newPose);
         void ResetCalibration();
         void RequestVirtualDesktopProps();
         void SetAlignmentSpeedParams(ipc::protocol::Command_SetAlignmentSpeedParams_t& params);

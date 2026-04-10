@@ -74,7 +74,7 @@ namespace spacecal {
         return { rotatedVectorQuat.x, rotatedVectorQuat.y, rotatedVectorQuat.z };
     }
 
-    bool ServerTrackedDeviceProvider::HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, const vr::DriverPose_t& newPose) {
+    bool ServerTrackedDeviceProvider::HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, vr::DriverPose_t& newPose) {
 
         // bounds check, as sometimes the id is invalid?
         if (!IsDeviceIndexValid(unWhichDevice))
@@ -82,7 +82,7 @@ namespace spacecal {
 
         m_ipcServer.UpdatePose(unWhichDevice, newPose);
 
-        vr::DriverPose_t modifiedPose = newPose;
+        vr::DriverPose_t& modifiedPose = newPose;
 
         auto& transform = m_transforms[unWhichDevice];
         
