@@ -78,7 +78,9 @@ namespace ipc {
         ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_RESET_CALIBRATION, nullptr, 0);
     }
     void IpcClient::RequestVirtualDesktopProps() {
-        ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_REQUEST_VIRTUAL_DESKTOP_PROPS, nullptr, 0);
+        if (spacecal::VRState::getInstance()->isHmdVirtualDesktop()) {
+            ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_REQUEST_VIRTUAL_DESKTOP_PROPS, nullptr, 0);
+        }
     }
     void IpcClient::PollPoses() {
         ipc_client_read_shared_memory(m_hIpc, m_poseDataOperation, spacecal::CalibrationManager::getInstance()->m_poses, sizeof(spacecal::CalibrationManager::getInstance()->m_poses));
