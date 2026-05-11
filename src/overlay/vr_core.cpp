@@ -302,7 +302,7 @@ namespace spacecal {
         for (int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
             const auto& device = m_aDevices[i];
 
-            if (device.bIsConnected) {
+            if (!device.bIsConnected) {
                 continue;
             }
 

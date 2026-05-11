@@ -237,6 +237,10 @@ namespace spacecal {
         wantedUpdateInterval = 0.0;
         assignTarget(referenceDevice);
         assignTarget(targetDevice);
+
+        // update state
+        const auto& hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
+        hmdIsInReferenceTrackingSystem = hmdDevice.szTrackingSystemId == referenceDevice.trackingSystem;
     }
     
     void TrackingSystemCalibration::calibrationTick(const double currentTime) {
@@ -394,14 +398,6 @@ namespace spacecal {
                 // apply samples to avoid sampling twice
                 calibratedTranslation = calibrateTranslation(m_samples, calibratedRotation);
 
-                ipc::protocol::Command_SetDeviceTransform_t args = {};
-                args.unOpenvrDeviceId = targetDevice.deviceId;
-                args.enabled(true);
-                args.quirks = targetDevice.quirks;
-                args.updateScale(true);
-                args.scale = calibratedScale;
-                CalibrationManager::getInstance()->m_ipcClient.SetDeviceTransform(args);
-
                 isValidCalibration = true;
                 // SaveProfile(ctx);
                 LOG_CALIB_INFO("Finished calibration, profile saved");
@@ -450,18 +446,16 @@ namespace spacecal {
     void TrackingSystemCalibration::apply() {
         this->isActive = isValidCalibration;
 
+        auto hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
+        if (this->hmdIsInReferenceTrackingSystem && hmdDevice.szTrackingSystemId != referenceDevice.trackingSystem) {
+            // if the hmd the hmd's tracking system is not what was saved, handles users changing streamer / VR headset properly by not applying calibration
+            this->isActive = false;
+            return;
+        }
+
         for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
             auto device = VRState::getInstance()->getVrDevice(i);
             if (device.eDeviceClass != vr::TrackedDeviceClass_Invalid) {
-
-                if (i == vr::k_unTrackedDeviceIndex_Hmd) {
-                    if (device.szTrackingSystemId != referenceDevice.trackingSystem) {
-                        // if the hmd the hmd's tracking system is not what was saved, handles users changing streamer / VR headset properly by not applying calibration
-                        isActive = false;
-                    }
-                    continue;
-                }
-
                 // if this is not the target tracking system
                 if (device.szTrackingSystemId != targetDevice.trackingSystem) {
                     continue;
@@ -488,6 +482,13 @@ namespace spacecal {
 
                     args.updateScale(true);
                     args.scale = calibratedScale;
+
+                    // for relative calibrations
+                    args.relativeCoordSystem(isRelativeCalibration);
+                    args.unReferenceOpenvrDeviceId = hmdIsInReferenceTrackingSystem ? vr::k_unTrackedDeviceIndex_Hmd : referenceDevice.deviceId;
+
+                    args.hideContinuousTracker(isContinuousCalibration() && hideContinuousTracker);
+                    args.lerpCalibrations(isContinuousCalibration());
                 }
 
                 CalibrationManager::getInstance()->m_ipcClient.SetDeviceTransform(args);
