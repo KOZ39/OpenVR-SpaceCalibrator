@@ -421,7 +421,7 @@ namespace spacecal {
 
             for (size_t i = 0; i < dwNumCalibrations; i++) {
                 spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(i);
-                if (calibration.hmdIsInSameTrackingSystem) {
+                if (calibration.hmdIsInReferenceTrackingSystem) {
                     // @TODO: hmd identification
                 }
                 else {
