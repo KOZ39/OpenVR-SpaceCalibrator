@@ -189,8 +189,9 @@ namespace spacecal {
             }
             else if (deviceClass == vr::TrackedDeviceClass_HMD && szTrackingSystem == "oculus") {
                 // Possibly Virtual Desktop on a non Meta HMD
-                if (m_hmdMetadata.isVirtualDesktopAvailable && isHmdVirtualDesktop()) {
-                    if (m_hmdMetadata.VD_hmdModel > ipc::protocol::VD_HmdModel_None && m_hmdMetadata.VD_hmdModel < ipc::protocol::VD_HmdModel_Count) {
+                if (m_hmdMetadata.isVirtualDesktopAvailable /* && isHmdVirtualDesktop() */ ) {
+                    // VD hardcodes the sn to "1PASH5D1P17365"
+                    if (szDeviceSerial == "1PASH5D1P17365" && m_hmdMetadata.VD_hmdModel > ipc::protocol::VD_HmdModel_None && m_hmdMetadata.VD_hmdModel < ipc::protocol::VD_HmdModel_Count) {
                         szDeviceModel = LOCALE_GET(k_VIRTUAL_DESKTOP_HMD_NAMES[m_hmdMetadata.VD_hmdModel]);
                     }
                 }
