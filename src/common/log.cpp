@@ -110,26 +110,25 @@ namespace logging {
         return fileAge > std::chrono::days(CLEAR_LOG_FILES_AFTER_DAYS);
     }
 
-    bool ParseLogFilename(const std::string& filename, int& year, int& month, int& day, int& hour, int& minute, int& second)
+    bool ParseLogFilename(std::string_view filename, int& year, int& month, int& day, int& hour, int& minute, int& second)
     {
-        if (filename.size() != 27) {
+        // needs to match _YYYY_MM_DD_HH_MM_SS.log suffix + log_ prefix
+        if (filename.size() < 28 || !filename.starts_with("log_") || !filename.ends_with(".log")) {
             return false;
         }
+        
+        const char* data = filename.data();
+        const size_t n = filename.size();
 
-        std::stringstream ss(filename.substr(4, 23));
-        ss >> year;
-        ss.ignore(1);
-        ss >> month;
-        ss.ignore(1);
-        ss >> day;
-        ss.ignore(1);
-        ss >> hour;
-        ss.ignore(1);
-        ss >> minute;
-        ss.ignore(1);
-        ss >> second;
+        // scan for _YYYY_MM_DD_HH_MM_SS from back
+        if (std::from_chars(data + (n - 23), data + (n - 19), year).ec      != std::errc{}) return false;
+        if (std::from_chars(data + (n - 18), data + (n - 16), month).ec     != std::errc{}) return false;
+        if (std::from_chars(data + (n - 15), data + (n - 13), day).ec       != std::errc{}) return false;
+        if (std::from_chars(data + (n - 12), data + (n - 10), hour).ec      != std::errc{}) return false;
+        if (std::from_chars(data + (n - 9),  data + (n - 7),  minute).ec    != std::errc{}) return false;
+        if (std::from_chars(data + (n - 6),  data + (n - 4),  second).ec    != std::errc{}) return false;
 
-        return !ss.fail();
+        return true;
     }
 
     void DeleteOldLogFiles(const std::filesystem::path& directoryPath)
@@ -147,6 +146,7 @@ namespace logging {
     }
 
 // Helper for declaring a logger
+    // @NOTE: CONSOLE_SINK crashes vr_server.exe ; so omit it from the driver binary
 #ifdef _DEBUG
 #define CONSOLE_SINK quill::Frontend::create_or_get_sink<quill::ConsoleSink>("console"),
 #else
