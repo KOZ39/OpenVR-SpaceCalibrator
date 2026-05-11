@@ -15,6 +15,9 @@ namespace spacecal {
         if (szTrackingSystemName == "lighthouse") {
             return "SteamVR Tracking"; // @NOTE: should this be localised?
         }
+        if (szTrackingSystemName == "cv") {
+            return "Steam Frame"; // @NOTE: should this be localised?
+        }
         if (szTrackingSystemName == "oculus") {
             // @TODO: if vd then set as virtual desktop
             // return "Virtual Desktop"; // @NOTE: should this be localised?
