@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "platform.h"
 #include "localisation.h"
+#include "calibration.h"
 #include <fmt/format.h>
 
 namespace spacecal {
@@ -244,6 +245,8 @@ namespace spacecal {
             }
 
             m_bStateDirty = false;
+            // an event that matters happened, re-apply calibration for good measure!
+            CalibrationManager::getInstance()->apply();
         }
 
         vr::VREvent_t vrEvent = {};
