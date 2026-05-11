@@ -8,6 +8,7 @@
 
 namespace spacecal {
 
+    // disabled in debug builds
     // @FIXME: Should this be behind an advanced or obscure toggle?
     // these tracking systems are explicitly hidden in Space Calibrator, as it does not make sense for Space Calibrator to "calibrate" such trackers
     constexpr const char* k_IGNORED_TRACKING_SYSTEMS[] = {
@@ -142,12 +143,14 @@ namespace spacecal {
             return;
         }
 
+#if !defined(_DEBUG)
         // if the tracking system should be ignored, ignore it
         for (size_t i = 0; i < std::size(k_IGNORED_TRACKING_SYSTEMS); i++) {
             if (strcmp(szTrackingSystem.c_str(), k_IGNORED_TRACKING_SYSTEMS[i]) == 0) {
                 return;
             }
         }
+#endif
 
         std::string szDeviceModel;
         std::string szDeviceSerial;
