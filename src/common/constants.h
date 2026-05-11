@@ -8,4 +8,8 @@ namespace spacecal {
     constexpr const char* c_STEAMVR_STEAM_APP_ID = "250820";
 
     #define SPACECAL_VERSION_STRING "v1.5.1-nova"
+
+    #ifndef M_PI
+        #define M_PI 3.1415926535
+    #endif // M_PI
 }

@@ -1,6 +1,10 @@
 #include "calibration.h"
+#include "Eigen/Geometry"
+#include "config/configuration_data_versions.h"
 #include "log.h"
 #include "platform.h"
+#include "constants.h"
+#include "configuration.h"
 #include <GLFW/glfw3.h>
 
 namespace spacecal {
@@ -379,6 +383,7 @@ namespace spacecal {
                 LOG_CALIB_INFO("Finished calibration, profile saved");
 
                 apply();
+                CalibrationManager::getInstance()->saveConfig();
 
                 state = CalibrationState::NONE;
                 break;
@@ -497,9 +502,13 @@ namespace spacecal {
         s_instance = this;
 
         // @FIXME: Need to figure out how to handle multiple calibrations
-        TrackingSystemCalibration mainCalibration;
-        mainCalibration.hmdIsInSameTrackingSystem = true;
-        m_calibrations.push_back(mainCalibration);
+
+        // try loading calibrations from disk, if fail, fallback to a default one
+        if (!loadConfig()) {
+            TrackingSystemCalibration mainCalibration;
+            mainCalibration.hmdIsInReferenceTrackingSystem = true;
+            m_calibrations.push_back(mainCalibration);
+        }
     }
 
     void CalibrationManager::init() {
@@ -570,5 +579,92 @@ namespace spacecal {
 
     const double CalibrationManager::getWantedUpdateInterval() const {
         return m_wantedUpdateInterval;
+    }
+
+    bool CalibrationManager::loadConfig() {
+        using namespace spacecal::config::versioned;
+        const Configuration* pConfig = spacecal::ConfigurationManager::getInstance()->getConfiguration();
+
+        // no calibrations found
+        if (pConfig->calibrations.size() == 0) {
+            return false;
+        }
+
+        // we need N calibrations
+        this->m_calibrations.resize(pConfig->calibrations.size());
+
+        // now load the calibration data
+        for (size_t i = 0; i < pConfig->calibrations.size(); i++) {
+            this->m_calibrations[i].isActive = pConfig->calibrations[i].is_active;
+
+            // copy device props
+            this->m_calibrations[i].targetDevice.deviceModel            = pConfig->calibrations[i].target_device.model;
+            this->m_calibrations[i].targetDevice.deviceSerialNumber     = pConfig->calibrations[i].target_device.serial;
+            this->m_calibrations[i].targetDevice.trackingSystem         = pConfig->calibrations[i].target_device.tracking_system;
+            
+            this->m_calibrations[i].referenceDevice.deviceModel         = pConfig->calibrations[i].reference_device.model;
+            this->m_calibrations[i].referenceDevice.deviceSerialNumber  = pConfig->calibrations[i].reference_device.serial;
+            this->m_calibrations[i].referenceDevice.trackingSystem      = pConfig->calibrations[i].reference_device.tracking_system;
+
+            this->m_calibrations[i].isRelativeCalibration               = pConfig->calibrations[i].anchor_mode == Configuration_Latest::AnchorMode::HmdRelative;
+            this->m_calibrations[i].calibrationSpeed                    = (CalibrationSpeed) pConfig->calibrations[i].calibration_speed;
+
+            // calibrated transform mapping
+            // @TODO: should we make a helper func?
+            this->m_calibrations[i].calibratedTranslation.x()           = pConfig->calibrations[i].calibrated_transform.x;
+            this->m_calibrations[i].calibratedTranslation.y()           = pConfig->calibrations[i].calibrated_transform.y;
+            this->m_calibrations[i].calibratedTranslation.z()           = pConfig->calibrations[i].calibrated_transform.z;
+            
+            double rollRad  = pConfig->calibrations[i].calibrated_transform.roll  * (M_PI / 180.0);
+            double pitchRad = pConfig->calibrations[i].calibrated_transform.pitch * (M_PI / 180.0);
+            double yawRad   = pConfig->calibrations[i].calibrated_transform.yaw   * (M_PI / 180.0);
+
+            this->m_calibrations[i].calibratedRotation =
+                Eigen::AngleAxisd(yawRad, Eigen::Vector3d::UnitZ()) *
+                Eigen::AngleAxisd(pitchRad, Eigen::Vector3d::UnitY()) *
+                Eigen::AngleAxisd(rollRad, Eigen::Vector3d::UnitX());
+        }
+
+        return true;
+    }
+
+    void CalibrationManager::saveConfig() const {
+        using namespace spacecal::config::versioned;
+        Configuration* pConfig = spacecal::ConfigurationManager::getInstance()->getConfiguration();
+
+        // we need N calibrations
+        pConfig->calibrations.resize(this->m_calibrations.size());
+        
+        for (size_t i = 0; i < pConfig->calibrations.size(); i++) {
+            pConfig->calibrations[i].is_active = this->m_calibrations[i].isActive;
+
+            // copy device props
+            pConfig->calibrations[i].target_device.model                = this->m_calibrations[i].targetDevice.deviceModel;
+            pConfig->calibrations[i].target_device.serial               = this->m_calibrations[i].targetDevice.deviceSerialNumber;
+            pConfig->calibrations[i].target_device.tracking_system      = this->m_calibrations[i].targetDevice.trackingSystem;
+            
+            pConfig->calibrations[i].reference_device.model             = this->m_calibrations[i].referenceDevice.deviceModel;
+            pConfig->calibrations[i].reference_device.serial            = this->m_calibrations[i].referenceDevice.deviceSerialNumber;
+            pConfig->calibrations[i].reference_device.tracking_system   = this->m_calibrations[i].referenceDevice.trackingSystem;
+
+            pConfig->calibrations[i].anchor_mode                        = this->m_calibrations[i].isRelativeCalibration ? Configuration_Latest::AnchorMode::HmdRelative : Configuration_Latest::AnchorMode::FixedWorld;
+            pConfig->calibrations[i].calibration_speed                  = (uint64_t)this->m_calibrations[i].calibrationSpeed;
+
+            // calibrated transform mapping
+            // @TODO: should we make a helper func?
+            pConfig->calibrations[i].calibrated_transform.x             = (float)this->m_calibrations[i].calibratedTranslation.x();
+            pConfig->calibrations[i].calibrated_transform.y             = (float)this->m_calibrations[i].calibratedTranslation.y();
+            pConfig->calibrations[i].calibrated_transform.z             = (float)this->m_calibrations[i].calibratedTranslation.z();
+
+            Eigen::Vector3d euler = this->m_calibrations[i].calibratedRotation.toRotationMatrix().canonicalEulerAngles(2, 1, 0);
+            pConfig->calibrations[i].calibrated_transform.yaw           = static_cast<float>(euler[0] * 180.0 / M_PI);
+            pConfig->calibrations[i].calibrated_transform.pitch         = static_cast<float>(euler[1] * 180.0 / M_PI);
+            pConfig->calibrations[i].calibrated_transform.roll          = static_cast<float>(euler[2] * 180.0 / M_PI);
+        }
+
+        ConfigurationError err = spacecal::ConfigurationManager::getInstance()->saveConfiguration();
+        if (err != ConfigurationError::Ok) {
+            LOG_WARNING("Failed to write calibration, got {}", (uint32_t)err);
+        }
     }
 }

@@ -2,11 +2,8 @@
 #pragma once
 
 #include "openvr_driver.h"
+#include "constants.h"
 #include <cmath>
-
-#ifndef M_PI
-#define M_PI 3.1415926535
-#endif
 
 #define DEG_TO_RAD( degrees ) ( ( degrees )*M_PI / 180.0 )
 #define RAD_TO_DEG( radians ) ( ( radians )*180.0 / M_PI )

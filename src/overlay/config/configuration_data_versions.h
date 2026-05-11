@@ -77,8 +77,8 @@ namespace spacecal {
                 spacecal::config::versioned::DataVersions dataVersion = spacecal::config::versioned::DataVersions::_0;
 
                 enum class AnchorMode : uint32_t {
-                    FixedWorld = 0,         // Static offset (Legacy style)
-                    HmdRelative = 1         // Dynamic: Entire System follows the HMD
+                    FixedWorld = 0,         // Worldspace calibration
+                    HmdRelative = 1         // Relative to reference device (typically HMD)
                 };
 
                 struct TrackingDevice {
@@ -87,23 +87,30 @@ namespace spacecal {
                     std::string tracking_system;
                 };
                 struct Transform {
-                    float x = 0.0f, y = 0.0f, z = 0.0f; // pos
-                    float yaw = 0.0f, pitch = 0.0f, roll = 0.0f; // rot
+                    float x = 0.0f, y = 0.0f, z = 0.0f; // pos, meters
+                    float yaw = 0.0f, pitch = 0.0f, roll = 0.0f; // rot, deg
+                };
+
+                struct ContinuousCalibrationData {
+                    bool is_active = false;
+                    bool hide_reference_tracker = false;
                 };
 
                 struct Calibration_t {
-                    bool isActive = false;
+                    bool is_active = false;
 
-                    Transform refToTargetTransform;
-                    Transform calibratedTransform;
+                    Transform ref_to_target_transform; // @TODO: redundant?
+                    Transform calibrated_transform;
 
-                    Transform anchorTransform;
-                    AnchorMode anchorMode = AnchorMode::FixedWorld;
+                    Transform anchor_transform; // @TODO: redundant?
+                    AnchorMode anchor_mode = AnchorMode::FixedWorld;
+                    ContinuousCalibrationData continuous;
 
-                    std::string hmdTrackingSystem;
+                    uint64_t calibration_speed = 0;
+                    std::string hmd_tracking_system; // @TODO: redundant?
 
-                    TrackingDevice referenceDevice;
-                    TrackingDevice targetDevice;
+                    TrackingDevice reference_device;
+                    TrackingDevice target_device;
                 };
 
                 std::vector<Calibration_t> calibrations;

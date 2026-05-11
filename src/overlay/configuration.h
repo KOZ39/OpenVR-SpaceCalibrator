@@ -5,6 +5,10 @@
 
 #include "config/configuration_data_versions.h"
 
+namespace glz {
+    struct generic;
+}
+
 namespace spacecal {
 
     enum class ConfigurationError {
@@ -30,7 +34,7 @@ namespace spacecal {
         [[nodiscard]] inline Configuration* getConfiguration() { return &m_config; }
 
     private:
-        bool upgradeConfigToLatest(const uint32_t readVersion, const std::string& configPath);
+        bool upgradeConfigToLatest(const uint32_t readVersion, glz::generic* configPath);
 
     private:
         std::string m_configPath;
