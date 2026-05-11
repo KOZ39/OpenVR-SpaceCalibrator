@@ -1,5 +1,6 @@
 #include "tracked_device_provider.h"
 
+#include "Eigen/Geometry"
 #include "util.h"
 #include "log.h"
 #include "interface_hook_injector.h"
@@ -74,6 +75,16 @@ namespace spacecal {
         return { rotatedVectorQuat.x, rotatedVectorQuat.y, rotatedVectorQuat.z };
     }
 
+    inline Eigen::Quaterniond eigenFromHmdQuat(const vr::HmdQuaternion_t& quat) {
+        return Eigen::Quaterniond(quat.w, quat.x, quat.y, quat.z);
+    }
+    inline Eigen::Translation3d eigenTransFromHmdVec(const double pos[3]) {
+        return Eigen::Translation3d(pos[0], pos[1], pos[2]);
+    }
+    inline Eigen::Vector3d eigenVecFromHmdVec(const double pos[3]) {
+        return Eigen::Vector3d(pos[0], pos[1], pos[2]);
+    }
+
     bool ServerTrackedDeviceProvider::HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, vr::DriverPose_t& newPose) {
 
         // bounds check, as sometimes the id is invalid?
@@ -93,18 +104,64 @@ namespace spacecal {
         } else if (transform.enabled()) {
             HandleQuirks(transform.quirks, modifiedPose);
 
-            modifiedPose.qWorldFromDriverRotation = transform.rotation * modifiedPose.qWorldFromDriverRotation;
+            if (transform.relativeCoordSystem()) {
+                if (IsDeviceIndexValid(transform.unReferenceOpenvrDeviceId) && m_poses[transform.unReferenceOpenvrDeviceId].poseIsValid) {
+                    const vr::DriverPose_t& refPose = m_poses[transform.unReferenceOpenvrDeviceId];
 
-            modifiedPose.vecPosition[0] *= transform.scale;
-            modifiedPose.vecPosition[1] *= transform.scale;
-            modifiedPose.vecPosition[2] *= transform.scale;
+                    // world-space pose of ref device
+                    Eigen::Quaterniond refWorldFromDriverRot = eigenFromHmdQuat(refPose.qWorldFromDriverRotation);
+                    Eigen::Vector3d    refWorldFromDriverPos = eigenVecFromHmdVec(refPose.vecWorldFromDriverTranslation);
 
-            vr::HmdVector3d_t rotatedTranslation = quaternionRotateVector(transform.rotation, modifiedPose.vecWorldFromDriverTranslation);
-            modifiedPose.vecWorldFromDriverTranslation[0] = rotatedTranslation.v[0] + transform.translation.v[0];
-            modifiedPose.vecWorldFromDriverTranslation[1] = rotatedTranslation.v[1] + transform.translation.v[1];
-            modifiedPose.vecWorldFromDriverTranslation[2] = rotatedTranslation.v[2] + transform.translation.v[2];
+                    Eigen::Quaterniond refRot = refWorldFromDriverRot * eigenFromHmdQuat(refPose.qRotation);
+                    Eigen::Vector3d    refPos = refWorldFromDriverPos + refWorldFromDriverRot * eigenVecFromHmdVec(refPose.vecPosition);
 
-            // @TODO: Lerping for continuous calibration?
+                    Eigen::Affine3d refWorld = Eigen::Translation3d(refPos) * refRot;
+
+                    // world-space pose of target device (whatever modifiedPose is)
+                    Eigen::Quaterniond targetWorldFromDriverRot = eigenFromHmdQuat(modifiedPose.qWorldFromDriverRotation);
+                    Eigen::Vector3d    targetWorldFromDriverPos = eigenVecFromHmdVec(modifiedPose.vecWorldFromDriverTranslation);
+
+                    Eigen::Quaterniond targetRot = targetWorldFromDriverRot * eigenFromHmdQuat(modifiedPose.qRotation);
+                    Eigen::Vector3d    targetPos = targetWorldFromDriverPos + targetWorldFromDriverRot * eigenVecFromHmdVec(modifiedPose.vecPosition);
+
+                    Eigen::Affine3d targetWorld = Eigen::Translation3d(targetPos) * targetRot;
+
+                    // local space calibration transform
+                    Eigen::Affine3d calibrationLocal =
+                        eigenTransFromHmdVec(transform.translation.v) *
+                        eigenFromHmdQuat(transform.rotation);
+
+                    // apply transformation matrices
+                    Eigen::Affine3d worldCalib = refWorld * calibrationLocal;
+
+                    // compute worldspace calibration pose data
+                    Eigen::Quaterniond worldCalibRot(worldCalib.rotation());
+                    worldCalibRot.normalize();
+                    vr::HmdQuaternion_t worldCalibRotVr = { worldCalibRot.w(), worldCalibRot.x(), worldCalibRot.y(), worldCalibRot.z() };
+                    
+                    // apply like normal
+                    modifiedPose.qWorldFromDriverRotation = worldCalibRotVr * modifiedPose.qWorldFromDriverRotation;
+
+                    vr::HmdVector3d_t rotatedTranslation = quaternionRotateVector(worldCalibRotVr, modifiedPose.vecWorldFromDriverTranslation);
+                    modifiedPose.vecWorldFromDriverTranslation[0] = rotatedTranslation.v[0] + worldCalib.translation().x();
+                    modifiedPose.vecWorldFromDriverTranslation[1] = rotatedTranslation.v[1] + worldCalib.translation().y();
+                    modifiedPose.vecWorldFromDriverTranslation[2] = rotatedTranslation.v[2] + worldCalib.translation().z();
+                }
+            } else {
+                // classic world-space application   
+                modifiedPose.qWorldFromDriverRotation = transform.rotation * modifiedPose.qWorldFromDriverRotation;
+                
+                modifiedPose.vecPosition[0] *= transform.scale;
+                modifiedPose.vecPosition[1] *= transform.scale;
+                modifiedPose.vecPosition[2] *= transform.scale;
+                
+                vr::HmdVector3d_t rotatedTranslation = quaternionRotateVector(transform.rotation, modifiedPose.vecWorldFromDriverTranslation);
+                modifiedPose.vecWorldFromDriverTranslation[0] = rotatedTranslation.v[0] + transform.translation.v[0];
+                modifiedPose.vecWorldFromDriverTranslation[1] = rotatedTranslation.v[1] + transform.translation.v[1];
+                modifiedPose.vecWorldFromDriverTranslation[2] = rotatedTranslation.v[2] + transform.translation.v[2];
+                
+                // @TODO: Lerping for continuous calibration?
+            }
         }
 
         return true;

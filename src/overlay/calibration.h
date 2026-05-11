@@ -133,6 +133,7 @@ namespace spacecal {
         DeltaSample_t deltaRotationSamples(const Sample_t& s1, const Sample_t& s2);
         Eigen::Quaterniond calibrateRotation(const std::vector<Sample_t>& samples);
         Eigen::Vector3d calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& R);
+        bool makeCalibrationLocal();
 
         inline const bool isContinuousCalibration() const {
             return state == CalibrationState::CONTINUOUS_IDLE || state == CalibrationState::CONTINUOUS_SAMPLE;

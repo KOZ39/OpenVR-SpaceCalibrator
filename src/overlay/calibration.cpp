@@ -181,6 +181,31 @@ namespace spacecal {
         return trans;
     }
 
+    bool TrackingSystemCalibration::makeCalibrationLocal() {
+        if (isRelativeCalibration && !m_samples.empty()) {
+            Sample_t& lastSample = m_samples.back();
+            if (hmdIsInReferenceTrackingSystem) {
+                lastSample.reference = Pose_t(CalibrationManager::getInstance()->m_poses[vr::k_unTrackedDeviceIndex_Hmd]);
+            }
+
+            // take calibration as a worldspace transformation matrix; take its inverse and apply it to the last known worldspace pose of the ref device
+            Eigen::Affine3d worldCalib = Eigen::Translation3d(calibratedTranslation) * calibratedRotation;
+            Eigen::Affine3d refPose = Eigen::Translation3d(lastSample.reference.trans) * lastSample.reference.rot;
+            Eigen::Affine3d localCalib = refPose.inverse() * worldCalib;
+
+            calibratedRotation = Eigen::Quaterniond(localCalib.rotation());
+            calibratedTranslation = localCalib.translation();
+
+            Eigen::Vector3d euler = calibratedRotation.toRotationMatrix().canonicalEulerAngles(2, 1, 0) * (180.0 / EIGEN_PI);
+            LOG_CALIB_INFO("Converted to local space. rotation (deg): yaw={:.2f} pitch={:.2f} roll={:.2f} ; translation (cm): x={:.2f} y={:.2f} z={:.2f}",
+                euler[1], euler[2], euler[0],
+                calibratedTranslation[0] * 100.0, calibratedTranslation[1] * 100.0, calibratedTranslation[2] * 100.0
+            );
+            return true;
+        }
+        return false;
+    }
+
     Sample_t TrackingSystemCalibration::collectSample() const {
         vr::DriverPose_t reference, target;
         reference.poseIsValid = false;
@@ -381,6 +406,8 @@ namespace spacecal {
                 args.translation.v[1] = calibratedTranslation.y();
                 args.translation.v[2] = calibratedTranslation.z();
                 CalibrationManager::getInstance()->m_ipcClient.SetDeviceTransform(args);
+
+                bool bMakeLocalSuccess = makeCalibrationLocal();
 
                 isValidCalibration = true;
                 // SaveProfile(ctx);
