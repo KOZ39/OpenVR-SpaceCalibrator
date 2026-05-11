@@ -246,7 +246,7 @@ namespace spacecal {
 
         // original code checks hmd specifically, we should check that the hmd and ref arent at 0 0 0
         // check that ref is not at origin
-        if (hmdIsInSameTrackingSystem) {
+        if (hmdIsInReferenceTrackingSystem) {
             if (targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
                 auto targetPose = CalibrationManager::getInstance()->m_poses[targetDevice.deviceId].vecPosition;
                 if ((targetPose[0] == 0.0 && targetPose[1] == 0.0 && targetPose[2] == 0.0) ||
@@ -342,8 +342,10 @@ namespace spacecal {
                 calibratedRotation = calibrateRotation(m_samples);
 
                 ipc::protocol::Command_SetDeviceTransform_t args = {};
-                args.unOpenvrDeviceId = targetDevice.deviceId;
+                args.unTargetOpenVrDeviceId = targetDevice.deviceId;
+                args.unReferenceOpenvrDeviceId = vr::k_unTrackedDeviceIndex_Hmd;
                 args.enabled(true);
+                args.relativeCoordSystem(false);
                 args.quirks = targetDevice.quirks;
                 args.updateRotation(true);
                 args.rotation.x = calibratedRotation.x();
@@ -361,8 +363,10 @@ namespace spacecal {
                 calibratedTranslation = calibrateTranslation(m_samples, calibratedRotation);
 
                 ipc::protocol::Command_SetDeviceTransform_t args = {};
-                args.unOpenvrDeviceId = targetDevice.deviceId;
+                args.unTargetOpenVrDeviceId = targetDevice.deviceId;
+                args.unReferenceOpenvrDeviceId = referenceDevice.deviceId;
                 args.enabled(true);
+                args.relativeCoordSystem(false);
                 args.quirks = targetDevice.quirks;
                 args.updateTranslation(true);
                 args.translation.v[0] = calibratedTranslation.x();
@@ -423,8 +427,10 @@ namespace spacecal {
 
         ipc::protocol::Command_SetDeviceTransform_t args = {};
 
-        args.unOpenvrDeviceId = device.deviceId;
+        args.unTargetOpenVrDeviceId = device.deviceId;
+        args.unReferenceOpenvrDeviceId = vr::k_unTrackedDeviceIndex_Hmd;
         args.enabled(false);
+        args.relativeCoordSystem(false);
         args.updateTranslation(true);
         args.translation = posOrigin;
         args.updateRotation(true);
@@ -458,7 +464,7 @@ namespace spacecal {
 
                 ipc::protocol::Command_SetDeviceTransform_t args = {};
 
-                args.unOpenvrDeviceId = i;
+                args.unTargetOpenVrDeviceId = i;
                 args.enabled(device.bIsConnected);
 
                 if (device.bIsConnected) {
@@ -543,6 +549,14 @@ namespace spacecal {
         if (countedCalibrations > 0) {
             // @NOTE: is max better here?
             m_wantedUpdateInterval = wantedInterval / countedCalibrations;
+        }
+    }
+
+    void CalibrationManager::apply() {
+        // @TODO: maybe more logic here?
+
+        for (auto& calibration : m_calibrations) {
+            calibration.apply();
         }
     }
 

@@ -159,7 +159,8 @@ namespace ipc::protocol
         uint8_t _boolFlags = 0;
     public:
         DeviceQuirks_t quirks;
-        vr::TrackedDeviceIndex_t unOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
+        vr::TrackedDeviceIndex_t unTargetOpenVrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
+        vr::TrackedDeviceIndex_t unReferenceOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         vr::HmdVector3d_t translation;
         vr::HmdQuaternion_t rotation;
         double scale = 1.0;
@@ -178,6 +179,7 @@ namespace ipc::protocol
         FLAG(updateScale,           0b00001000)
         FLAG(lerpCalibrations,      0b00010000)
         FLAG(hideContinuousTracker, 0b00100000)
+        FLAG(relativeCoordSystem,   0b01000000) // the calibration values are interpreted as relative to the hmd if this is set
 #undef FLAG
     };
 

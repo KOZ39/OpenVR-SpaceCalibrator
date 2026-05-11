@@ -95,7 +95,9 @@ namespace spacecal {
 
         bool isActive = false; // enabled in the UI
         bool isValidCalibration = false; // whether we can even use this calibration
-        bool hmdIsInSameTrackingSystem = false; // whether the hmd is part of the tracking systems involved in this calibration
+        bool hmdIsInReferenceTrackingSystem = false; // whether the hmd is part of the reference device tracking system
+        bool isRelativeCalibration = false; // whether the calibration is stored such that its coordinate system is relative to the reference device. this hides tracking anomalies from the reference device and keeps calibrations "valid" for longer
+        bool hideContinuousTracker = false;
         CalibrationSpeed calibrationSpeed = CalibrationSpeed::FAST;
         CalibrationState state = CalibrationState::NONE;
 
@@ -132,6 +134,10 @@ namespace spacecal {
         Eigen::Quaterniond calibrateRotation(const std::vector<Sample_t>& samples);
         Eigen::Vector3d calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& R);
 
+        inline const bool isContinuousCalibration() const {
+            return state == CalibrationState::CONTINUOUS_IDLE || state == CalibrationState::CONTINUOUS_SAMPLE;
+        }
+
     private:
         double m_lastTick = 0.0;
         double m_lastScan = 0.0;
@@ -156,6 +162,11 @@ namespace spacecal {
         void init();
         void start(); // @FIXME: how do i even define a calibration????
         void shutdown();
+
+        void apply(); // applies all calibrations to all devices
+
+        bool loadConfig();
+        void saveConfig() const;
 
         // handles updating pending calibrations every frame
         void calibrationTick(const double currentTime);

@@ -137,9 +137,9 @@ namespace spacecal {
     }
     
     void ServerTrackedDeviceProvider::RequestVirtualDesktopProps() {
-        // this simply states whether or not the vd driver is loaded
-        // @TODO: verify this works
+        // this simply states whether or not the vd driver is loaded. it doesnt tell us if the active hmd IS vd
         m_hmdMetaData.isVirtualDesktopAvailable = vr::VRDriverManager()->GetDriverHandle("virtualdesktop") != vr::k_ulInvalidDriverHandle;
+        // NOTE: DO NOT INVOKE IF VD IS NOT THE ACTIVE HMD! WILL CAUSE CRASH!!
         if (m_hmdMetaData.isVirtualDesktopAvailable) {
             m_hmdMetaData.VD_hmdModel = hmd::VD_getHmdModel();
             m_hmdMetaData.VD_stageTrackingEnabled = hmd::VD_isStageTrackingEnabled();
@@ -151,24 +151,26 @@ namespace spacecal {
     }
 
     void ServerTrackedDeviceProvider::SetDeviceTransform(ipc::protocol::Command_SetDeviceTransform_t& transform) {
-        m_transforms[transform.unOpenvrDeviceId].unOpenvrDeviceId = transform.unOpenvrDeviceId;
-        m_transforms[transform.unOpenvrDeviceId].enabled(transform.enabled());
-        m_transforms[transform.unOpenvrDeviceId].hideContinuousTracker(transform.hideContinuousTracker());
-        m_transforms[transform.unOpenvrDeviceId].lerpCalibrations(transform.lerpCalibrations());
-        m_transforms[transform.unOpenvrDeviceId].quirks = transform.quirks;
+        m_transforms[transform.unTargetOpenVrDeviceId].unTargetOpenVrDeviceId = transform.unTargetOpenVrDeviceId;
+        m_transforms[transform.unTargetOpenVrDeviceId].unReferenceOpenvrDeviceId = transform.unReferenceOpenvrDeviceId;
+        m_transforms[transform.unTargetOpenVrDeviceId].enabled(transform.enabled());
+        m_transforms[transform.unTargetOpenVrDeviceId].hideContinuousTracker(transform.hideContinuousTracker());
+        m_transforms[transform.unTargetOpenVrDeviceId].lerpCalibrations(transform.lerpCalibrations());
+        m_transforms[transform.unTargetOpenVrDeviceId].relativeCoordSystem(transform.relativeCoordSystem());
+        m_transforms[transform.unTargetOpenVrDeviceId].quirks = transform.quirks;
 
         // @FIXME: i dont like how much this branches, we can probably make this branchless but thats a problem for future me
         if (transform.updateRotation()) {
-            m_transforms[transform.unOpenvrDeviceId].updateRotation(transform.updateRotation());
-            m_transforms[transform.unOpenvrDeviceId].rotation = transform.rotation;
+            m_transforms[transform.unTargetOpenVrDeviceId].updateRotation(transform.updateRotation());
+            m_transforms[transform.unTargetOpenVrDeviceId].rotation = transform.rotation;
         }
         if (transform.updateTranslation()) {
-            m_transforms[transform.unOpenvrDeviceId].updateTranslation(transform.updateTranslation());
-            m_transforms[transform.unOpenvrDeviceId].translation = transform.translation;
+            m_transforms[transform.unTargetOpenVrDeviceId].updateTranslation(transform.updateTranslation());
+            m_transforms[transform.unTargetOpenVrDeviceId].translation = transform.translation;
         }
         if (transform.updateScale()) {
-            m_transforms[transform.unOpenvrDeviceId].updateScale(transform.updateScale());
-            m_transforms[transform.unOpenvrDeviceId].scale = transform.scale;
+            m_transforms[transform.unTargetOpenVrDeviceId].updateScale(transform.updateScale());
+            m_transforms[transform.unTargetOpenVrDeviceId].scale = transform.scale;
         }
     }
 }
