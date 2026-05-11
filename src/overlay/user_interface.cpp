@@ -96,12 +96,12 @@ namespace spacecal {
     }
 
     inline void buildDeviceSelection(spacecal::TrackingSystemCalibration& calibration, spacecal::CalibrationDevice& device) {
-        int selected = device.deviceId;
+        vr::TrackedDeviceIndex_t selected = device.deviceId;
         std::string szFriendlyTrackingSystemName = getTrackingSystemFriendlyName(device.trackingSystem);
         ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1), "%s", LOCALE_FORMAT("devices_from_space", szFriendlyTrackingSystemName).c_str());
 
         // check if the selected device was disconnected or is not present
-        if (selected != -1) {
+        if (selected != vr::k_unTrackedDeviceIndexInvalid) {
             bool matched = false;
             for (size_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
                 auto vrDevice = VRState::getInstance()->getVrDevice(i);
@@ -118,14 +118,14 @@ namespace spacecal {
 
             if (!matched) {
                 // Device is no longer present.
-                selected = -1;
+                selected = vr::k_unTrackedDeviceIndexInvalid;
             }
         }
 
         bool standby = calibration.state == CalibrationState::CONTINUOUS_IDLE;
 
         // select the left controller, or the first device that makes sense to select
-        if (selected == -1 && !standby) {
+        if (selected == vr::k_unTrackedDeviceIndexInvalid && !standby) {
             for (size_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
                 auto vrDevice = VRState::getInstance()->getVrDevice(i);
                 if (!vrDevice.bIsConnected)
@@ -139,7 +139,7 @@ namespace spacecal {
                 }
             }
 
-            if (selected == -1) {
+            if (selected == vr::k_unTrackedDeviceIndexInvalid) {
                 for (size_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
                     auto vrDevice = VRState::getInstance()->getVrDevice(i);
                     if (!vrDevice.bIsConnected)
@@ -160,7 +160,7 @@ namespace spacecal {
         }
 
         uint64_t iterator = 0;
-        if (selected == -1 && standby) {
+        if (selected == vr::k_unTrackedDeviceIndexInvalid && standby) {
             bool present = false;
             for (size_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
                 auto vrDevice = VRState::getInstance()->getVrDevice(i);
@@ -206,19 +206,11 @@ namespace spacecal {
         }
 
         if (selected != device.deviceId) {
-            for (size_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
-                auto vrDevice = VRState::getInstance()->getVrDevice(i);
-                if (!vrDevice.bIsConnected)
-                    continue;
-                if (vrDevice.szTrackingSystemId != device.trackingSystem)
-                    continue;
-
-                device.deviceId = selected;
-                device.trackingSystem = vrDevice.szTrackingSystemId;
-                device.deviceModel = vrDevice.szModel;
-                device.deviceSerialNumber = vrDevice.szSerial;
-                break;
-            }
+            auto vrDevice = VRState::getInstance()->getVrDevice(selected);
+            device.deviceId = selected;
+            device.trackingSystem = vrDevice.szTrackingSystemId;
+            device.deviceModel = vrDevice.szModel;
+            device.deviceSerialNumber = vrDevice.szSerial;
         }
     }
 
@@ -329,6 +321,8 @@ namespace spacecal {
                 }
             }
 #endif
+
+            ImGui::Checkbox("DEBUG: relative transform. RECALIBRATE TO APPLY", &calibration.isRelativeCalibration);
 
             ImGui::Text("");
             auto speed = calibration.calibrationSpeed;
