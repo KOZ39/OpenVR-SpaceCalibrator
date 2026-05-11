@@ -25,7 +25,7 @@
 #elif defined(_MSC_VER)
 #define BEGIN_EXTERNAL_HEADERS \
     __pragma(warning(push, 0)) \
-    __pragma(warning(disable : 4668))
+    __pragma(warning(disable : 4668)) // #if FOO warns if FOO is not defined; some libs are written like that :(
 #define END_EXTERNAL_HEADERS \
     __pragma(warning(pop))
 #elif defined(__GNUC__)
