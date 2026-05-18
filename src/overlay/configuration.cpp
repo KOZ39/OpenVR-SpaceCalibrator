@@ -163,6 +163,8 @@ namespace spacecal {
             return ConfigurationError::SerialiseFail;
         }
 
+        LOG_INFO("Configuration file saved to \"{0}\"", m_configPath);
+
         return ConfigurationError::Ok;
     }
 

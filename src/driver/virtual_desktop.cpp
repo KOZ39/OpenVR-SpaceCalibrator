@@ -84,6 +84,7 @@ namespace hmd {
         } else {
             LOG_HOOKING_WARN("Couldn't hook into VirtualDesktop.LibOVRRT64_1.dll; cannot communicate with VirtualDesktop if it's being used.");
         }
+        LOG_HOOKING_INFO("Successfully hooked into VirtualDesktop.LibOVRRT64_1.dll! Virtual Desktop specific behaviour is available for this session.");
         return false;
     }
     

@@ -478,6 +478,7 @@ namespace spacecal {
         if (this->hmdIsInReferenceTrackingSystem && hmdDevice.szTrackingSystemId != referenceDevice.trackingSystem) {
             // if the hmd the hmd's tracking system is not what was saved, handles users changing streamer / VR headset properly by not applying calibration
             this->isActive = false;
+            LOG_CALIB_INFO("Skipping calibration: HMD tracking system changed from {} to {}", referenceDevice.trackingSystem, hmdDevice.szTrackingSystemId);
             return;
         }
 

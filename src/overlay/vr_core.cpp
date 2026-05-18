@@ -254,6 +254,7 @@ namespace spacecal {
             switch (vrEvent.eventType) {
                 // @TODO: Handle these??
             case vr::EVREventType::VREvent_TrackedDeviceActivated:
+                LOG_OPENVR_INFO("New device connected at index {}", vrEvent.trackedDeviceIndex);
             case vr::EVREventType::VREvent_TrackedDeviceDeactivated:
             case vr::EVREventType::VREvent_TrackedDeviceUpdated:
             case vr::EVREventType::VREvent_TrackedDeviceRoleChanged:

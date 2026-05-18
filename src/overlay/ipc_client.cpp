@@ -60,6 +60,8 @@ namespace ipc {
         ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_HANDSHAKE, &handshakeArgs, sizeof(handshakeArgs));
 
         m_connected = m_hIpc != k_hInvalidIpcHandle;
+        
+        LOG_IPC_INFO("IPC connection established: {}", m_connected);
 
         return m_connected;
     }
