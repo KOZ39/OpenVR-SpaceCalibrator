@@ -41,7 +41,7 @@ namespace spacecal {
         [[nodiscard]] inline vr::EVRInitError getVrInitError() const { return m_eVrInitError; }
         [[nodiscard]] inline ipc::protocol::SharedData_HmdMetadata getHmdMeta() const { return m_hmdMetadata; }
     private:
-        void updateSteamVRDevice(const vr::TrackedDeviceIndex_t deviceId);
+        bool updateSteamVRDevice(const vr::TrackedDeviceIndex_t deviceId);
 
     private:
         static VRState* s_instance;

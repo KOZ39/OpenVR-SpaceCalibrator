@@ -122,14 +122,21 @@ namespace spacecal {
         return err;
     }
 
-    void VRState::updateSteamVRDevice(const vr::TrackedDeviceIndex_t deviceId) {
+    bool VRState::updateSteamVRDevice(const vr::TrackedDeviceIndex_t deviceId) {
         vr::ETrackedDeviceClass deviceClass = vr::VRSystem()->GetTrackedDeviceClass(deviceId);
 
         // we dont care about these devices types
         if (deviceClass == vr::TrackedDeviceClass_Invalid // Unset
             || deviceClass == vr::TrackedDeviceClass_TrackingReference // Base Stations
             || deviceClass == vr::TrackedDeviceClass_DisplayRedirect) // vr::IVRVirtualDisplay
-            return;
+            return true;
+
+        bool isConnected = vr::VRSystem()->IsTrackedDeviceConnected(deviceId);
+
+        // we don't care about the device if it is not even connected
+        if (!isConnected) {
+            return true;
+        }
 
         vr::ETrackedPropertyError err = vr::TrackedProp_Success;
         std::string szTrackingSystem;
@@ -141,14 +148,14 @@ namespace spacecal {
                 err != vr::TrackedProp_NotYetAvailable) {
                 LOG_OPENVR_WARN("Failed to get tracking system string for device with id {}, got error {} ({})", deviceId, err, (uint32_t)err);
             }
-            return;
+            return false;
         }
 
 #if !defined(_DEBUG)
         // if the tracking system should be ignored, ignore it
         for (size_t i = 0; i < std::size(k_IGNORED_TRACKING_SYSTEMS); i++) {
             if (strcmp(szTrackingSystem.c_str(), k_IGNORED_TRACKING_SYSTEMS[i]) == 0) {
-                return;
+                return true; // this is a don't care
             }
         }
 #endif
@@ -215,7 +222,6 @@ namespace spacecal {
 
         // update tracking state
         vr::ETrackedControllerRole controllerRole = (vr::ETrackedControllerRole)vr::VRSystem()->GetInt32TrackedDeviceProperty(deviceId, vr::Prop_ControllerRoleHint_Int32, &err);
-        bool isConnected = vr::VRSystem()->IsTrackedDeviceConnected(deviceId);
 
         m_aDevices[deviceId] = {
             .bIsConnected = isConnected,
@@ -226,6 +232,8 @@ namespace spacecal {
             .szModel = szDeviceModel,
             .szSerial = szDeviceSerial,
         };
+
+        return true;
     }
 
     void VRState::updateVrState() {
@@ -234,17 +242,19 @@ namespace spacecal {
             return;
 
         if (m_aTrackingSystems.size() == 0 || m_bStateDirty) {
+            m_bStateDirty = false;
+
             // fresh poll, go through everything because we're in a fresh state
             for (vr::TrackedDeviceIndex_t id = 0; id < vr::k_unMaxTrackedDeviceCount; ++id) {
                 if (vr::VRSystem()->IsTrackedDeviceConnected(id)) {
-                    updateSteamVRDevice(id);
+                    // only clear dirty if we successfully updated ALL devices!
+                    m_bStateDirty |= !updateSteamVRDevice(id);
                 }
                 else {
                     m_aDevices[id].bIsConnected = false;
                 }
             }
 
-            m_bStateDirty = false;
             // an event that matters happened, re-apply calibration for good measure!
             CalibrationManager::getInstance()->apply();
         }
