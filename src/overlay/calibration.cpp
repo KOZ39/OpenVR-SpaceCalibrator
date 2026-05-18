@@ -534,7 +534,18 @@ namespace spacecal {
         // @FIXME: Need to figure out how to handle multiple calibrations
 
         // try loading calibrations from disk, if fail, fallback to a default one
-        if (!loadConfig()) {
+        if (loadConfig()) {
+            // successfully loaded calibration; update runtime state
+            const auto& hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
+
+            for (size_t i = 0; i < m_calibrations.size(); i++) {
+                m_calibrations[i].assignTarget(m_calibrations[i].referenceDevice);
+                m_calibrations[i].assignTarget(m_calibrations[i].targetDevice);
+                
+                // update state
+                m_calibrations[i].hmdIsInReferenceTrackingSystem = hmdDevice.szTrackingSystemId == m_calibrations[i].referenceDevice.trackingSystem;
+            }
+        } else {
             TrackingSystemCalibration mainCalibration;
             mainCalibration.hmdIsInReferenceTrackingSystem = true;
             m_calibrations.push_back(mainCalibration);
