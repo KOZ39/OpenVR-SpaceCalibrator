@@ -680,7 +680,7 @@ namespace vr {
             return "TrackedDeviceClass_DisplayRedirect";
         case ETrackedDeviceClass::TrackedDeviceClass_Max:
         default:
-            return fmt::format("ETrackedDeviceClass::{}", (uint32_t)trackedDeviceClass);
+            return fmt::format("TrackedDeviceClass_{}", (uint32_t)trackedDeviceClass);
         }
     }
     std::string format_as(ETrackedDeviceProperty trackedDeviceProperty)
@@ -1156,7 +1156,7 @@ namespace vr {
         case EVRSettingsError::VRSettingsError_AccessDenied:
             return "VRSettingsError_AccessDenied";
         default:
-            return fmt::format("EVRSettingsError::{}", (uint32_t)settingsError);
+            return fmt::format("VRSettingsError_{}", (uint32_t)settingsError);
         }
     }
     std::string format_as(EVREventType eventType)
@@ -1522,7 +1522,7 @@ namespace vr {
             return "VREvent_VendorSpecific_Reserved_End";
 
         default:
-            return fmt::format("EVREventType::{}", (uint32_t)eventType);
+            return fmt::format("VREvent_{}", (uint32_t)eventType);
         }
     }
 }
