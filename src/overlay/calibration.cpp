@@ -493,7 +493,7 @@ namespace spacecal {
                 ipc::protocol::Command_SetDeviceTransform_t args = {};
 
                 args.unTargetOpenVrDeviceId = i;
-                args.enabled(device.bIsConnected);
+                args.enabled(device.bIsConnected && this->isActive);
 
                 if (device.bIsConnected) {
                     args.quirks = ipc::protocol::DeviceQuirks_t::QUIRK_NONE;

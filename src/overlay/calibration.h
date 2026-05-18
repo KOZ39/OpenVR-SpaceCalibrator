@@ -105,8 +105,8 @@ namespace spacecal {
         CalibrationDevice targetDevice; // what we are calibrating (ie this tracking system will be manipulated to match the ref)
 
         // the calibrated pose
-        Eigen::Quaterniond calibratedRotation;
-        Eigen::Vector3d calibratedTranslation;
+        Eigen::Quaterniond calibratedRotation = Eigen::Quaterniond::Identity();
+        Eigen::Vector3d calibratedTranslation = Eigen::Vector3d::Zero();
         double calibratedScale = 1.0;
 
         double wantedUpdateInterval = 1.0;
