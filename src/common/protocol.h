@@ -2,8 +2,8 @@
 
 #include <inttypes.h>
 
-#ifndef _OPENVR_API
-#ifdef IS_DRIVER
+#if !defined(_OPENVR_API)
+#if defined(IS_DRIVER)
 #include <openvr_driver.h>
 #elif defined(IS_OVERLAY)
 #include <openvr.h>
