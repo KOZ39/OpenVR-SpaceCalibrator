@@ -27,6 +27,7 @@ namespace vr {
     std::string format_as(EVRInputError inputErr);
     std::string format_as(EVRSpatialAnchorError spatialAnchorErr);
     std::string format_as(EVRNotificationError notificationErr);
+    std::string format_as(ETrackedDeviceClass trackedDeviceClass);
     std::string format_as(ETrackedDeviceProperty trackedDeviceProperty);
     std::string format_as(EVRSettingsError settingsError);
     std::string format_as(EVREventType eventType);

@@ -345,4 +345,16 @@ namespace spacecal {
         // @TODO: implement another method of identifying the selected device! not everything has LEDs or haptic motors, and viewing LEDs is challenging in VR!
         vr::VRSystem()->TriggerHapticPulse(deviceId, 0, 2000);
     }
+
+    void VRState::debugListDevices() const {
+        for (int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
+            const auto& device = m_aDevices[i];
+
+            if (!device.bIsConnected) {
+                continue;
+            }
+
+            LOG_OPENVR_INFO("Device [{}] : {} {} {} ({})", i, device.szTrackingSystemId, device.szModel, device.szSerial, device.eDeviceClass);
+        }
+    }
 }

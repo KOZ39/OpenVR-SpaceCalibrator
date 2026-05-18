@@ -5,6 +5,7 @@
 #include "platform.h"
 #include "constants.h"
 #include "configuration.h"
+#include "vr_core.h"
 #include <GLFW/glfw3.h>
 
 namespace spacecal {
@@ -549,6 +550,10 @@ namespace spacecal {
             m_ipcClient.PollPoses();
         }
 
+        LOG_CALIB_INFO("Initialising CalibrationManager...");
+        LOG_CALIB_INFO("Connected OpenVR devices:");
+        VRState::getInstance()->debugListDevices();
+
         for (auto& calibration : m_calibrations) {
             calibration.init();
         }
@@ -562,6 +567,10 @@ namespace spacecal {
 
     void CalibrationManager::start() {
         // @TODO: maybe more logic here?
+
+        LOG_CALIB_INFO("Starting calibration...");
+        LOG_CALIB_INFO("Connected OpenVR devices:");
+        VRState::getInstance()->debugListDevices();
 
         for (auto& calibration : m_calibrations) {
             calibration.start();

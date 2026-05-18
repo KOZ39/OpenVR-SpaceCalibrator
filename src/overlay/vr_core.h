@@ -24,6 +24,7 @@ namespace spacecal {
 
         // called every frame, updates m_aDevices and m_aTrackingSystems
         void updateVrState();
+        void debugListDevices() const;
         const VRDevice_t findVrDevice(const std::string& trackingSystem, const std::string& model, const std::string& serial) const;
 
         const VRDevice_t getVrDevice(const size_t index) const;

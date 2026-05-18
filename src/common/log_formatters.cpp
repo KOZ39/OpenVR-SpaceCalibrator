@@ -663,6 +663,26 @@ namespace vr {
         }
     }
 
+    std::string format_as(ETrackedDeviceClass trackedDeviceClass)
+    {
+        switch (trackedDeviceClass) {
+        case ETrackedDeviceClass::TrackedDeviceClass_Invalid:
+            return "TrackedDeviceClass_Invalid";
+        case ETrackedDeviceClass::TrackedDeviceClass_HMD:
+            return "TrackedDeviceClass_HMD";
+        case ETrackedDeviceClass::TrackedDeviceClass_Controller:
+            return "TrackedDeviceClass_Controller";
+        case ETrackedDeviceClass::TrackedDeviceClass_GenericTracker:
+            return "TrackedDeviceClass_GenericTracker";
+        case ETrackedDeviceClass::TrackedDeviceClass_TrackingReference:
+            return "TrackedDeviceClass_TrackingReference";
+        case ETrackedDeviceClass::TrackedDeviceClass_DisplayRedirect:
+            return "TrackedDeviceClass_DisplayRedirect";
+        case ETrackedDeviceClass::TrackedDeviceClass_Max:
+        default:
+            return fmt::format("ETrackedDeviceClass::{}", (uint32_t)trackedDeviceClass);
+        }
+    }
     std::string format_as(ETrackedDeviceProperty trackedDeviceProperty)
     {
         switch (trackedDeviceProperty) {
