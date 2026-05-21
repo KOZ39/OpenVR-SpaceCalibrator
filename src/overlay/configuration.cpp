@@ -1,4 +1,5 @@
 #include "configuration.h"
+#include "calibration.h"
 #include "log.h"
 #include "util.h"
 #include "platform.h"
@@ -190,6 +191,18 @@ namespace spacecal {
 
             if (jsonData->contains("calibration_speed") && !jsonData->at("calibration_speed").is_null() && jsonData->at("calibration_speed").is_number()) {
                 m_config.calibrations[0].calibration_speed = (uint32_t)jsonData->at("calibration_speed").get_number();
+                // remap to new range
+                switch (m_config.calibrations[0].calibration_speed) {
+                    case 0: // FAST
+                        m_config.calibrations[0].calibration_speed = (uint32_t)spacecal::CalibrationSpeed::FAST;
+                        break;
+                    case 1: // SLOW
+                        m_config.calibrations[0].calibration_speed = (uint32_t)spacecal::CalibrationSpeed::SLOW;
+                        break;
+                    case 2: // VERY_SLOW
+                        m_config.calibrations[0].calibration_speed = (uint32_t)spacecal::CalibrationSpeed::VERY_SLOW;
+                        break;
+                }
             }
 
             // ref device
