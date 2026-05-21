@@ -38,6 +38,12 @@ namespace ipc {
             .userData = this,
         });
 
+        if (m_hIpc == k_hInvalidIpcHandle) {
+            LOG_IPC_ERROR("Failed to initialise IPC client!");
+            m_connected = false;
+            return false;
+        }
+
         m_poseDataOperation = {
             .szIdentifier = "SpaceCalibratorNova_PoseSharedBuffer",
             .dwSharedMemoryOffset = 0,

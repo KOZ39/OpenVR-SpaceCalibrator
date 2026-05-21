@@ -125,6 +125,10 @@ namespace ipc {
             .userData = this,
         });
 
+        if (m_hIpc == k_hInvalidIpcHandle) {
+            LOG_IPC_ERROR("Failed to initialise IPC server!");
+        }
+
         m_poseDataOperation = {
             .szIdentifier = "SpaceCalibratorNova_PoseSharedBuffer",
             .dwSharedMemoryOffset = 0,
