@@ -27,6 +27,7 @@
 
   "calibration_progress": "Calibration Progress",
   "calibration_progress_placeholder": "Calibration in progress...",
+  "calibration_info_move_around_unsifficient_samples": "Move your selected devices together in your playspace, and walk around your room while doing so",
 
   "calibration_speed": "Calibration Speed",
   "calibration_speed_fast": "Fast",

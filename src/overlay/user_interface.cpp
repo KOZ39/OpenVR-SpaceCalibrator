@@ -1,4 +1,5 @@
 #include "user_interface.h"
+#include "imgui.h"
 #include "imgui_extensions.h"
 #include "constants.h"
 #include "localisation.h"
@@ -361,6 +362,7 @@ namespace spacecal {
 #endif
         else
         {
+            ImGui::Text("%s", LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());
             ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2));
             float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
             ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
@@ -415,6 +417,10 @@ namespace spacecal {
             drawTroubleshootView();
         } else {
             const size_t dwNumCalibrations = spacecal::CalibrationManager::getInstance()->getCalibrationCount();
+
+            if (dwNumCalibrations == 0) {
+                // @TODO: no calibrations edge case handling
+            }
 
             for (size_t i = 0; i < dwNumCalibrations; i++) {
                 spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(i);
