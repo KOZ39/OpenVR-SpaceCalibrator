@@ -127,7 +127,6 @@ namespace spacecal {
 
         // we dont care about these devices types
         if (deviceClass == vr::TrackedDeviceClass_Invalid // Unset
-            || deviceClass == vr::TrackedDeviceClass_TrackingReference // Base Stations
             || deviceClass == vr::TrackedDeviceClass_DisplayRedirect) // vr::IVRVirtualDisplay
             return true;
 

@@ -113,6 +113,8 @@ namespace spacecal {
                     continue;
                 if (vrDevice.szTrackingSystemId != device.trackingSystem)
                     continue;
+                if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)
+                    continue;
 
                 if (selected == vrDevice.dwDeviceIndex) {
                     matched = true;
@@ -136,6 +138,8 @@ namespace spacecal {
                     continue;
                 if (vrDevice.szTrackingSystemId != device.trackingSystem)
                     continue;
+                if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)
+                    continue;
 
                 if (vrDevice.eControllerRole == vr::ETrackedControllerRole::TrackedControllerRole_LeftHand) {
                     selected = vrDevice.dwDeviceIndex;
@@ -154,8 +158,6 @@ namespace spacecal {
                         continue;
                     if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)
                         continue;
-                    if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_DisplayRedirect)
-                        continue;
 
                     selected = vrDevice.dwDeviceIndex;
                     break;
@@ -171,6 +173,8 @@ namespace spacecal {
                 if (!vrDevice.bIsConnected)
                     continue;
                 if (vrDevice.szTrackingSystemId != device.trackingSystem)
+                    continue;
+                if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)
                     continue;
 
                 if (device.deviceModel != vrDevice.szModel) continue;
@@ -197,6 +201,8 @@ namespace spacecal {
             if (!vrDevice.bIsConnected)
                 continue;
             if (vrDevice.szTrackingSystemId != device.trackingSystem)
+                continue;
+            if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)
                 continue;
 
             auto label = fmt::format("{} | {}", vrDevice.szModel, vrDevice.szSerial);
