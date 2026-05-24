@@ -211,8 +211,7 @@ namespace ipc::protocol
         VirtualDesktop_HmdModel VD_hmdModel = VD_HmdModel_None;
     };
 
-    constexpr uint32_t k_unSharedMemoryPoseCount = vr::k_unMaxTrackedDeviceCount;
-    constexpr uint32_t k_unSharedMemoryFrameCount = 512; // @ 90Hz => 5.7s of history, @ 120Hz => 4.2s of history
-    constexpr uint32_t k_unSharedMemoryElementCount = k_unSharedMemoryPoseCount * k_unSharedMemoryFrameCount + sizeof(SharedData_HmdMetadata);
+    constexpr uint32_t k_unSharedMemoryPoseSize = vr::k_unMaxTrackedDeviceCount * sizeof(vr::DriverPose_t);
+    constexpr uint32_t k_unSharedMemoryElementSize = k_unSharedMemoryPoseSize + sizeof(SharedData_HmdMetadata);
     constexpr const char* k_szIpcIdentifier = "SPACE_CALIBRATOR_NOVA";
 }

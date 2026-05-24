@@ -30,7 +30,7 @@ namespace ipc {
     bool IpcClient::Connect() {
         m_hIpc = ipc_client_init({
             .szSharedMemoryName = protocol::k_szIpcIdentifier,
-            .dwSharedBufferSizeBytes = protocol::k_unSharedMemoryElementCount,
+            .dwSharedBufferSizeBytes = protocol::k_unSharedMemoryElementSize,
             .aFunctions = m_funcs,
             .dwFunctionCount = _countof(m_funcs),
             .aOperations = nullptr,
@@ -48,15 +48,15 @@ namespace ipc {
             .szIdentifier = "SpaceCalibratorNova_PoseSharedBuffer",
             .dwSharedMemoryOffset = 0,
         };
+        m_hmdMetaDataOperation = {
+            .szIdentifier = "SpaceCalibratorNova_HmdMetaData",
+            .dwSharedMemoryOffset = protocol::k_unSharedMemoryPoseSize,
+        };
         
         if (!ipc_server_register_operation(m_hIpc, &m_poseDataOperation)) {
             LOG_IPC_ERROR("Failed to register pose data shared memory operation!");
         }
 
-        m_hmdMetaDataOperation = {
-            .szIdentifier = "SpaceCalibratorNova_HmdMetaData",
-            .dwSharedMemoryOffset = sizeof(ipc::protocol::SharedData_HmdMetadata),
-        };
         if (!ipc_server_register_operation(m_hIpc, &m_hmdMetaDataOperation)) {
             LOG_IPC_ERROR("Failed to register hmd metadata shared memory operation!");
         }

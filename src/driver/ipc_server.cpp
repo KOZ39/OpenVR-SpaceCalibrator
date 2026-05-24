@@ -117,7 +117,7 @@ namespace ipc {
     bool Server::Connect(spacecal::ServerTrackedDeviceProvider* driver) {
         m_hIpc = ::ipc_server_init({
             .szSharedMemoryName = protocol::k_szIpcIdentifier,
-            .dwSharedBufferSizeBytes = protocol::k_unSharedMemoryElementCount,
+            .dwSharedBufferSizeBytes = protocol::k_unSharedMemoryElementSize,
             .aFunctions = m_funcs,
             .dwFunctionCount = _countof(m_funcs),
             .aOperations = nullptr,
@@ -135,7 +135,7 @@ namespace ipc {
         };
         m_hmdMetaOperation = {
             .szIdentifier = "SpaceCalibratorNova_HmdMetaData",
-            .dwSharedMemoryOffset = sizeof(ipc::protocol::SharedData_HmdMetadata),
+            .dwSharedMemoryOffset = protocol::k_unSharedMemoryPoseSize,
         };
 
         if (!ipc_server_register_operation(m_hIpc, &m_poseDataOperation)) {
