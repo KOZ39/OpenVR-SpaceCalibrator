@@ -116,7 +116,18 @@ namespace spacecal {
         io.IniFilename = nullptr;
 
         // load resources
-        // io.Fonts->AddFontFromMemoryCompressedTTF(DroidSans_compressed_data, DroidSans_compressed_size, 24.0f);
+        ImFontConfig cfg;
+        // io.Fonts->AddFontFromMemoryCompressedTTF(DroidSans_compressed_data, DroidSans_compressed_size, 24.0f, &cfg);
+        // @TEMP: embed fonts later
+        std::string fontPath = (platform::getExeDir() / "assets" / "fonts" / "Poppins-Regular.ttf").string();
+        cfg.MergeMode = false;
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+
+        fontPath = (platform::getExeDir() / "assets" / "fonts" / "MPLUS1p-Regular.ttf").string();
+        static const ImWchar k_RANGE_CORE_LATIN[] = { 0x0020, 0x00FF, 0, };
+        cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.MergeMode = true;
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
         ImGui_ImplGlfw_InitForOpenGL(m_glfwWindow, true);
         ImGui_ImplOpenGL3_Init("#version 330");
