@@ -98,7 +98,7 @@ namespace spacecal {
 
         // Load icon and set it in the window
         GLFWimage images[1] = {};
-        std::string iconPath = (std::filesystem::current_path() / "taskbar_icon.png").string();
+        std::string iconPath = (platform::getExeDir() / "taskbar_icon.png").string();
         images[0].pixels = stbi_load(iconPath.c_str(), &images[0].width, &images[0].height, 0, 4);
         glfwSetWindowIcon(m_glfwWindow, 1, images);
         stbi_image_free(images[0].pixels);
