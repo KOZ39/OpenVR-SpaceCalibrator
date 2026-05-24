@@ -1,4 +1,5 @@
 #include "localisation.h"
+#include "configuration.h"
 #include "log.h"
 #include "platform.h"
 #include "util.h"
@@ -9,6 +10,40 @@ BEGIN_EXTERNAL_HEADERS
 END_EXTERNAL_HEADERS
 
 namespace spacecal {
+
+// enum -> string mapping
+#define LOCALE_LIST \
+    X(System,                 "system") \
+    X(English_UK,             "en_GB") \
+    X(English_US,             "en_US") \
+    X(French,                 "fr") \
+    X(Italian,                "it") \
+    X(German,                 "de") \
+    X(Dutch,                  "nl") \
+    X(Spanish_Spain,          "es_ES") \
+    X(Spanish_LatinAmerica,   "es_US") \
+    X(Danish,                 "da") \
+    X(Swedish,                "sv") \
+    X(Finnish,                "fi") \
+    X(Norwegian,              "no") \
+    X(Bulgarian,              "bg") \
+    X(Polish,                 "pl") \
+    X(Czech,                  "cs") \
+    X(Greek,                  "el") \
+    X(Hungarian,              "hu") \
+    X(Portuguese_Portugal,    "pt_PT") \
+    X(Portuguese_Brazil,      "pt_BR") \
+    X(Romanian,               "ro") \
+    X(Russian,                "ru") \
+    X(Turkish,                "tr") \
+    X(Ukrainian,              "uk") \
+    X(Chinese_Simplified,     "zh_HANS") \
+    X(Chinese_Traditional,    "zh_HANT") \
+    X(Japanese,               "ja") \
+    X(Korean,                 "ko") \
+    X(Thai,                   "th") \
+    X(Vietnamese,             "vi")
+
     LocalisationManager* LocalisationManager::m_instance = nullptr;
 
     void LocalisationManager::init() {
@@ -18,15 +53,30 @@ namespace spacecal {
         }
         m_instance = this;
 
-        m_selectedLocale = estimateSystemLocale();
+        m_nativeLanguageNames.clear();
 
-        // @TODO: Check if it's defined in settings, if so, estimate, else, lmao
+        // config will be valid by this point, so we can read it
+        m_selectedLocale = getLocaleFromRegionString(ConfigurationManager::getInstance()->getConfiguration()->uiLocale);
+        if (m_selectedLocale == Locale::System) {
+            m_selectedLocale = estimateSystemLocale();
+        }
 
         loadLocalisationStrings(m_selectedLocale);
+
+        // build native tongue locale name list
+        LOG_INFO("Building native locale name table...");
+#define X(enum_val, str_val) loadNativeNameForLocale(Locale::enum_val, str_val);
+        LOCALE_LIST
+#undef X
+        m_nativeLanguageNames[Locale::System] = m_nativeLanguageNames[estimateSystemLocale()];
     }
 
     bool LocalisationManager::setLocale(const Locale locale) {
-        m_selectedLocale = locale;
+        if (locale == Locale::System) {
+            m_selectedLocale = estimateSystemLocale();
+        } else {
+            m_selectedLocale = locale;
+        }
         return loadLocalisationStrings(m_selectedLocale);
     }
 
@@ -48,6 +98,11 @@ namespace spacecal {
 
         m_localisedStrings.clear();
 
+        Locale targetLocale = locale;
+        if (locale == Locale::System) {
+            targetLocale = estimateSystemLocale();
+        }
+
         bool result = loadLocaleFromFile(Locale::English_UK);
         if (locale != Locale::English_UK) {
             result |= loadLocaleFromFile(locale);
@@ -66,6 +121,9 @@ namespace spacecal {
         switch (fileErr) {
         case 0: // OK
             break;
+        case ENOENT:
+            LOG_WARNING("The locale file \"{0}\" does not exist on disk.", langPath);
+            return false;
         case EACCES:
             LOG_WARNING("The locale file \"{0}\" could not be loaded due to misconfigured permissions.", langPath);
             return false;
@@ -78,7 +136,7 @@ namespace spacecal {
             return false;
         default:
             LOG_WARNING("The locale file \"{0}\" could not be loaded due to an unknown error ({1}).", langPath, fileErr);
-            break;
+            return false;
         }
         if (localeFile) {
             // Read to std::string
@@ -132,86 +190,109 @@ namespace spacecal {
         return false;
     }
 
-    std::string LocalisationManager::getLocaleAsRegionString(const Locale locale) const
-    {
-
-        switch (locale) {
-        case Locale::English_UK:
-            return "en_GB";
-        case Locale::English_US:
-            return "en_US";
-        case Locale::French:
-            return "fr";
-        case Locale::Italian:
-            return "it";
-        case Locale::German:
-            return "de";
-        case Locale::Dutch:
-            return "nl";
-        case Locale::Spanish_Spain:
-            return "es_ES";
-        case Locale::Spanish_LatinAmerica:
-            return "es_US";
-        case Locale::Danish:
-            return "da";
-        case Locale::Swedish:
-            return "se";
-        case Locale::Finnish:
-            return "fi";
-        case Locale::Norwegian:
-            return "no";
-        case Locale::Bulgarian:
-            return "bg";
-        case Locale::Polish:
-            return "pl";
-        case Locale::Czech:
-            return "cs";
-        case Locale::Greek:
-            return "el";
-        case Locale::Hungarian:
-            return "hu";
-        case Locale::Portuguese_Portugal:
-            return "pt_PT";
-        case Locale::Portuguese_Brazil:
-            return "pt_BR";
-        case Locale::Romanian:
-            return "ro";
-        case Locale::Russian:
-            return "ru";
-        case Locale::Turkish:
-            return "tr";
-        case Locale::Ukrainian:
-            return "uk";
-        case Locale::Chinese_Simplified:
-            return "zh_HANS";
-        case Locale::Chinese_Traditional:
-            return "zh_HANT";
-        case Locale::Japanese:
-            return "ja";
-        case Locale::Korean:
-            return "ko";
-        case Locale::Thai:
-            return "th";
-        case Locale::Vietnamese:
-            return "vi";
-
-#if _DEBUG
-        case Locale::System:
-            return "ss_ss";
-        case Locale::Count:
-            return "cc_CC";
-#else
-        case Locale::System:
-        case Locale::Count:
-            return "en_GB";
-#endif
+    void LocalisationManager::loadNativeNameForLocale(const Locale locale, const std::string& regionCode) {
+        if (locale == Locale::System || locale == Locale::Count) {
+            return;
         }
 
-#if _DEBUG
-        // Return an invalid code in debug mode to signify that I fucked up
-        return "xx_XX";
-#else
-        return "en_GB";
-#endif
+        const auto rootDir = util::getSpaceCalibratorLangsDir();
+        std::string langPath = (rootDir / (regionCode + ".json")).string();
+        std::string expectedKey = "languages_" + regionCode;
+
+        // fallback to the loaded locale string
+        m_nativeLanguageNames[locale] = getString(expectedKey);
+
+        FILE* file = nullptr;
+        errno_t fileErr = fopen_s(&file, langPath.c_str(), "rb");
+        switch (fileErr) {
+        case 0: // OK
+            break;
+        case ENOENT:
+            LOG_WARNING("The locale file \"{0}\" does not exist on disk.", langPath);
+            return;
+        case EACCES:
+            LOG_WARNING("The locale file \"{0}\" could not be loaded due to misconfigured permissions.", langPath);
+            return;
+        case EMFILE:
+        case ENFILE:
+            LOG_WARNING("The locale file \"{0}\" could not be loaded as too many files are open on the system.", langPath);
+            return;
+        case EFBIG:
+            LOG_WARNING("The locale file \"{0}\" could not be loaded as it was too large.", langPath);
+            return;
+        default:
+            LOG_WARNING("The locale file \"{0}\" could not be loaded due to an unknown error ({1}).", langPath, fileErr);
+            return;
+        }
+
+        if (!file) {
+            return;
+        }
+
+        fseek(file, 0, SEEK_END);
+        size_t localeFileSize = ftell(file);
+        std::string buffer;
+        buffer.resize(localeFileSize);
+        rewind(file);
+        fread(&buffer[0], 1, localeFileSize, file);
+        fclose(file);
+
+        glz::generic json{};
+        glz::error_ctx jsonError = glz::read_jsonc(json, buffer);
+        if (jsonError.ec != glz::error_code::none) {
+            LOG_WARNING("Failed to parse JSON for locale file \"{0}\". {1}.", langPath, jsonError.custom_error_message);
+            return;
+        }
+        if (json.empty()) {
+            LOG_WARNING("Failed to parse JSON for locale file \"{0}\". Expected JSON object, got empty file.", langPath);
+            return;
+        }
+        if (!json.is_object()) {
+            LOG_WARNING("Failed to parse JSON for locale file \"{0}\". Expected JSON object, got another type.", langPath);
+            return;
+        }
+
+        glz::generic::object_t jsonObject = json.as<glz::generic::object_t>();
+
+        if (jsonObject.contains(expectedKey)) {
+            const glz::generic& value = jsonObject.at(expectedKey);
+            if (value.is_string()) {
+                m_nativeLanguageNames[locale] = value.get_string();
+                return;
+            }
+        }
+
+        LOG_WARNING("Key \"{0}\" missing or invalid type in \"{1}\".", expectedKey, langPath);
+    }
+
+    std::string LocalisationManager::getNativeTongueLocaleName(const Locale locale) const {
+        auto it = m_nativeLanguageNames.find(locale);
+        if (it != m_nativeLanguageNames.end()) {
+            return it->second;
+        }
+        if (locale == Locale::Count) {
+            return _DEBUG ? "cc_CC" : "English (UK)";
+        }
+        return _DEBUG ? "xx_XX" : "English (UK)";
+    }
+
+    std::string LocalisationManager::getLocaleAsRegionString(const Locale locale) const
+    {
+        switch (locale) {
+#define X(enum_val, str_val) case Locale::enum_val: return str_val;
+            LOCALE_LIST
+#undef X
+        case Locale::Count:
+            return _DEBUG ? "cc_CC" : "en_GB";
+        }
+        return _DEBUG ? "xx_XX" : "en_GB";
+    }
+
+    const Locale LocalisationManager::getLocaleFromRegionString(const std::string& szLocale) const {
+#define X(enum_val, str_val) if (szLocale == str_val) return Locale::enum_val;
+        LOCALE_LIST
+#undef X
+
+        return Locale::System;
     }
 }

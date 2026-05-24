@@ -391,6 +391,52 @@ namespace spacecal {
         }
     }
 
+    inline void buildLocaleSelector() {
+        ImGui::Text("%s", LOCALE_GET("settings_locale").c_str());
+        ImGui::SameLine();
+
+        std::string& szLocale = ConfigurationManager::getInstance()->getConfiguration()->uiLocale;
+        Locale eLocale = LocalisationManager::getInstance()->getLocaleFromRegionString(szLocale);
+        std::string selectedLocaleNativeName = LocalisationManager::getInstance()->getNativeTongueLocaleName(eLocale);
+
+        std::string selectedLocale = fmt::format("languages_{}", szLocale);
+        std::string displaySelectedLocaleName = fmt::format("{} ({})", LOCALE_GET(selectedLocale), selectedLocaleNativeName);
+
+        if (ImGui::BeginCombo("##LocalePicker", displaySelectedLocaleName.c_str())) {
+            for (size_t i = 0; i < (size_t)Locale::Count; i++) {
+                const Locale eThisLocale = (Locale)i;
+                std::string thisLocaleId = LocalisationManager::getInstance()->getLocaleAsRegionString(eThisLocale);
+                std::string thisLocaleString = fmt::format("languages_{}", thisLocaleId);
+
+                std::string friendlyLocaleString = LOCALE_GET(thisLocaleString);
+                std::string localeNativeName = LocalisationManager::getInstance()->getNativeTongueLocaleName(eThisLocale);
+
+                // German (Deustche)
+                std::string displayLocaleName = fmt::format("{} ({})", friendlyLocaleString, localeNativeName);
+
+                bool isSelected = (eLocale == eThisLocale);
+
+                if (ImGui::Selectable(displayLocaleName.c_str(), isSelected)) {
+                    szLocale = thisLocaleId;
+                    // apply locale to UI
+                    LocalisationManager::getInstance()->setLocale(eThisLocale);
+                    ConfigurationManager::getInstance()->saveConfiguration();
+                }
+
+                if (isSelected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::TextDisabled("Note: does practically nothing right now!");
+    }
+
+    inline void buildSettingsView() {
+        ImGui::Text("%s", LOCALE_GET("settings_title").c_str());
+        ImGui::TextDisabled("This layout is temporary.");
+        buildLocaleSelector();
+    }
+
     void drawInterface(bool isOverlay) {
         bIsRunningInOverlay = isOverlay;
         auto& io = ImGui::GetIO();
@@ -438,6 +484,8 @@ namespace spacecal {
                 buildStandardCalibrationMenu(calibration);
             }
         }
+
+        buildSettingsView();
 
         buildVersionInfo();
         ImGui::End();

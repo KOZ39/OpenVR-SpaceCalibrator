@@ -113,6 +113,8 @@ namespace spacecal {
                     TrackingDevice target_device;
                 };
 
+                std::string uiLocale = "system";
+
                 std::vector<Calibration_t> calibrations;
             };
 

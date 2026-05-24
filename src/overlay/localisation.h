@@ -9,6 +9,10 @@
 namespace spacecal {
 
     enum class Locale {
+        // Use the OS defined locale
+        System,
+
+        // Western-languages
         English_UK,
         English_US,
         French,
@@ -41,9 +45,6 @@ namespace spacecal {
         Thai,
         Vietnamese,
 
-        // Use the OS defined locale
-        System,
-
         Count,
     };
 
@@ -64,15 +65,21 @@ namespace spacecal {
         /// <param name="locale">The locale to convert</param>
         /// <returns>A string representing the unique locale code for the given Locale</returns>
         std::string getLocaleAsRegionString(const Locale locale) const;
+        const Locale getLocaleFromRegionString(const std::string& szLocale) const;
+
+        // gets the locale's own name in it's native tongue. eg, for german it would return "Deustche" as defined in lang/lang_de.json
+        std::string getNativeTongueLocaleName(const Locale locale) const;
 
     private:
         bool loadLocaleFromFile(const Locale locale);
+        void loadNativeNameForLocale(const Locale locale, const std::string& regionCode);
 
     private:
         static LocalisationManager* m_instance;
-        Locale m_selectedLocale = Locale::English_UK;
+        Locale m_selectedLocale = Locale::System;
 
         std::unordered_map<std::string, std::string> m_localisedStrings;
+        std::unordered_map<Locale, std::string> m_nativeLanguageNames; // eg Locale::German -> "Deutsche"
     };
 }
 
