@@ -482,9 +482,9 @@ namespace spacecal {
             return;
         }
 
+        LOG_CALIB_INFO("Applying calibration....");
         for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
             auto device = VRState::getInstance()->getVrDevice(i);
-            LOG_CALIB_INFO("applying device [{}]: class: {} connected: {} role: {} tracking: {} model: {} serial: {} idx: {}", i, device.eDeviceClass, device.bIsConnected, device.eControllerRole, device.szTrackingSystemId, device.szModel, device.szSerial, device.dwDeviceIndex);
             if (device.eDeviceClass != vr::TrackedDeviceClass_Invalid) {
                 // if this is not the target tracking system
                 if (device.szTrackingSystemId != targetDevice.trackingSystem) {
@@ -497,6 +497,7 @@ namespace spacecal {
                 args.enabled(device.bIsConnected && this->isActive);
 
                 if (device.bIsConnected) {
+                    LOG_CALIB_INFO("    applying device [{}]: class: {} connected: {} role: {} tracking: {} model: {} serial: {} idx: {}", i, device.eDeviceClass, device.bIsConnected, device.eControllerRole, device.szTrackingSystemId, device.szModel, device.szSerial, device.dwDeviceIndex);
                     args.quirks = ipc::protocol::DeviceQuirks_t::QUIRK_NONE;
 
                     args.updateTranslation(true);
