@@ -271,9 +271,17 @@ namespace spacecal {
             return it->second;
         }
         if (locale == Locale::Count) {
-            return _DEBUG ? "cc_CC" : "English (UK)";
+#if _DEBUG
+            return "cc_CC";
+#else
+            return "English (UK)";
+#endif
         }
-        return _DEBUG ? "xx_XX" : "English (UK)";
+#if _DEBUG
+        return "xx_XX";
+#else
+        return "English (UK)";
+#endif
     }
 
     std::string LocalisationManager::getLocaleAsRegionString(const Locale locale) const
@@ -283,9 +291,17 @@ namespace spacecal {
             LOCALE_LIST
 #undef X
         case Locale::Count:
-            return _DEBUG ? "cc_CC" : "en_GB";
+#if _DEBUG
+            return "cc_CC";
+#else
+            return "en_GB";
+#endif
         }
-        return _DEBUG ? "xx_XX" : "en_GB";
+#if _DEBUG
+        return "xx_XX";
+#else
+        return "en_GB";
+#endif
     }
 
     const Locale LocalisationManager::getLocaleFromRegionString(const std::string& szLocale) const {
