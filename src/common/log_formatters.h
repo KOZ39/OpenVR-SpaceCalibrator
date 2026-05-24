@@ -30,6 +30,7 @@ namespace vr {
     std::string format_as(ETrackedDeviceClass trackedDeviceClass);
     std::string format_as(ETrackedDeviceProperty trackedDeviceProperty);
     std::string format_as(EVRSettingsError settingsError);
+    std::string format_as(ETrackedControllerRole controllerRole);
     std::string format_as(EVREventType eventType);
 }
 

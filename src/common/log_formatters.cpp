@@ -1159,6 +1159,26 @@ namespace vr {
             return fmt::format("VRSettingsError_{}", (uint32_t)settingsError);
         }
     }
+
+    std::string format_as(ETrackedControllerRole controllerRole)
+    {
+        switch (controllerRole) {
+        case ETrackedControllerRole::TrackedControllerRole_Invalid:
+            return "TrackedControllerRole_Invalid";
+        case ETrackedControllerRole::TrackedControllerRole_LeftHand:
+            return "TrackedControllerRole_LeftHand";
+        case ETrackedControllerRole::TrackedControllerRole_RightHand:
+            return "TrackedControllerRole_RightHand";
+        case ETrackedControllerRole::TrackedControllerRole_OptOut:
+            return "TrackedControllerRole_OptOut";
+        case ETrackedControllerRole::TrackedControllerRole_Treadmill:
+            return "TrackedControllerRole_Treadmill";
+        case ETrackedControllerRole::TrackedControllerRole_Stylus:
+            return "TrackedControllerRole_Stylus";
+        default:
+            return fmt::format("TrackedControllerRole_{}", (uint32_t)controllerRole);
+        }
+    }
     std::string format_as(EVREventType eventType)
     {
         switch (eventType) {

@@ -476,7 +476,7 @@ namespace spacecal {
 
         auto hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
         if (this->hmdIsInReferenceTrackingSystem && hmdDevice.szTrackingSystemId != referenceDevice.trackingSystem) {
-            // if the hmd the hmd's tracking system is not what was saved, handles users changing streamer / VR headset properly by not applying calibration
+            // if the hmd's tracking system is not what was saved, handles users changing streamer / VR headset properly by not applying calibration
             this->isActive = false;
             LOG_CALIB_INFO("Skipping calibration: HMD tracking system changed from {} to {}", referenceDevice.trackingSystem, hmdDevice.szTrackingSystemId);
             return;
@@ -484,6 +484,7 @@ namespace spacecal {
 
         for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
             auto device = VRState::getInstance()->getVrDevice(i);
+            LOG_CALIB_INFO("applying device [{}]: class: {} connected: {} role: {} tracking: {} model: {} serial: {} idx: {}", i, device.eDeviceClass, device.bIsConnected, device.eControllerRole, device.szTrackingSystemId, device.szModel, device.szSerial, device.dwDeviceIndex);
             if (device.eDeviceClass != vr::TrackedDeviceClass_Invalid) {
                 // if this is not the target tracking system
                 if (device.szTrackingSystemId != targetDevice.trackingSystem) {
