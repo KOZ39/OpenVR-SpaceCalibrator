@@ -332,7 +332,7 @@ namespace spacecal {
             auto speed = calibration.calibrationSpeed;
 
             ImGui::Columns(4, nullptr, false);
-            ImGui::Text(LOCALE_GET("calibration_speed").c_str());
+            ImGui::Text("%s",  LOCALE_GET("calibration_speed").c_str());
 
             ImGui::NextColumn();
             if (ImGui::RadioButton(LOCALE_GET("calibration_speed_fast").c_str(), speed == CalibrationSpeed::FAST))
