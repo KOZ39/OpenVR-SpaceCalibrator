@@ -132,6 +132,7 @@ namespace spacecal {
             return true;
 
         bool isConnected = vr::VRSystem()->IsTrackedDeviceConnected(deviceId);
+        m_aDevices[deviceId].bIsConnected = isConnected;
 
         // we don't care about the device if it is not even connected
         if (!isConnected) {
@@ -167,8 +168,17 @@ namespace spacecal {
 
         // QUIRKS! ( a bunch of hardware lies about what it is :c )
         {
+            // Possibly Virtual Desktop on a non Meta HMD
+            if (deviceClass == vr::TrackedDeviceClass_HMD && szTrackingSystem == "oculus") {
+                if (m_hmdMetadata.isVirtualDesktopAvailable /* && isHmdVirtualDesktop() */) {
+                    // VD hardcodes the sn to "1PASH5D1P17365"
+                    if (szDeviceSerial == "1PASH5D1P17365" && m_hmdMetadata.VD_hmdModel > ipc::protocol::VD_HmdModel_None && m_hmdMetadata.VD_hmdModel < ipc::protocol::VD_HmdModel_Count) {
+                        szDeviceModel = LOCALE_GET(k_VIRTUAL_DESKTOP_HMD_NAMES[m_hmdMetadata.VD_hmdModel]);
+                    }
+                }
+            }
             // Check if the current HMD is a Pimax crystal
-            if (deviceClass == vr::TrackedDeviceClass_HMD && szTrackingSystem == "aapvr") {
+            else if (deviceClass == vr::TrackedDeviceClass_HMD && szTrackingSystem == "aapvr") {
                 // HMD is a Pimax HMD
                 vr::HmdMatrix34_t eyeToHeadLeft = vr::VRSystem()->GetEyeToHeadTransform(vr::Eye_Left);
                 // Crystal's projection matrix is constant 0s or 1s except for [0][3], which stores the IPD offset from the nose
@@ -182,6 +192,7 @@ namespace spacecal {
                     szTrackingSystem = "Pimax Crystal HMD";
                 }
             }
+            // Pimax cystal controllers
             else if (deviceClass == vr::TrackedDeviceClass_Controller && szTrackingSystem == "oculus") {
                 std::string renderModel;
                 std::string connectedWirelessDongle;
@@ -193,15 +204,6 @@ namespace spacecal {
                     renderModel.find("crystal") != std::string::npos &&
                     connectedWirelessDongle.find("lighthouse") != std::string::npos) {
                     szTrackingSystem = "Pimax Crystal Controllers";
-                }
-            }
-            else if (deviceClass == vr::TrackedDeviceClass_HMD && szTrackingSystem == "oculus") {
-                // Possibly Virtual Desktop on a non Meta HMD
-                if (m_hmdMetadata.isVirtualDesktopAvailable /* && isHmdVirtualDesktop() */ ) {
-                    // VD hardcodes the sn to "1PASH5D1P17365"
-                    if (szDeviceSerial == "1PASH5D1P17365" && m_hmdMetadata.VD_hmdModel > ipc::protocol::VD_HmdModel_None && m_hmdMetadata.VD_hmdModel < ipc::protocol::VD_HmdModel_Count) {
-                        szDeviceModel = LOCALE_GET(k_VIRTUAL_DESKTOP_HMD_NAMES[m_hmdMetadata.VD_hmdModel]);
-                    }
                 }
             }
         }
