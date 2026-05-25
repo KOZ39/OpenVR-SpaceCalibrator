@@ -239,8 +239,8 @@ namespace spacecal {
         ImGui::EndChild();
 
         if (ImGui::Button(LOCALE_GET("identify_selected_devices").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeightWithSpacing() + 4.0f))) {
-            // @TODO: non-blocking
-            for (unsigned i = 0; i < 100; ++i) {
+            // @TODO: non-blocking ; blocks for 500ms rn :(
+            for (size_t i = 0; i < 100; ++i) {
                 VRState::getInstance()->identifyDevice(calibration.targetDevice.deviceId);
                 VRState::getInstance()->identifyDevice(calibration.referenceDevice.deviceId);
                 std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -255,7 +255,7 @@ namespace spacecal {
     inline void buildStandardCalibrationMenu(spacecal::TrackingSystemCalibration& calibration) {
         auto& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();
-        ImGui::Text("");
+        ImGui::NewLine();
 
         if (calibration.state == CalibrationState::NONE)
         {
@@ -263,7 +263,7 @@ namespace spacecal {
             {
                 std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
                 ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1), "%s", LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
-                ImGui::Text("");
+                ImGui::NewLine();
             }
 
             float width = ImGui::GetWindowContentRegionWidth(), scale = 1.0f / 2.0f;
@@ -310,7 +310,7 @@ namespace spacecal {
                 scale = 0.5;
             }
 
-            ImGui::Text("");
+            ImGui::NewLine();
             if (ImGui::Button("Copy Chaperone Bounds to profile", ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
             {
                 LoadChaperoneBounds();
@@ -331,10 +331,9 @@ namespace spacecal {
                 }
             }
 #endif
-
             ImGui::Checkbox("DEBUG: relative transform. RECALIBRATE TO APPLY", &calibration.isRelativeCalibration);
 
-            ImGui::Text("");
+            ImGui::NewLine();
             auto speed = calibration.calibrationSpeed;
 
             ImGui::Columns(4, nullptr, false);

@@ -12,7 +12,7 @@ namespace ImGui
 
 	inline void TextWithWidth(const char* label, const char* text, float width) {
 		ImGui::BeginChild(label, ImVec2(width, ImGui::GetTextLineHeightWithSpacing()));
-		ImGui::Text(text);
+		ImGui::Text("%s", text);
 		ImGui::EndChild();
 	}
 
