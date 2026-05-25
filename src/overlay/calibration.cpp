@@ -182,7 +182,35 @@ namespace spacecal {
         return trans;
     }
 
-    bool TrackingSystemCalibration::makeCalibrationLocal() {
+    bool TrackingSystemCalibration::computeCalibrationOneshot(bool bForceCalibration) {
+        // @TODO: do NOT apply until we are certain this is a better calibration.
+
+        // apply samples to avoid sampling twice
+        Eigen::Quaterniond computedRotation = calibrateRotation(m_samples);
+        Eigen::Vector3d computedTranslation = calibrateTranslation(m_samples, computedRotation);
+        
+        bool bIsCalibrationValid = true;
+        if (isRelativeCalibration) {
+            bIsCalibrationValid = bIsCalibrationValid && makeCalibrationLocal(computedRotation, computedTranslation);
+        }
+
+        // @TODO: calibration metrics
+
+        if (bIsCalibrationValid || bForceCalibration) {
+            isValidCalibration = bIsCalibrationValid;
+            calibratedRotation = computedRotation;
+            calibratedTranslation = computedTranslation;
+
+            LOG_CALIB_INFO("Finished calibration, profile saved");
+
+            apply();
+            CalibrationManager::getInstance()->saveConfig();
+        }
+
+        return isValidCalibration;
+    }
+
+    bool TrackingSystemCalibration::makeCalibrationLocal(Eigen::Quaterniond& rotation, Eigen::Vector3d& translation) {
         if (isRelativeCalibration && !m_samples.empty()) {
             Sample_t& lastSample = m_samples.back();
             if (hmdIsInReferenceTrackingSystem) {
@@ -268,6 +296,18 @@ namespace spacecal {
         const auto& hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
         hmdIsInReferenceTrackingSystem = hmdDevice.szTrackingSystemId == referenceDevice.trackingSystem;
     }
+
+    void TrackingSystemCalibration::startContinuous() {
+        reset();
+        state = CalibrationState::CONTINUOUS_IDLE;
+        wantedUpdateInterval = 0.0;
+        assignTarget(referenceDevice);
+        assignTarget(targetDevice);
+
+        // update state
+        const auto& hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
+        hmdIsInReferenceTrackingSystem = hmdDevice.szTrackingSystemId == referenceDevice.trackingSystem;
+    }
     
     void TrackingSystemCalibration::calibrationTick(const double currentTime) {
         if (!vr::VRSystem())
@@ -305,6 +345,17 @@ namespace spacecal {
             }
         }
 
+        if (state == CalibrationState::CONTINUOUS_IDLE) {
+            wantedUpdateInterval = 1.0;
+            if ((currentTime - m_lastScan) >= 1.0) {
+                assignTarget(referenceDevice);
+                assignTarget(targetDevice);
+                const auto& hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
+                hmdIsInReferenceTrackingSystem = hmdDevice.szTrackingSystemId == referenceDevice.trackingSystem;
+                m_lastScan = currentTime;
+            }
+        }
+
         if (state == CalibrationState::NONE) {
             wantedUpdateInterval = 1.0;
             if ((currentTime - m_lastScan) >= 1.0) {
@@ -325,7 +376,7 @@ namespace spacecal {
             return;
         }
 
-        if (state == CalibrationState::START) {
+        if (state == CalibrationState::START || state == CalibrationState::CONTINUOUS_IDLE) {
             bool ok = true;
 
             LOG_CALIB_INFO("Beginning calibration...");
@@ -347,16 +398,23 @@ namespace spacecal {
             }
 
             if (!ok) {
-                state = CalibrationState::NONE;
+                if (state == CalibrationState::START)
+                    state = CalibrationState::NONE;
                 LOG_CALIB_ERROR("Aborting calibration!");
                 return;
             }
 
             resetCalibrationForDevice(targetDevice);
-            state = CalibrationState::ROTATION;
+            if (state == CalibrationState::CONTINUOUS_IDLE) {
+                state = CalibrationState::CONTINUOUS;
+                LOG_CALIB_INFO("Starting continuous calibration...");
+            }
+            else {
+                state = CalibrationState::SAMPLE;
+                LOG_CALIB_INFO("Starting calibration...");
+            }
             wantedUpdateInterval = 0.0;
 
-            LOG_CALIB_INFO("Starting calibration...");
             return;
         }
 
@@ -371,68 +429,27 @@ namespace spacecal {
 
         if (m_samples.size() == getSampleCount()) {
             switch (state) {
-            case CalibrationState::ROTATION:
+            case CalibrationState::SAMPLE:
             {
-                calibratedRotation = calibrateRotation(m_samples);
+                computeCalibrationOneshot(false); // @TODO: force here? idk how to handle minimising the error term
 
-                ipc::protocol::Command_SetDeviceTransform_t args = {};
-                args.unTargetOpenVrDeviceId = targetDevice.deviceId;
-                args.unReferenceOpenvrDeviceId = vr::k_unTrackedDeviceIndex_Hmd;
-                args.enabled(true);
-                args.relativeCoordSystem(false);
-                args.quirks = targetDevice.quirks;
-                args.updateRotation(true);
-                args.rotation.x = calibratedRotation.x();
-                args.rotation.y = calibratedRotation.y();
-                args.rotation.z = calibratedRotation.z();
-                args.rotation.w = calibratedRotation.w();
-                CalibrationManager::getInstance()->m_ipcClient.SetDeviceTransform(args);
-
-                state = CalibrationState::TRANSLATION;
-                break;
-            }
-            case CalibrationState::TRANSLATION:
-            {
-                // apply samples to avoid sampling twice
-                calibratedTranslation = calibrateTranslation(m_samples, calibratedRotation);
-
-                ipc::protocol::Command_SetDeviceTransform_t args = {};
-                args.unTargetOpenVrDeviceId = targetDevice.deviceId;
-                args.unReferenceOpenvrDeviceId = referenceDevice.deviceId;
-                args.enabled(true);
-                args.relativeCoordSystem(false);
-                args.quirks = targetDevice.quirks;
-                args.updateTranslation(true);
-                args.translation.v[0] = calibratedTranslation.x();
-                args.translation.v[1] = calibratedTranslation.y();
-                args.translation.v[2] = calibratedTranslation.z();
-                CalibrationManager::getInstance()->m_ipcClient.SetDeviceTransform(args);
-
-                bool bMakeLocalSuccess = makeCalibrationLocal();
-
-                isValidCalibration = true;
-                // SaveProfile(ctx);
-                LOG_CALIB_INFO("Finished calibration, profile saved");
-
-                apply();
-                CalibrationManager::getInstance()->saveConfig();
+                LOG_CALIB_INFO("Finished standard calibration, profile saved");
 
                 state = CalibrationState::NONE;
                 break;
             }
-            case CalibrationState::SCALE:
+            case CalibrationState::CONTINUOUS:
             {
-                // @TODO: robust measure of scale algorithm?
-                // apply samples to avoid sampling twice
-                calibratedTranslation = calibrateTranslation(m_samples, calibratedRotation);
+                // @TODO: force here? idk how to handle minimising the error term
+                if (computeCalibrationOneshot(false)) {
+                    LOG_CALIB_INFO("Finished continuous calibration, profile saved");
+                }
 
-                isValidCalibration = true;
-                // SaveProfile(ctx);
-                LOG_CALIB_INFO("Finished calibration, profile saved");
+                // clear half the samples for the next calibration
+                size_t dwEraseSampleSize = getSampleCount() / 2;
+                m_samples.erase(m_samples.begin(), m_samples.begin() + dwEraseSampleSize);
 
-                apply();
-
-                state = CalibrationState::NONE;
+                // state should remain as continuous
                 break;
             }
             default:
@@ -600,7 +617,7 @@ namespace spacecal {
 
         for (auto& calibration : m_calibrations) {
             calibration.calibrationTick(currentTime);
-            if (calibration.isActive) {
+            if (calibration.isActive || calibration.state != CalibrationState::NONE) {
                 wantedInterval += calibration.wantedUpdateInterval;
                 countedCalibrations++;
             }
@@ -666,14 +683,19 @@ namespace spacecal {
             this->m_calibrations[i].calibratedTranslation.y()           = pConfig->calibrations[i].calibrated_transform.y;
             this->m_calibrations[i].calibratedTranslation.z()           = pConfig->calibrations[i].calibrated_transform.z;
             
-            double rollRad  = pConfig->calibrations[i].calibrated_transform.roll  * (M_PI / 180.0);
-            double pitchRad = pConfig->calibrations[i].calibrated_transform.pitch * (M_PI / 180.0);
-            double yawRad   = pConfig->calibrations[i].calibrated_transform.yaw   * (M_PI / 180.0);
+            double rollRad  = pConfig->calibrations[i].calibrated_transform.roll  * (EIGEN_PI / 180.0);
+            double pitchRad = pConfig->calibrations[i].calibrated_transform.pitch * (EIGEN_PI / 180.0);
+            double yawRad   = pConfig->calibrations[i].calibrated_transform.yaw   * (EIGEN_PI / 180.0);
 
             this->m_calibrations[i].calibratedRotation =
                 Eigen::AngleAxisd(yawRad, Eigen::Vector3d::UnitZ()) *
                 Eigen::AngleAxisd(pitchRad, Eigen::Vector3d::UnitY()) *
                 Eigen::AngleAxisd(rollRad, Eigen::Vector3d::UnitX());
+
+            if (pConfig->calibrations[i].continuous.is_active) {
+                this->m_calibrations[i].state                           = CalibrationState::CONTINUOUS_IDLE;
+            }
+            this->m_calibrations[i].hideContinuousTracker               = pConfig->calibrations[i].continuous.hide_reference_tracker;
         }
 
         return true;
@@ -708,9 +730,12 @@ namespace spacecal {
             pConfig->calibrations[i].calibrated_transform.z             = (float)this->m_calibrations[i].calibratedTranslation.z();
 
             Eigen::Vector3d euler = this->m_calibrations[i].calibratedRotation.toRotationMatrix().canonicalEulerAngles(2, 1, 0);
-            pConfig->calibrations[i].calibrated_transform.yaw           = static_cast<float>(euler[0] * 180.0 / M_PI);
-            pConfig->calibrations[i].calibrated_transform.pitch         = static_cast<float>(euler[1] * 180.0 / M_PI);
-            pConfig->calibrations[i].calibrated_transform.roll          = static_cast<float>(euler[2] * 180.0 / M_PI);
+            pConfig->calibrations[i].calibrated_transform.yaw           = static_cast<float>(euler[0] * 180.0 / EIGEN_PI);
+            pConfig->calibrations[i].calibrated_transform.pitch         = static_cast<float>(euler[1] * 180.0 / EIGEN_PI);
+            pConfig->calibrations[i].calibrated_transform.roll          = static_cast<float>(euler[2] * 180.0 / EIGEN_PI);
+
+            pConfig->calibrations[i].continuous.is_active               = this->m_calibrations[i].isContinuousCalibration();
+            pConfig->calibrations[i].continuous.hide_reference_tracker  = this->m_calibrations[i].hideContinuousTracker;
         }
 
         ConfigurationError err = spacecal::ConfigurationManager::getInstance()->saveConfiguration();

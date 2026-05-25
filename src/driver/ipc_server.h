@@ -26,6 +26,7 @@ private:
     bool m_connected = false;
     ::IpcHandle_t m_hIpc = k_hInvalidIpcHandle;
     ::IpcOperation_t m_poseDataOperation;
+    ::IpcOperation_t m_deviceTransformOperation;
     ::IpcOperation_t m_hmdMetaOperation;
     spacecal::ServerTrackedDeviceProvider* m_driver = nullptr;
 

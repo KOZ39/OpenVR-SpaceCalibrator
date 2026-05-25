@@ -212,6 +212,7 @@ namespace ipc::protocol
     };
 
     constexpr uint32_t k_unSharedMemoryPoseSize = vr::k_unMaxTrackedDeviceCount * sizeof(vr::DriverPose_t);
-    constexpr uint32_t k_unSharedMemoryElementSize = k_unSharedMemoryPoseSize + sizeof(SharedData_HmdMetadata);
+    constexpr uint32_t k_unSharedMemoryDeviceTransformSize = vr::k_unMaxTrackedDeviceCount * sizeof(protocol::Command_SetDeviceTransform_t);
+    constexpr uint32_t k_unSharedMemoryElementSize = k_unSharedMemoryPoseSize + k_unSharedMemoryDeviceTransformSize + sizeof(SharedData_HmdMetadata);
     constexpr const char* k_szIpcIdentifier = "SPACE_CALIBRATOR_NOVA";
 }

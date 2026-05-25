@@ -34,6 +34,8 @@
   "calibration_speed_slow": "Slow",
   "calibration_speed_very_slow": "Very Slow",
 
+  "continuous_hide_tracker": "Hide reference tracker from apps",
+
   /* HMD names for Virtual Desktop */
   /* Virtual desktop lies that it's a Quest 2/3 on most headsets, so we have to substitute the real HMD name ourselves. you generally should
      NOT have to change these! but some headsets have different names in certain regions (eg PFD MR is YVR MR in China) */

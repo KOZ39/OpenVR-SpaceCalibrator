@@ -266,7 +266,7 @@ namespace spacecal {
                 ImGui::Text("");
             }
 
-            float width = ImGui::GetWindowContentRegionWidth(), scale = 1.0f;
+            float width = ImGui::GetWindowContentRegionWidth(), scale = 1.0f / 2.0f;
             if (calibration.isValidCalibration)
             {
                 width -= style.FramePadding.x * 4.0f;
@@ -279,10 +279,10 @@ namespace spacecal {
                 calibration.start();
             }
 
-            // ImGui::SameLine();
-            // if (ImGui::Button(LOCALE_GET("calibration_action_continuous").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2))) {
-            //     StartContinuousCalibration();
-            // }
+            ImGui::SameLine();
+            if (ImGui::Button(LOCALE_GET("calibration_action_continuous").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2))) {
+                calibration.startContinuous();
+            }
 
             if (calibration.isValidCalibration)
             {
@@ -366,6 +366,81 @@ namespace spacecal {
             }
         }
 #endif
+        else if (calibration.isContinuousCalibration()) {
+
+            if (calibration.isValidCalibration && !calibration.isActive)
+            {
+                std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
+                ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1), "%s", LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
+                ImGui::NewLine();
+            }
+
+            float width = ImGui::GetWindowContentRegionWidth(), scale = 1.0f / 2.0f;
+            if (calibration.isValidCalibration)
+            {
+                width -= style.FramePadding.x * 4.0f;
+                scale = 1.0f / 4.0f;
+            }
+
+            if (ImGui::Button(LOCALE_GET("calibration_action_start").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
+            {
+                calibration.start();
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button(LOCALE_GET("calibration_action_continuous").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2))) {
+                calibration.startContinuous();
+            }
+
+            if (calibration.isValidCalibration)
+            {
+                ImGui::SameLine();
+                if (ImGui::Button(LOCALE_GET("calibration_action_clear").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
+                {
+                    calibration.reset();
+                }
+            }
+
+            // continuous settings
+            if (calibration.isContinuousCalibration()) {
+                if (ImGui::Checkbox(LOCALE_GET("continuous_hide_tracker").c_str(), &calibration.hideContinuousTracker)) {
+                    CalibrationManager::getInstance()->saveConfig();
+                }
+            }
+
+            ImGui::Checkbox("DEBUG: relative transform. RECALIBRATE TO APPLY", &calibration.isRelativeCalibration);
+
+            ImGui::NewLine();
+            auto speed = calibration.calibrationSpeed;
+
+            ImGui::Columns(4, nullptr, false);
+            ImGui::Text("%s", LOCALE_GET("calibration_speed").c_str());
+
+            ImGui::NextColumn();
+            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_fast").c_str(), speed == CalibrationSpeed::FAST)) {
+                calibration.calibrationSpeed = CalibrationSpeed::FAST;
+                calibration.clearSamples();
+            }
+
+            ImGui::NextColumn();
+            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_slow").c_str(), speed == CalibrationSpeed::SLOW)) {
+                calibration.calibrationSpeed = CalibrationSpeed::SLOW;
+                calibration.clearSamples();
+            }
+
+            ImGui::NextColumn();
+            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_very_slow").c_str(), speed == CalibrationSpeed::VERY_SLOW)) {
+                calibration.calibrationSpeed = CalibrationSpeed::VERY_SLOW;
+                calibration.clearSamples();
+            }
+
+            ImGui::Columns(1);
+
+            ImGui::Text("%s", LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());
+            ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2));
+            float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
+            ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
+        }
         else
         {
             ImGui::Text("%s", LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());

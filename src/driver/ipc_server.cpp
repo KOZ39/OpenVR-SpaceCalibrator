@@ -112,6 +112,7 @@ namespace ipc {
                 LOG_IPC_ERROR("Tried updating HMD metadata, but operation is invalid!");
             }
         }
+        ipc_client_read_shared_memory(m_hIpc, m_deviceTransformOperation, &m_driver->m_transforms, sizeof(m_driver->m_transforms));
     }
 
     bool Server::Connect(spacecal::ServerTrackedDeviceProvider* driver) {
@@ -133,13 +134,21 @@ namespace ipc {
             .szIdentifier = "SpaceCalibratorNova_PoseSharedBuffer",
             .dwSharedMemoryOffset = 0,
         };
+        m_deviceTransformOperation = {
+            .szIdentifier = "SpaceCalibratorNova_DeviceTransformsSharedBuffer",
+            .dwSharedMemoryOffset = protocol::k_unSharedMemoryPoseSize,
+        };
         m_hmdMetaOperation = {
             .szIdentifier = "SpaceCalibratorNova_HmdMetaData",
-            .dwSharedMemoryOffset = protocol::k_unSharedMemoryPoseSize,
+            .dwSharedMemoryOffset = protocol::k_unSharedMemoryPoseSize + protocol::k_unSharedMemoryDeviceTransformSize,
         };
 
         if (!ipc_server_register_operation(m_hIpc, &m_poseDataOperation)) {
             LOG_IPC_ERROR("Failed to register pose data shared memory operation!");
+        }
+
+        if (!ipc_server_register_operation(m_hIpc, &m_deviceTransformOperation)) {
+            LOG_IPC_ERROR("Failed to register device transform shared memory operation!");
         }
 
         if (!ipc_server_register_operation(m_hIpc, &m_hmdMetaOperation)) {

@@ -16,17 +16,11 @@ namespace spacecal {
         START,
         // collecting samples
         SAMPLE,
-        // calibrating orientation
-        ROTATION,
-        // calibrating position
-        TRANSLATION,
-        // calibrating scale
-        SCALE,
         // user is editing calibration
         EDITING,
-        // collecting samples for continuous
-        CONTINUOUS_SAMPLE,
-        // continuous calibration, but idle
+        // continuous calibration mode
+        CONTINUOUS,
+        // the calibration was set to continuous in a previous session, but the user hasn't selected it. we won't compute for now
         CONTINUOUS_IDLE,
     };
 
@@ -76,7 +70,9 @@ namespace spacecal {
     public:
         void init();
         void start();
+        void startContinuous();
         void reset();
+        inline void clearSamples() { m_samples.clear(); }
         void calibrationTick(const double currentTime);
         void resetCalibrationForDevice(const CalibrationDevice& device); // resets the given device's pose to the raw pose
         // applies the calibration to the VR runtime
@@ -91,6 +87,10 @@ namespace spacecal {
 
         [[nodiscard]] inline const float getCalibrationProgress() const {
             return getSampleCount() == 0 ? 0.0f : (float)((double)m_samples.size() / (double)getSampleCount());
+        }
+
+        [[nodiscard]] inline const bool isContinuousCalibration() const {
+            return state == CalibrationState::CONTINUOUS_IDLE || state == CalibrationState::CONTINUOUS;
         }
 
         bool isActive = false; // enabled in the UI
@@ -133,11 +133,8 @@ namespace spacecal {
         DeltaSample_t deltaRotationSamples(const Sample_t& s1, const Sample_t& s2);
         Eigen::Quaterniond calibrateRotation(const std::vector<Sample_t>& samples);
         Eigen::Vector3d calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& R);
-        bool makeCalibrationLocal();
-
-        inline const bool isContinuousCalibration() const {
-            return state == CalibrationState::CONTINUOUS_IDLE || state == CalibrationState::CONTINUOUS_SAMPLE;
-        }
+        bool makeCalibrationLocal(Eigen::Quaterniond& rotation, Eigen::Vector3d& translation);
+        bool computeCalibrationOneshot(bool bForceCalibration); // computes instantaneous calibration
 
     private:
         double m_lastTick = 0.0;

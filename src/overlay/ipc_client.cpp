@@ -48,16 +48,24 @@ namespace ipc {
             .szIdentifier = "SpaceCalibratorNova_PoseSharedBuffer",
             .dwSharedMemoryOffset = 0,
         };
-        m_hmdMetaDataOperation = {
-            .szIdentifier = "SpaceCalibratorNova_HmdMetaData",
+        m_deviceTransformOperation = {
+            .szIdentifier = "SpaceCalibratorNova_DeviceTransformsSharedBuffer",
             .dwSharedMemoryOffset = protocol::k_unSharedMemoryPoseSize,
+        };
+        m_hmdMetaOperation = {
+            .szIdentifier = "SpaceCalibratorNova_HmdMetaData",
+            .dwSharedMemoryOffset = protocol::k_unSharedMemoryPoseSize + protocol::k_unSharedMemoryDeviceTransformSize,
         };
         
         if (!ipc_server_register_operation(m_hIpc, &m_poseDataOperation)) {
             LOG_IPC_ERROR("Failed to register pose data shared memory operation!");
         }
 
-        if (!ipc_server_register_operation(m_hIpc, &m_hmdMetaDataOperation)) {
+        if (!ipc_server_register_operation(m_hIpc, &m_deviceTransformOperation)) {
+            LOG_IPC_ERROR("Failed to register device transform shared memory operation!");
+        }
+
+        if (!ipc_server_register_operation(m_hIpc, &m_hmdMetaOperation)) {
             LOG_IPC_ERROR("Failed to register hmd metadata shared memory operation!");
         }
 
@@ -77,7 +85,12 @@ namespace ipc {
     }
 
     void IpcClient::SetDeviceTransform(protocol::Command_SetDeviceTransform_t deviceTransform) {
-        ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_SET_DEVICE_TRANSFORM, &deviceTransform, sizeof(deviceTransform));
+        m_transforms[deviceTransform.unTargetOpenVrDeviceId] = deviceTransform;
+        if (!ipc_server_write_shared_memory(m_hIpc, m_deviceTransformOperation, m_transforms, sizeof(m_transforms))) {
+            LOG_IPC_ERROR("Tried updating device transform buffer, but operation is invalid!");
+        }
+
+        // ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_SET_DEVICE_TRANSFORM, &deviceTransform, sizeof(deviceTransform));
     }
     void IpcClient::SetAlignmentSpeed(protocol::Command_SetAlignmentSpeedParams_t alignmentParams) {
         ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_SET_ALIGNMENT_SPEED_PARAMS, &alignmentParams, sizeof(alignmentParams));
@@ -92,6 +105,6 @@ namespace ipc {
     }
     void IpcClient::PollPoses() {
         ipc_client_read_shared_memory(m_hIpc, m_poseDataOperation, spacecal::CalibrationManager::getInstance()->m_poses, sizeof(spacecal::CalibrationManager::getInstance()->m_poses));
-        ipc_client_read_shared_memory(m_hIpc, m_hmdMetaDataOperation, &spacecal::VRState::getInstance()->m_hmdMetadata, sizeof(spacecal::VRState::getInstance()->m_hmdMetadata));
+        ipc_client_read_shared_memory(m_hIpc, m_hmdMetaOperation, &spacecal::VRState::getInstance()->m_hmdMetadata, sizeof(spacecal::VRState::getInstance()->m_hmdMetadata));
     }
 }

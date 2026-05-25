@@ -21,7 +21,10 @@ namespace ipc {
         bool m_connected = false;
         ::IpcHandle_t m_hIpc = k_hInvalidIpcHandle;
         ::IpcOperation_t m_poseDataOperation;
-        ::IpcOperation_t m_hmdMetaDataOperation;
+        ::IpcOperation_t m_deviceTransformOperation;
+        ::IpcOperation_t m_hmdMetaOperation;
+
+        ipc::protocol::Command_SetDeviceTransform_t m_transforms[vr::k_unMaxTrackedDeviceCount] = {};
 
         static const IpcFunction_t m_funcs[];
 
