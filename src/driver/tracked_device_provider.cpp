@@ -105,24 +105,15 @@ namespace spacecal {
             HandleQuirks(transform.quirks, modifiedPose);
 
             if (transform.relativeCoordSystem()) {
-                if (IsDeviceIndexValid(transform.unReferenceOpenvrDeviceId) && m_poses[transform.unReferenceOpenvrDeviceId].poseIsValid) {
-                    const vr::DriverPose_t& refPose = m_poses[transform.unReferenceOpenvrDeviceId];
+                if (IsDeviceIndexValid(transform.unRelativeTargetOpenvrDeviceId) && m_poses[transform.unRelativeTargetOpenvrDeviceId].poseIsValid) {
+                    const vr::DriverPose_t& targetPose = m_poses[transform.unRelativeTargetOpenvrDeviceId];
 
                     // world-space pose of ref device
-                    Eigen::Quaterniond refWorldFromDriverRot = eigenFromHmdQuat(refPose.qWorldFromDriverRotation);
-                    Eigen::Vector3d    refWorldFromDriverPos = eigenVecFromHmdVec(refPose.vecWorldFromDriverTranslation);
+                    Eigen::Quaterniond targetWorldFromDriverRot = eigenFromHmdQuat(targetPose.qWorldFromDriverRotation);
+                    Eigen::Vector3d    targetWorldFromDriverPos = eigenVecFromHmdVec(targetPose.vecWorldFromDriverTranslation);
 
-                    Eigen::Quaterniond refRot = refWorldFromDriverRot * eigenFromHmdQuat(refPose.qRotation);
-                    Eigen::Vector3d    refPos = refWorldFromDriverPos + refWorldFromDriverRot * eigenVecFromHmdVec(refPose.vecPosition);
-
-                    Eigen::Affine3d refWorld = Eigen::Translation3d(refPos) * refRot;
-
-                    // world-space pose of target device (whatever modifiedPose is)
-                    Eigen::Quaterniond targetWorldFromDriverRot = eigenFromHmdQuat(modifiedPose.qWorldFromDriverRotation);
-                    Eigen::Vector3d    targetWorldFromDriverPos = eigenVecFromHmdVec(modifiedPose.vecWorldFromDriverTranslation);
-
-                    Eigen::Quaterniond targetRot = targetWorldFromDriverRot * eigenFromHmdQuat(modifiedPose.qRotation);
-                    Eigen::Vector3d    targetPos = targetWorldFromDriverPos + targetWorldFromDriverRot * eigenVecFromHmdVec(modifiedPose.vecPosition);
+                    Eigen::Quaterniond targetRot = targetWorldFromDriverRot * eigenFromHmdQuat(targetPose.qRotation);
+                    Eigen::Vector3d    targetPos = targetWorldFromDriverPos + targetWorldFromDriverRot * eigenVecFromHmdVec(targetPose.vecPosition);
 
                     Eigen::Affine3d targetWorld = Eigen::Translation3d(targetPos) * targetRot;
 
@@ -132,15 +123,19 @@ namespace spacecal {
                         eigenFromHmdQuat(transform.rotation);
 
                     // apply transformation matrices
-                    Eigen::Affine3d worldCalib = refWorld * calibrationLocal;
+                    Eigen::Affine3d worldCalib = targetWorld * calibrationLocal;
 
-                    // compute worldspace calibration pose data
+                    // decompose to worldspace calibration pose data
                     Eigen::Quaterniond worldCalibRot(worldCalib.rotation());
                     worldCalibRot.normalize();
                     vr::HmdQuaternion_t worldCalibRotVr = { worldCalibRot.w(), worldCalibRot.x(), worldCalibRot.y(), worldCalibRot.z() };
                     
-                    // apply like normal
+                    // apply like classic world-space calibration
                     modifiedPose.qWorldFromDriverRotation = worldCalibRotVr * modifiedPose.qWorldFromDriverRotation;
+
+                    modifiedPose.vecPosition[0] *= transform.scale;
+                    modifiedPose.vecPosition[1] *= transform.scale;
+                    modifiedPose.vecPosition[2] *= transform.scale;
 
                     vr::HmdVector3d_t rotatedTranslation = quaternionRotateVector(worldCalibRotVr, modifiedPose.vecWorldFromDriverTranslation);
                     modifiedPose.vecWorldFromDriverTranslation[0] = rotatedTranslation.v[0] + worldCalib.translation().x();
@@ -184,8 +179,12 @@ namespace spacecal {
 
         // this improves pose prediction on some vendors' devices (eg Pico)
         if (ENUM_HAS_FLAGS(quirks, ipc::protocol::DeviceQuirks_t::QUIRK_HAS_WORLDSPACE_ANGULAR_VELOCITY)) {
-            // m_poses->vecAngularVelocity
-            // pose.vecAngularVelocity = Vector3.Transform(pose.vecAngularVelocity, Quaternion.Inverse(pose.qRotation));
+            Eigen::Quaterniond qRotation = eigenFromHmdQuat(pose.qRotation);
+            Eigen::Vector3d vecAngularVel = eigenVecFromHmdVec(pose.vecAngularVelocity);
+            Eigen::Vector3d localAngularVel = qRotation.inverse() * vecAngularVel;
+            pose.vecAngularVelocity[0] = localAngularVel.x();
+            pose.vecAngularVelocity[1] = localAngularVel.y();
+            pose.vecAngularVelocity[2] = localAngularVel.z();
         }
     }
 
@@ -209,7 +208,7 @@ namespace spacecal {
 
     void ServerTrackedDeviceProvider::SetDeviceTransform(ipc::protocol::Command_SetDeviceTransform_t& transform) {
         m_transforms[transform.unTargetOpenVrDeviceId].unTargetOpenVrDeviceId = transform.unTargetOpenVrDeviceId;
-        m_transforms[transform.unTargetOpenVrDeviceId].unReferenceOpenvrDeviceId = transform.unReferenceOpenvrDeviceId;
+        m_transforms[transform.unTargetOpenVrDeviceId].unRelativeTargetOpenvrDeviceId = transform.unRelativeTargetOpenvrDeviceId;
         m_transforms[transform.unTargetOpenVrDeviceId].enabled(transform.enabled());
         m_transforms[transform.unTargetOpenVrDeviceId].hideContinuousTracker(transform.hideContinuousTracker());
         m_transforms[transform.unTargetOpenVrDeviceId].lerpCalibrations(transform.lerpCalibrations());
