@@ -276,13 +276,15 @@ namespace spacecal {
     }
 
     void TrackingSystemCalibration::init() {
-        // @TODO: 
-
+        m_samples.reserve((size_t) CalibrationSpeed::VERY_SLOW);
     }
     
     void TrackingSystemCalibration::reset() {
-        // @TODO: 
         m_samples.clear();
+        // @NOTE: should we do this? need to compare with live behaviour
+        calibratedRotation = Eigen::Quaterniond::Identity();
+        calibratedTranslation = Eigen::Vector3d::Zero();
+        calibratedScale = 1.0;
     }
 
     void TrackingSystemCalibration::start() {
@@ -316,8 +318,6 @@ namespace spacecal {
         if ((currentTime - m_lastTick) < (1.0 / k_TICK_RATE_HZ))
             return;
 
-        m_lastTick = currentTime;
-
         // original code checks hmd specifically, we should check that the hmd and ref arent at 0 0 0
         // check that ref is not at origin
         if (hmdIsInReferenceTrackingSystem) {
@@ -328,9 +328,6 @@ namespace spacecal {
                     // LOG_CALIB_WARN("HMD tracking didn't update, skipping update");
                     return;
                 }
-                m_xTargetPrev = (float)targetPose[0];
-                m_yTargetPrev = (float)targetPose[1];
-                m_zTargetPrev = (float)targetPose[2];
             }
             if (referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
                 auto refPose = CalibrationManager::getInstance()->m_poses[referenceDevice.deviceId].vecPosition;
@@ -339,6 +336,20 @@ namespace spacecal {
                     // LOG_CALIB_WARN("HMD tracking didn't update, skipping update");
                     return;
                 }
+            }
+        }
+        
+        m_lastTick = currentTime;
+
+        if (hmdIsInReferenceTrackingSystem) {
+            if (targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
+                auto targetPose = CalibrationManager::getInstance()->m_poses[targetDevice.deviceId].vecPosition;
+                m_xTargetPrev = (float)targetPose[0];
+                m_yTargetPrev = (float)targetPose[1];
+                m_zTargetPrev = (float)targetPose[2];
+            }
+            if (referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
+                auto refPose = CalibrationManager::getInstance()->m_poses[referenceDevice.deviceId].vecPosition;
                 m_xRefPrev = (float)refPose[0];
                 m_yRefPrev = (float)refPose[1];
                 m_zRefPrev = (float)refPose[2];
