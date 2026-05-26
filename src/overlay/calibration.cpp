@@ -2,6 +2,7 @@
 #include "Eigen/Geometry"
 #include "config/configuration_data_versions.h"
 #include "log.h"
+#include "openvr.h"
 #include "platform.h"
 #include "constants.h"
 #include "configuration.h"
@@ -62,6 +63,38 @@ namespace spacecal {
 
         rot = xform.rotation();
         trans = xform.translation();
+    }
+
+    inline vr::HmdQuaternion_t eigenAsVrQuat(const Eigen::Quaterniond& quat) {
+        vr::HmdQuaternion_t q = {
+            .w = quat.w(),
+            .x = quat.x(),
+            .y = quat.y(),
+            .z = quat.z(),
+        };
+        return q;
+    }
+
+    inline vr::HmdVector3_t eigenAsVrVec3(const Eigen::Vector3d& trans) {
+        vr::HmdVector3_t pos = {
+            .v = {
+                (float)trans.x(),
+                (float)trans.y(),
+                (float)trans.z(),
+            }
+        };
+        return pos;
+    }
+
+    inline vr::HmdVector3d_t eigenAsVrVec3d(const Eigen::Vector3d& trans) {
+        vr::HmdVector3d_t pos = {
+            .v = {
+                trans.x(),
+                trans.y(),
+                trans.z(),
+            }
+        };
+        return pos;
     }
 
     TrackingSystemCalibration::DeltaSample_t TrackingSystemCalibration::deltaRotationSamples(const Sample_t& s1, const Sample_t& s2) {
@@ -221,6 +254,9 @@ namespace spacecal {
             rotation = Eigen::Quaterniond(localCalib.rotation());
             translation = localCalib.translation();
 
+            m_calibRelative_refRotation = lastSample.reference.rot;
+            m_calibRelative_refTranslation = lastSample.reference.trans;
+
             Eigen::Vector3d euler = rotation.toRotationMatrix().canonicalEulerAngles(2, 1, 0) * (180.0 / EIGEN_PI);
             LOG_CALIB_INFO("Converted to local space. rotation (deg): yaw={:.2f} pitch={:.2f} roll={:.2f} ; translation (cm): x={:.2f} y={:.2f} z={:.2f}",
                 euler[1], euler[2], euler[0],
@@ -281,6 +317,9 @@ namespace spacecal {
         calibratedRotation = Eigen::Quaterniond::Identity();
         calibratedTranslation = Eigen::Vector3d::Zero();
         calibratedScale = 1.0;
+        
+        m_calibRelative_refRotation = Eigen::Quaterniond::Identity();
+        m_calibRelative_refTranslation = Eigen::Vector3d::Zero();
     }
 
     void TrackingSystemCalibration::start() {
@@ -481,6 +520,7 @@ namespace spacecal {
         ipc::protocol::Command_SetDeviceTransform_t args = {};
 
         args.unTargetOpenVrDeviceId = device.deviceId;
+        args.unRelativeReferenceOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         args.unRelativeTargetOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         args.enabled(false);
         args.relativeCoordSystem(false);
@@ -525,15 +565,10 @@ namespace spacecal {
                     args.quirks = ipc::protocol::DeviceQuirks_t::QUIRK_NONE;
 
                     args.updateTranslation(true);
-                    args.translation.v[0] = calibratedTranslation.x();
-                    args.translation.v[1] = calibratedTranslation.y();
-                    args.translation.v[2] = calibratedTranslation.z();
+                    args.translation = eigenAsVrVec3d((calibratedTranslation));
 
                     args.updateRotation(true);
-                    args.rotation.x = calibratedRotation.x();
-                    args.rotation.y = calibratedRotation.y();
-                    args.rotation.z = calibratedRotation.z();
-                    args.rotation.w = calibratedRotation.w();
+                    args.rotation = eigenAsVrQuat((calibratedRotation));
 
                     args.updateScale(true);
                     args.scale = calibratedScale;
@@ -541,6 +576,9 @@ namespace spacecal {
                     // for relative calibrations
                     args.relativeCoordSystem(isRelativeCalibration);
                     args.unRelativeTargetOpenvrDeviceId = targetDevice.deviceId;
+                    args.unRelativeReferenceOpenvrDeviceId = referenceDevice.deviceId;
+                    args.referenceRotation = eigenAsVrQuat(m_calibRelative_refRotation);
+                    args.referenceTranslation = eigenAsVrVec3d(m_calibRelative_refTranslation);
 
                     args.hideContinuousTracker(isContinuousCalibration() && hideContinuousTracker);
                     args.lerpCalibrations(isContinuousCalibration());

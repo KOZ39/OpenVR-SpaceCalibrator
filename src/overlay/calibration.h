@@ -137,6 +137,9 @@ namespace spacecal {
         bool computeCalibrationOneshot(bool bForceCalibration); // computes instantaneous calibration
 
     private:
+        Eigen::Quaterniond m_calibRelative_refRotation = Eigen::Quaterniond::Identity();
+        Eigen::Vector3d m_calibRelative_refTranslation = Eigen::Vector3d::Zero();
+
         double m_lastTick = 0.0;
         double m_lastScan = 0.0;
         

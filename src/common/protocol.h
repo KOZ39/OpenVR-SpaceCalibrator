@@ -160,9 +160,12 @@ namespace ipc::protocol
     public:
         DeviceQuirks_t quirks;
         vr::TrackedDeviceIndex_t unTargetOpenVrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
+        vr::TrackedDeviceIndex_t unRelativeReferenceOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         vr::TrackedDeviceIndex_t unRelativeTargetOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         vr::HmdVector3d_t translation;
         vr::HmdQuaternion_t rotation;
+        vr::HmdVector3d_t referenceTranslation;
+        vr::HmdQuaternion_t referenceRotation;
         double scale = 1.0;
 
 #define FLAG(name, bitfield) \
