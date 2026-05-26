@@ -1,0 +1,90 @@
+{
+  "app_title": "{0} {1}", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "app_title_vr": "{0} {1} - fermer l'overlay VR pour pouvoir utiliser votre souris", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "tracking_system_no_systems": "Pas d'objet tracké présent. Merci d'allumer un appareil pour continuer.", /* Should never be hit but you never know */
+
+  "ipc_unavailable": "La connexion avec le driver SteamVR de Space Calibrator n'a pas pu être établie. Merci de vérifier l'intégrité des fichiers en allant dans Propriétés -> Fichiers installés ou en ré-installant l'application.",
+  "steamvr_unavailable": "La connexion avec SteamVR n'a pas pu être établie.",
+  "vr_troubleshooting_hmd_not_found": "Veuillez connecter votre casque et lancer SteamVR en premier.",
+  "vr_troubleshooting_connect_steamlink": "Veuillez ouvrir SteamLink sur votre casque de VR et vous connecter à SteamVR en premier.",
+  "vr_troubleshooting_generic": "Veuillez connecter votre casque et lancer SteamVR en premier. ({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
+
+  // space here refers to a tracking space / tracking system.
+  "reference_space": "Espace de référence",
+  "target_space": "Espace désiré",
+  "select_reference_device": "Sélectionner l'appareil de référence",
+  "select_target_device": "Sélectionner l'appareil de l'espace désiré",
+
+  "devices_from_space": "Appareils de: {0}", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "identify_selected_devices": "Identifier l'appareil sélectionné (clignotement LED ou vibrations)",
+  "calibration_error_reference_hmd_missing": "Casque de Référence ({0}) pas détecté, profil désactivé", /* 0 : tracking system name, eg SteamVR Tracking*/
+
+  "calibration_action_start": "Débuter la Calibration",
+  "calibration_action_clear": "Effacer la Calibration",
+  "calibration_action_continuous": "Calibration continue",
+  "calibration_action_edit": "Modifier la Calibration",
+  "save_calibration_profile": "Sauvegarder le profil",
+
+  "calibration_progress": "Avancement de la Calibration",
+  "calibration_progress_placeholder": "Calibration en cours...",
+  "calibration_info_move_around_insufficient_samples": "Déplacez vos appareils sélectionnés ensemble dans votre espace de jeu et marchez en rond dans votre pièce en même temps",
+
+  "calibration_speed": "Vitesse de Calibration",
+  "calibration_speed_fast": "Rapide",
+  "calibration_speed_slow": "Lent",
+  "calibration_speed_very_slow": "Très Lent",
+
+  "continuous_hide_tracker": "Cache le tracker de référence de vos applications",
+
+  /* HMD names for Virtual Desktop */
+  /* Virtual desktop lies that it's a Quest 2/3 on most headsets, so we have to substitute the real HMD name ourselves. you generally should
+     NOT have to change these! but some headsets have different names in certain regions (eg PFD MR is YVR MR in China) */
+  "virtual_desktop_hmd_none": "None", /* should never appear but you never know*/
+  "virtual_desktop_hmd_gearvr": "Samsung Gear VR",
+  "virtual_desktop_hmd_oculus_go": "Oculus Go",
+  "virtual_desktop_hmd_oculus_quest_1": "Oculus Quest",
+  "virtual_desktop_hmd_oculus_quest_2": "Oculus Quest 2",
+  "virtual_desktop_hmd_meta_quest_pro": "Meta Quest Pro",
+  "virtual_desktop_hmd_pico_4": "Pico 4",
+  "virtual_desktop_hmd_meta_quest_3": "Meta Quest 3",
+  "virtual_desktop_hmd_meta_quest_3s": "Meta Quest 3S",
+  "virtual_desktop_hmd_pico_4_ultra": "Pico 4 Ultra",
+  "virtual_desktop_hmd_samsung_galaxy_xr": "Samsung Galaxy XR",
+  "virtual_desktop_hmd_play_for_dream_mr": "Play For Dream MR",
+
+  /* settings */
+  "settings_title": "Options",
+  "settings_locale": "Langue",
+
+  /* Names of the various languages one may select. Shown in settings */
+  "languages_en_GB": "Anglais (Royaume-Uni)",
+  "languages_en_US": "Anglais (États-Unis)",
+  "languages_fr": "Français",
+  "languages_it": "Italien",
+  "languages_de": "Allemand",
+  "languages_nl": "Néerlandais",
+  "languages_es_ES": "Espagnol (Espagne)",
+  "languages_es_US": "Espagnol (Amérique Latine)",
+  "languages_da": "Danois",
+  "languages_sv": "Suédois",
+  "languages_fi": "Finlandais",
+  "languages_no": "Norvégien",
+  "languages_bg": "Bulgare",
+  "languages_pl": "Polonais",
+  "languages_cs": "Tchèque",
+  "languages_el": "Grec",
+  "languages_hu": "Hongrois",
+  "languages_pt_PT": "Portugais (Portugal)",
+  "languages_pt_BR": "Portugais (Brésil)",
+  "languages_ro": "Roumain",
+  "languages_ru": "Russe",
+  "languages_tr": "Turc",
+  "languages_uk": "Ukrainien",
+  "languages_zh_HANS": "Chinois (Simplifié)",
+  "languages_zh_HANT": "Chinois (Traditionnel)",
+  "languages_ja": "Japonais",
+  "languages_ko": "Coréen",
+  "languages_th": "Thaï",
+  "languages_vi": "Vietnamien",
+  "languages_system": "Langue du système"
+}
