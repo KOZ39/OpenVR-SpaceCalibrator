@@ -13,6 +13,7 @@ namespace spacecal {
     class Window {
     public:
         bool CreateNativeWindow();
+        void SetupImGuiStyle();
         void Shutdown();
         void RunLoop();
 
@@ -20,8 +21,8 @@ namespace spacecal {
         GLFWwindow* m_glfwWindow = nullptr;
         GLuint m_fboHandle = 0;
         GLuint m_fboTextureHandle = 0;
-        int m_fboTextureWidth = 1200;
-        int m_fboTextureHeight = 800;
+        int m_fboTextureWidth = 1450;
+        int m_fboTextureHeight = 850;
 
         const float k_MINIMIZED_MAX_FPS = 60.0f;
     };

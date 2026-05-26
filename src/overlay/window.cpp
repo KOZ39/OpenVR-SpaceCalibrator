@@ -65,6 +65,8 @@ namespace spacecal {
 
         glfwSetErrorCallback(GLFWErrorCallback);
 
+        // @TODO: multiple render backends; prefer dx11 on windows, vk on linux
+
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -134,6 +136,8 @@ namespace spacecal {
 
         ImGui::StyleColorsDark();
 
+        SetupImGuiStyle();
+
         glGenTextures(1, &m_fboTextureHandle);
         glBindTexture(GL_TEXTURE_2D, m_fboTextureHandle);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_fboTextureWidth, m_fboTextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
@@ -155,6 +159,19 @@ namespace spacecal {
         }
 
         return true;
+    }
+
+    void Window::SetupImGuiStyle() {
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.FrameRounding = 10;
+        
+        // colours
+        ImVec4* colors = style.Colors;
+        colors[ImGuiCol_Button] = ImVec4(0.74f, 0.74f, 0.74f, 0.24f);
+        colors[ImGuiCol_ButtonHovered] = ImVec4(0.74f, 0.74f, 0.74f, 0.40f);
+        colors[ImGuiCol_ButtonActive] = ImVec4(0.74f, 0.74f, 0.74f, 0.51f);
+
+
     }
 
     void Window::Shutdown() {
@@ -290,6 +307,10 @@ namespace spacecal {
                 ImGui::NewFrame();
 
                 spacecal::drawInterface(dashboardVisible);
+
+#ifdef _DEBUG
+                // ImGui::ShowDemoWindow();
+#endif
 
                 ImGui::EndFrame();
                 ImGui::Render();
