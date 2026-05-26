@@ -266,7 +266,8 @@ namespace spacecal {
                 ImGui::NewLine();
             }
 
-            float width = ImGui::GetWindowContentRegionWidth(), scale = 1.0f / 2.0f;
+            float width = ImGui::GetWindowContentRegionWidth() - style.FramePadding.x * 2.0f;
+            float scale = 1.0f / 2.0f;
             if (calibration.isValidCalibration)
             {
                 width -= style.FramePadding.x * 4.0f;
@@ -374,7 +375,8 @@ namespace spacecal {
                 ImGui::NewLine();
             }
 
-            float width = ImGui::GetWindowContentRegionWidth(), scale = 1.0f / 2.0f;
+            float width = ImGui::GetWindowContentRegionWidth() - style.FramePadding.x * 2.0f;
+            float scale = 1.0f / 2.0f;
             if (calibration.isValidCalibration)
             {
                 width -= style.FramePadding.x * 4.0f;
