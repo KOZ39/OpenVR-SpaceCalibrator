@@ -571,6 +571,9 @@ namespace spacecal {
                 // update state
                 m_calibrations[i].hmdIsInReferenceTrackingSystem = hmdDevice.szTrackingSystemId == m_calibrations[i].referenceDevice.trackingSystem;
             }
+
+            // re-use the last calibration now
+            apply();
         } else {
             TrackingSystemCalibration mainCalibration;
             mainCalibration.hmdIsInReferenceTrackingSystem = true;
