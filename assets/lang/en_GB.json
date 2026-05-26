@@ -13,7 +13,7 @@
   "reference_space": "Reference space",
   "target_space": "Target space",
   "select_reference_device": "Select reference device",
-  "select_target_device": "Select target space",
+  "select_target_device": "Select target device",
 
   "devices_from_space": "Devices from: {0}", /* 0 : tracking system name, eg SteamVR Tracking*/
   "identify_selected_devices": "Identify selected devices (blinks LED or vibrates)",
