@@ -259,7 +259,7 @@ namespace spacecal {
 
         if (calibration.state == CalibrationState::NONE)
         {
-            if (calibration.isValidCalibration && !calibration.isActive)
+            if (calibration.isValidCalibration() && !calibration.isActive)
             {
                 std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
                 ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1), "%s", LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
@@ -268,7 +268,7 @@ namespace spacecal {
 
             float width = ImGui::GetWindowContentRegionWidth() - style.FramePadding.x * 2.0f;
             float scale = 1.0f / 2.0f;
-            if (calibration.isValidCalibration)
+            if (calibration.isValidCalibration())
             {
                 width -= style.FramePadding.x * 4.0f;
                 scale = 1.0f / 4.0f;
@@ -285,7 +285,7 @@ namespace spacecal {
                 calibration.startContinuous();
             }
 
-            if (calibration.isValidCalibration)
+            if (calibration.isValidCalibration())
             {
                 // ImGui::SameLine();
                 // if (ImGui::Button(LOCALE_GET("calibration_action_edit").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
@@ -368,7 +368,7 @@ namespace spacecal {
 #endif
         else if (calibration.isContinuousCalibration()) {
 
-            if (calibration.isValidCalibration && !calibration.isActive)
+            if (calibration.isValidCalibration() && !calibration.isActive)
             {
                 std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
                 ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1), "%s", LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
@@ -377,7 +377,7 @@ namespace spacecal {
 
             float width = ImGui::GetWindowContentRegionWidth() - style.FramePadding.x * 2.0f;
             float scale = 1.0f / 2.0f;
-            if (calibration.isValidCalibration)
+            if (calibration.isValidCalibration())
             {
                 width -= style.FramePadding.x * 4.0f;
                 scale = 1.0f / 4.0f;
@@ -393,7 +393,7 @@ namespace spacecal {
                 calibration.startContinuous();
             }
 
-            if (calibration.isValidCalibration)
+            if (calibration.isValidCalibration())
             {
                 ImGui::SameLine();
                 if (ImGui::Button(LOCALE_GET("calibration_action_clear").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))

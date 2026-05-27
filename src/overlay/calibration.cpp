@@ -222,26 +222,28 @@ namespace spacecal {
         return trans;
     }
 
-    bool TrackingSystemCalibration::computeCalibrationOneshot(bool bForceCalibration) {
+    CalibrationError TrackingSystemCalibration::computeCalibrationOneshot(bool bForceCalibration) {
         // @TODO: do NOT apply until we are certain this is a better calibration.
 
         // apply samples to avoid sampling twice
         Eigen::Quaterniond computedRotation = calibrateRotation(m_samples);
         Eigen::Vector3d computedTranslation = calibrateTranslation(m_samples, computedRotation);
         
-        bool bIsCalibrationValid = true;
+        CalibrationError eCalibrationError = CalibrationError::None;
         // ensure rotation is valid
         // @TODO: propagate rejection reason to UI to provide user with feedback on how to improve calibration
-        bIsCalibrationValid = bIsCalibrationValid && computedRotation.squaredNorm() > 1e-6;
-
-        if (isRelativeCalibration) {
-            bIsCalibrationValid = bIsCalibrationValid && makeCalibrationLocal(computedRotation, computedTranslation);
+        if (computedRotation.squaredNorm() > 1e-6) {
+            eCalibrationError = CalibrationError::LackOfRotationalVariance;
+        }
+        
+        if (isRelativeCalibration && makeCalibrationLocal(computedRotation, computedTranslation)) {
+            eCalibrationError = CalibrationError::BadRelativeCalibration;
         }
 
         // @TODO: calibration metrics
 
-        if (bIsCalibrationValid || bForceCalibration) {
-            isValidCalibration = bIsCalibrationValid;
+        if (eCalibrationError == CalibrationError::None || bForceCalibration) {
+            calibrationError = eCalibrationError;
             calibratedRotation = computedRotation;
             calibratedTranslation = computedTranslation;
 
@@ -251,7 +253,7 @@ namespace spacecal {
             CalibrationManager::getInstance()->saveConfig();
         }
 
-        return isValidCalibration;
+        return eCalibrationError;
     }
 
     bool TrackingSystemCalibration::makeCalibrationLocal(Eigen::Quaterniond& rotation, Eigen::Vector3d& translation) {
@@ -502,7 +504,7 @@ namespace spacecal {
             case CalibrationState::CONTINUOUS:
             {
                 // @TODO: force here? idk how to handle minimising the error term
-                if (computeCalibrationOneshot(false)) {
+                if (computeCalibrationOneshot(false) == CalibrationError::None) {
                     LOG_CALIB_INFO("Finished continuous calibration, profile saved");
                 }
 
@@ -551,7 +553,7 @@ namespace spacecal {
     
     // applies calibration to all devices under this tracking system
     void TrackingSystemCalibration::apply() {
-        this->isActive = isValidCalibration;
+        this->isActive = calibrationError == CalibrationError::None;
 
         auto hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
         if (this->hmdIsInReferenceTrackingSystem && hmdDevice.szTrackingSystemId != referenceDevice.trackingSystem) {

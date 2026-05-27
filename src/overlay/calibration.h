@@ -31,6 +31,13 @@ namespace spacecal {
         VERY_SLOW = 500,
     };
 
+    enum class CalibrationError {
+        None,
+        LackOfRotationalVariance, // move around more
+        BadRelativeCalibration, // maths fucked up, try again soz
+        Unknown,
+    };
+
     // An instantaneous pose, SteamVR poses are mapped to this for ease of use with
     // Eigen
     struct Pose_t {
@@ -93,8 +100,12 @@ namespace spacecal {
             return state == CalibrationState::CONTINUOUS_IDLE || state == CalibrationState::CONTINUOUS;
         }
 
+        [[nodiscard]] inline const bool isValidCalibration() const {
+            return calibrationError == CalibrationError::None;
+        }
+
         bool isActive = false; // enabled in the UI
-        bool isValidCalibration = false; // whether we can even use this calibration
+        CalibrationError calibrationError = CalibrationError::Unknown; // error state of the last calibration, to be used by ui
         bool hmdIsInReferenceTrackingSystem = false; // whether the hmd is part of the reference device tracking system
         bool isRelativeCalibration = false; // whether the calibration is stored such that its coordinate system is relative to the reference device. this hides tracking anomalies from the reference device and keeps calibrations "valid" for longer
         bool hideContinuousTracker = false;
@@ -134,7 +145,7 @@ namespace spacecal {
         Eigen::Quaterniond calibrateRotation(const std::vector<Sample_t>& samples);
         Eigen::Vector3d calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& R);
         bool makeCalibrationLocal(Eigen::Quaterniond& rotation, Eigen::Vector3d& translation);
-        bool computeCalibrationOneshot(bool bForceCalibration); // computes instantaneous calibration
+        CalibrationError computeCalibrationOneshot(bool bForceCalibration); // computes instantaneous calibration
 
     private:
         Eigen::Quaterniond m_calibRelative_refRotation = Eigen::Quaterniond::Identity();
