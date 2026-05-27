@@ -190,6 +190,7 @@ namespace spacecal {
     }
 
     void Window::RunLoop() {
+        VRState::getInstance()->updateVrState();
         CalibrationManager::getInstance()->init();
 
         double lastFrameStartTime = glfwGetTime();

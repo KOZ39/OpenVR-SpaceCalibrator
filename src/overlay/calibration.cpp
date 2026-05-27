@@ -231,6 +231,7 @@ namespace spacecal {
         
         bool bIsCalibrationValid = true;
         // ensure rotation is valid
+        // @TODO: propagate rejection reason to UI to provide user with feedback on how to improve calibration
         bIsCalibrationValid = bIsCalibrationValid && computedRotation.squaredNorm() > 1e-6;
 
         if (isRelativeCalibration) {
@@ -435,7 +436,11 @@ namespace spacecal {
         if (state == CalibrationState::START || state == CalibrationState::CONTINUOUS_IDLE) {
             bool ok = true;
 
-            LOG_CALIB_INFO("Beginning calibration...");
+            if (state == CalibrationState::CONTINUOUS_IDLE) {
+                LOG_CALIB_INFO("Beginning continuous calibration...");
+            } else {
+                LOG_CALIB_INFO("Beginning calibration...");
+            }
             LOG_CALIB_INFO("  Reference device: ID: {}, tracking system: {}, model: {} serial: {}", referenceDevice.deviceId, referenceDevice.trackingSystem, referenceDevice.deviceModel, referenceDevice.deviceSerialNumber);
             LOG_CALIB_INFO("  Target device: ID: {}, tracking system: {}, model: {} serial: {}", targetDevice.deviceId, targetDevice.trackingSystem, targetDevice.deviceModel, targetDevice.deviceSerialNumber);
 
