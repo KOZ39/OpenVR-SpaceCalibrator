@@ -132,6 +132,13 @@ namespace spacecal {
         }
         LOG_CALIB_INFO("Got {} samples with {} delta samples", samples.size(), deltas.size());
 
+        constexpr size_t k_MIN_DELTA_SAMPLE_COUNT = 5;
+
+        if (deltas.size() < k_MIN_DELTA_SAMPLE_COUNT) {
+            LOG_CALIB_WARN("No valid delta samples! Aborting calibration...");
+            return Eigen::Quaterniond(0, 0, 0, 0);
+        }
+
         // Kabsch algorithm
         Eigen::MatrixXd refPoints(deltas.size(), 3), targetPoints(deltas.size(), 3);
         Eigen::Vector3d refCentroid(0, 0, 0), targetCentroid(0, 0, 0);
@@ -223,6 +230,9 @@ namespace spacecal {
         Eigen::Vector3d computedTranslation = calibrateTranslation(m_samples, computedRotation);
         
         bool bIsCalibrationValid = true;
+        // ensure rotation is valid
+        bIsCalibrationValid = bIsCalibrationValid && computedRotation.squaredNorm() > 1e-6;
+
         if (isRelativeCalibration) {
             bIsCalibrationValid = bIsCalibrationValid && makeCalibrationLocal(computedRotation, computedTranslation);
         }
