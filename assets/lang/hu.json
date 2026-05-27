@@ -1,0 +1,90 @@
+{
+  "app_title": "{0} {1}", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "app_title_vr": "{0} {1} - Az egér használatához zárja be a VR-panelt", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "tracking_system_no_systems": "Nincsenek felismert követőeszközök. A folytatáshoz kapcsoljon be egy eszközt.", /* Should never be hit but you never know */
+
+  "ipc_unavailable": "Nem sikerült csatlakozni a Space Calibrator SteamVR illesztőprogramjához. Kérjük, ellenőrizze a fájlok épségét a Steam könyvtárban, az alkalmazásra jobb kattintásnál felugró Tulajdonságok -> Telepített fájlok menüpontban, vagy telepítse újra az alkalmazást.",
+  "steamvr_unavailable": "Nem sikerült csatlakozni a SteamVR-hoz.",
+  "vr_troubleshooting_hmd_not_found": "Kérjük, először csatlakoztassa a VR-szemüvegét, és indítsa el a SteamVR-t.",
+  "vr_troubleshooting_connect_steamlink": "Kérjük, először nyissa meg a Steam Linket a VR-szemüvegén, és csatlakozzon a SteamVR-hoz.",
+  "vr_troubleshooting_generic": "Kérjük, először csatlakoztassa a VR-szemüvegét, és indítsa el a SteamVR-t. Hibakód: ({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
+
+  // "követési tér" == "tracking space", but synonims that could be relevant include "koordináta-rendszer"(coordinate-system), "Játéktér"(Playspace), "Követési rendszer"(Tracking system), "Bázis"(Linear algebra - Basis (but this is mainly used only there))
+  "reference_space": "Viszonyítási tér:",
+  "target_space": "Illesztendő tér:", /*Assuming that reference_space is treated as the "standard basis", and target_space is the one that's then transformed to align with it, idk which way around is it actually*/
+  "select_reference_device": "Viszonyítási követőrendszer kiválasztása",
+  "select_target_device": "Illesztendő követőrendszer kiválasztása",
+
+  "devices_from_space": "Innen származó eszközök: [{0}]", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "identify_selected_devices": "Kiválasztott eszközök azonosítása (villogó LED-es jelzőfény vagy rezgés)",
+  "calibration_error_reference_hmd_missing": "A viszonyítási ({0}) VR-szemüveg nem található, profil letiltva", /* 0 : tracking system name, eg SteamVR Tracking*/
+
+  "calibration_action_start": "Összehangolás indítása", /*"Összehangolás" could be "Kalibráció"(too hunglish, meh), or "Térszinkronizáció"(Technical), or simply "Szinkronizáció"(but this is a bit hunglish too)*/
+  "calibration_action_clear": "Összehangolás törlése",
+  "calibration_action_continuous": "Folyamatos összehangolás",
+  "calibration_action_edit": "Összehangolás szerkesztése",
+  "save_calibration_profile": "Profil mentése",
+
+  "calibration_progress": "Összehangolás állapota",
+  "calibration_progress_placeholder": "Összehangolás folyamatban...",
+  "calibration_info_move_around_unsifficient_samples": "Összehangolás közben tartsa össze és mozgassa együtt a kiválasztott eszközöket a játéktérben, és közben sétáljon körbe a szobában.",
+
+  "calibration_speed": "Összehangolás sebessége",
+  "calibration_speed_fast": "Gyors",
+  "calibration_speed_slow": "Lassú",
+  "calibration_speed_very_slow": "Nagyon lassú",
+
+  "continuous_hide_tracker": "Kiválasztott viszonyítási követőeszköz elrejtése a többi alkalmazás elől", /*Assuming this hides the selected tracker from the reference_space ("Viszonyítási"), and not the one from the target_space ("Illesztendő"). Might be the other way around idk rn.*/
+
+  /* HMD names for Virtual Desktop */
+  /* Virtual desktop lies that it's a Quest 2/3 on most headsets, so we have to substitute the real HMD name ourselves. you generally should
+     NOT have to change these! but some headsets have different names in certain regions (eg PFD MR is YVR MR in China) */
+  "virtual_desktop_hmd_none": "Semmilyen", /* should never appear but you never know*/
+  "virtual_desktop_hmd_gearvr": "Samsung Gear VR",
+  "virtual_desktop_hmd_oculus_go": "Oculus Go",
+  "virtual_desktop_hmd_oculus_quest_1": "Oculus Quest",
+  "virtual_desktop_hmd_oculus_quest_2": "Oculus Quest 2",
+  "virtual_desktop_hmd_meta_quest_pro": "Meta Quest Pro",
+  "virtual_desktop_hmd_pico_4": "Pico 4",
+  "virtual_desktop_hmd_meta_quest_3": "Meta Quest 3",
+  "virtual_desktop_hmd_meta_quest_3s": "Meta Quest 3S",
+  "virtual_desktop_hmd_pico_4_ultra": "Pico 4 Ultra",
+  "virtual_desktop_hmd_samsung_galaxy_xr": "Samsung Galaxy XR",
+  "virtual_desktop_hmd_play_for_dream_mr": "Play For Dream MR",
+
+  /* settings */
+  "settings_title": "Beállítások",
+  "settings_locale": "Nyelv",
+
+  /* Names of the various languages one may select. Shown in settings */
+  "languages_en_GB": "Angol (brit)",
+  "languages_en_US": "Angol (amerikai)",
+  "languages_fr": "Francia",
+  "languages_it": "Olasz",
+  "languages_de": "Német",
+  "languages_nl": "Holland",
+  "languages_es_ES": "Spanyol (spanyolországi)",
+  "languages_es_US": "Spanyol (latin-amerikai)",
+  "languages_da": "Dán",
+  "languages_sv": "Svéd",
+  "languages_fi": "Finn",
+  "languages_no": "Norvég",
+  "languages_bg": "Bolgár",
+  "languages_pl": "Lengyel",
+  "languages_cs": "Cseh",
+  "languages_el": "Görög",
+  "languages_hu": "Magyar",
+  "languages_pt_PT": "Portugál (portugáliai)",
+  "languages_pt_BR": "Portugál (brazil)",
+  "languages_ro": "Román",
+  "languages_ru": "Orosz",
+  "languages_tr": "Török",
+  "languages_uk": "Ukrán",
+  "languages_zh_HANS": "Kínai (egyszerűsített)",
+  "languages_zh_HANT": "Kínai (hagyományos)",
+  "languages_ja": "Japán",
+  "languages_ko": "Koreai",
+  "languages_th": "Thai",
+  "languages_vi": "Vietnámi",
+  "languages_system": "Rendszer nyelve"
+}
