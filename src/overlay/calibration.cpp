@@ -232,7 +232,7 @@ namespace spacecal {
         CalibrationError eCalibrationError = CalibrationError::None;
         // ensure rotation is valid
         // @TODO: propagate rejection reason to UI to provide user with feedback on how to improve calibration
-        if (computedRotation.squaredNorm() > 1e-6) {
+        if (computedRotation.squaredNorm() < 1e-6) {
             eCalibrationError = CalibrationError::LackOfRotationalVariance;
         }
         
