@@ -236,7 +236,7 @@ namespace spacecal {
             eCalibrationError = CalibrationError::LackOfRotationalVariance;
         }
         
-        if (isRelativeCalibration && makeCalibrationLocal(computedRotation, computedTranslation)) {
+        if (isRelativeCalibration && !makeCalibrationLocal(computedRotation, computedTranslation)) {
             eCalibrationError = CalibrationError::BadRelativeCalibration;
         }
 
@@ -251,6 +251,24 @@ namespace spacecal {
 
             apply();
             CalibrationManager::getInstance()->saveConfig();
+        } else {
+            // @TODO: make this better to maintain -> log formatters ?
+            std::string calibErrString = "unknown";
+            switch (eCalibrationError) {
+            case CalibrationError::LackOfRotationalVariance:
+                calibErrString = "lack of rotational variance";
+                break;
+            case CalibrationError::BadRelativeCalibration:
+                calibErrString = "bad relative calibration";
+                break;
+            case CalibrationError::None:
+                calibErrString = "none";
+                break;
+            default:
+                calibErrString = "unknown";
+                break;
+            }
+            LOG_CALIB_INFO("Rejecting calibration due to {}", calibErrString);
         }
 
         return eCalibrationError;
@@ -616,19 +634,7 @@ namespace spacecal {
 
         // try loading calibrations from disk, if fail, fallback to a default one
         if (loadConfig()) {
-            // successfully loaded calibration; update runtime state
-            const auto& hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
-
-            for (size_t i = 0; i < m_calibrations.size(); i++) {
-                m_calibrations[i].assignTarget(m_calibrations[i].referenceDevice);
-                m_calibrations[i].assignTarget(m_calibrations[i].targetDevice);
-                
-                // update state
-                m_calibrations[i].hmdIsInReferenceTrackingSystem = hmdDevice.szTrackingSystemId == m_calibrations[i].referenceDevice.trackingSystem;
-            }
-
-            // re-use the last calibration now
-            apply();
+            m_needToApplyTransformsAfterInit = true;
         } else {
             TrackingSystemCalibration mainCalibration;
             mainCalibration.hmdIsInReferenceTrackingSystem = true;
@@ -649,6 +655,22 @@ namespace spacecal {
         LOG_CALIB_INFO("Initialising CalibrationManager...");
         LOG_CALIB_INFO("Connected OpenVR devices:");
         VRState::getInstance()->debugListDevices();
+
+        // re-use the last calibration now
+        if (m_needToApplyTransformsAfterInit) {
+            // successfully loaded calibration; update runtime state
+            const auto& hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
+
+            for (size_t i = 0; i < m_calibrations.size(); i++) {
+                m_calibrations[i].assignTarget(m_calibrations[i].referenceDevice);
+                m_calibrations[i].assignTarget(m_calibrations[i].targetDevice);
+                
+                // update state
+                m_calibrations[i].hmdIsInReferenceTrackingSystem = hmdDevice.szTrackingSystemId == m_calibrations[i].referenceDevice.trackingSystem;
+            }
+            
+            apply();
+        }
 
         for (auto& calibration : m_calibrations) {
             calibration.init();

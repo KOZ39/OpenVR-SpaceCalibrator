@@ -195,6 +195,7 @@ namespace spacecal {
     private:
 
         double m_wantedUpdateInterval = 1.0;
+        bool m_needToApplyTransformsAfterInit = false;
 
         vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {};
         std::vector<TrackingSystemCalibration> m_calibrations;
