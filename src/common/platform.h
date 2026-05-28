@@ -3,7 +3,7 @@
 #include <string>
 #include <filesystem>
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #define OS_WINDOWS 1
 #define OS_LINUX 0
 #elif (defined(__gnu_linux__) || defined(__linux__))
@@ -11,6 +11,22 @@
 #define OS_LINUX 1
 #else
 #error "Unsupported OS"
+#endif
+
+#if defined(__clang__)
+#define COMPILER_MSVC 0
+#define COMPILER_GCC 0
+#define COMPILER_CLANG 1
+#elif defined(_MSC_VER)
+#define COMPILER_MSVC 1
+#define COMPILER_GCC 0
+#define COMPILER_CLANG 0
+#elif defined(__GNUC__)
+#define COMPILER_MSVC 0
+#define COMPILER_GCC 1
+#define COMPILER_CLANG 0
+#else
+#error "Unknown compiler"
 #endif
 
 // warning guards for various compilers
@@ -55,4 +71,7 @@ namespace platform {
     void showMessageDialog(const std::string& title, const std::string& message);
 
     void setThreadName(const std::string& threadName);
+
+    // utf8 stuff for imgui -> overlay -> os interop
+    
 }

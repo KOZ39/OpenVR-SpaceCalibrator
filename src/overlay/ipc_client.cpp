@@ -32,7 +32,7 @@ namespace ipc {
             .szSharedMemoryName = protocol::k_szIpcIdentifier,
             .dwSharedBufferSizeBytes = protocol::k_unSharedMemoryElementSize,
             .aFunctions = m_funcs,
-            .dwFunctionCount = _countof(m_funcs),
+            .dwFunctionCount = IPC_COUNT_OF(m_funcs),
             .aOperations = nullptr,
             .dwOperationCount = 0,
             .userData = this,

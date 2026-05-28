@@ -4,6 +4,8 @@
 #include "platform.h"
 #include "util.h"
 
+#include <errno.h>
+
 BEGIN_EXTERNAL_HEADERS
 #include <filesystem>
 #include <glaze/glaze.hpp>
@@ -116,9 +118,8 @@ namespace spacecal {
         auto rootDir = util::getSpaceCalibratorLangsDir();
         std::string langPath = (rootDir / (getLocaleAsRegionString(locale) + ".json")).string();
 
-        FILE* localeFile = nullptr;
-        errno_t fileErr = fopen_s(&localeFile, langPath.c_str(), "rb");
-        switch (fileErr) {
+        FILE* localeFile = fopen(langPath.c_str(), "rb");
+        switch (errno) {
         case 0: // OK
             break;
         case ENOENT:
@@ -135,7 +136,7 @@ namespace spacecal {
             LOG_WARNING("The locale file \"{0}\" could not be loaded as it was too large.", langPath);
             return false;
         default:
-            LOG_WARNING("The locale file \"{0}\" could not be loaded due to an unknown error ({1}).", langPath, fileErr);
+            LOG_WARNING("The locale file \"{0}\" could not be loaded due to an unknown error ({1}).", langPath, errno);
             return false;
         }
         if (localeFile) {
@@ -202,9 +203,8 @@ namespace spacecal {
         // fallback to the loaded locale string
         m_nativeLanguageNames[locale] = getString(expectedKey);
 
-        FILE* file = nullptr;
-        errno_t fileErr = fopen_s(&file, langPath.c_str(), "rb");
-        switch (fileErr) {
+        FILE* file = fopen(langPath.c_str(), "rb");
+        switch (errno) {
         case 0: // OK
             break;
         case ENOENT:
@@ -221,7 +221,7 @@ namespace spacecal {
             LOG_WARNING("The locale file \"{0}\" could not be loaded as it was too large.", langPath);
             return;
         default:
-            LOG_WARNING("The locale file \"{0}\" could not be loaded due to an unknown error ({1}).", langPath, fileErr);
+            LOG_WARNING("The locale file \"{0}\" could not be loaded due to an unknown error ({1}).", langPath, errno);
             return;
         }
 

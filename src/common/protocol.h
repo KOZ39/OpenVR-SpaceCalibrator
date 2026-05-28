@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <inttypes.h>
 
 #if !defined(_OPENVR_API)

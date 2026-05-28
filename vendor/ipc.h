@@ -43,6 +43,8 @@
 //    o-----------------o
 //
 
+#define IPC_COUNT_OF(arr) (sizeof(arr) / sizeof((arr)[0]))
+
 typedef void* IpcHandle_t;
 static const IpcHandle_t k_hInvalidIpcHandle = ((IpcHandle_t)(-1));
 typedef uint64_t IpcCommandType_t;
@@ -89,7 +91,20 @@ bool ipc_client_read_shared_memory(IpcHandle_t hIpcClient, IpcOperation_t ipcOpe
 
 #ifdef IPC_IMPLEMENTATION
 
+#if defined(_WIN32)
+#define IPC_OS_WIN32 1
+#else
+#define IPC_OS_WIN32 0
+#endif
+
+#if defined(__gnu_linux__) || defined(__linux__)
+#define IPC_OS_LINUX 1
+#else
+#define IPC_OS_LINUX 0
+#endif
+
 #include <stdio.h>
+#include <string.h>
 #include <vector>
 #include <string>
 #include <thread>
@@ -100,7 +115,7 @@ bool ipc_client_read_shared_memory(IpcHandle_t hIpcClient, IpcOperation_t ipcOpe
 #define IPC_FUNCTION_ARGS_TOTAL_SIZE (1024*16)
 #endif // IPC_FUNCTION_ARGS_TOTAL_SIZE
 
-#if _WIN32
+#if IPC_OS_WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif // WIN32_LEAN_AND_MEAN
@@ -117,6 +132,11 @@ bool ipc_client_read_shared_memory(IpcHandle_t hIpcClient, IpcOperation_t ipcOpe
 #define NOMINMAX
 #endif // NOMINMAX
 #include <windows.h>
+#elif IPC_OS_LINUX
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <semaphore.h>
+#include <sys/stat.h>
 #endif
 
 struct __internal__IpcFunction_t {
@@ -139,10 +159,14 @@ struct __internal__IpcHandle_t {
     void* userData = nullptr;
 };
 
+#if IPC_OS_LINUX
+#define IPC_S_RW_ALL (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
+#endif
+
 void __internal_ipc_server_poll_requests(IpcHandle_t hIpcServer) {
     __internal__IpcHandle_t* handleInternal = (__internal__IpcHandle_t*)hIpcServer;
 
-#if _WIN32
+#if IPC_OS_WIN32
     while (handleInternal->is_running) {
         DWORD result = WaitForSingleObject((HANDLE)handleInternal->hNativeEvent, 100);
 
@@ -162,6 +186,41 @@ void __internal_ipc_server_poll_requests(IpcHandle_t hIpcServer) {
 
             ResetEvent((HANDLE)handleInternal->hNativeEvent);
             ReleaseMutex((HANDLE)handleInternal->hNativeMutex);
+        }
+    }
+#elif IPC_OS_LINUX
+    sem_t* semEvt = (sem_t*)handleInternal->hNativeEvent;
+    sem_t* semMtx = (sem_t*)handleInternal->hNativeMutex;
+
+    while (handleInternal->is_running) {
+        struct timespec ts;
+        if (clock_gettime(CLOCK_REALTIME, &ts) == -1) continue;
+        ts.tv_nsec += 100000000; // 100ms
+        if (ts.tv_nsec >= 1000000000) {
+            ts.tv_sec += 1;
+            ts.tv_nsec -= 1000000000;
+        }
+
+        int res = sem_timedwait(semEvt, &ts);
+        if (res == 0) {
+            if (sem_wait(semMtx) == 0) {
+                IpcCommandType_t* cmdType = (IpcCommandType_t*)handleInternal->pSharedMemory;
+                void* pArgs = (void*)((char*)handleInternal->pSharedMemory + sizeof(IpcCommandType_t));
+
+                for (const auto& func : handleInternal->registed_functions) {
+                    if (func.unCmdType == *cmdType) {
+                        if (func.pfnCallback) {
+                            func.pfnCallback(*cmdType, hIpcServer, pArgs, handleInternal->userData);
+                        }
+                        break;
+                    }
+                }
+
+                sem_post(semMtx);
+            }
+        }
+        else if (errno != ETIMEDOUT && errno != EINTR) {
+            handleInternal->is_running = false;
         }
     }
 #else
@@ -184,7 +243,7 @@ IpcHandle_t ipc_server_init(IpcCreateArguments_t args) {
     handleInternal->szSharedMemoryName = args.szSharedMemoryName;
     size_t totalSharedMemSize = IPC_FUNCTION_ARGS_TOTAL_SIZE + args.dwSharedBufferSizeBytes;
 
-#if _WIN32
+#if IPC_OS_WIN32
     handleInternal->hSharedMemory = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)totalSharedMemSize, args.szSharedMemoryName);
     if (handleInternal->hSharedMemory == NULL) {
         free(handleInternal);
@@ -207,6 +266,39 @@ IpcHandle_t ipc_server_init(IpcCreateArguments_t args) {
         ipc_server_shutdown(&hIpcHandle);
         return k_hInvalidIpcHandle;
     }
+#elif IPC_OS_LINUX
+    // shared mem needs a leading / on linux
+    std::string szSharedMemoryPath = (args.szSharedMemoryName[0] == '/') ? args.szSharedMemoryName : "/" + std::string(args.szSharedMemoryName);
+
+    int hSharedMemFd = shm_open(szSharedMemoryPath.c_str(), O_CREAT | O_RDWR, IPC_S_RW_ALL);
+    if (hSharedMemFd == -1) {
+        free(handleInternal);
+        return k_hInvalidIpcHandle;
+    }
+
+    handleInternal->hSharedMemory = (IpcNativeHandle_t)(intptr_t)hSharedMemFd;
+    ftruncate(hSharedMemFd, totalSharedMemSize);
+
+    handleInternal->pSharedMemory = mmap(NULL, totalSharedMemSize, PROT_READ | PROT_WRITE, MAP_SHARED, hSharedMemFd, 0);
+    if (handleInternal->pSharedMemory == MAP_FAILED) {
+        close(hSharedMemFd);
+        free(handleInternal);
+        return k_hInvalidIpcHandle;
+    }
+
+    std::string mutexName = szSharedMemoryPath + "_FUNC_MTX";
+    std::string eventName = szSharedMemoryPath + "_FUNC_EVT";
+
+    handleInternal->hNativeMutex = (IpcNativeHandle_t)sem_open(mutexName.c_str(), O_CREAT, IPC_S_RW_ALL, 1);
+    handleInternal->hNativeEvent = (IpcNativeHandle_t)sem_open(eventName.c_str(), O_CREAT, IPC_S_RW_ALL, 0);
+    if (handleInternal->hNativeMutex == SEM_FAILED || handleInternal->hNativeEvent == SEM_FAILED) {
+        IpcHandle_t hIpcHandle = ((IpcHandle_t)handleInternal);
+        ipc_server_shutdown(&hIpcHandle);
+        return k_hInvalidIpcHandle;
+    }
+#else
+#error "Unsupported platform"
+#endif
 
     for (size_t i = 0; i < args.dwFunctionCount; ++i) {
         const IpcFunction_t& reg = args.aFunctions[i];
@@ -219,9 +311,6 @@ IpcHandle_t ipc_server_init(IpcCreateArguments_t args) {
 
     handleInternal->is_running = true;
     handleInternal->poll_thread = std::thread(__internal_ipc_server_poll_requests, (IpcHandle_t)handleInternal);
-#else
-#error "Unsupported platform"
-#endif
 
     return (IpcHandle_t)handleInternal;
 }
@@ -239,7 +328,7 @@ IpcHandle_t ipc_client_init(IpcCreateArguments_t args) {
 
     handleInternal->szSharedMemoryName = args.szSharedMemoryName;
 
-#if _WIN32
+#if IPC_OS_WIN32
     handleInternal->hSharedMemory = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, args.szSharedMemoryName);
     if (handleInternal->hSharedMemory == NULL) {
         free(handleInternal);
@@ -262,6 +351,32 @@ IpcHandle_t ipc_client_init(IpcCreateArguments_t args) {
         ipc_client_shutdown(&handleFinal);
         return k_hInvalidIpcHandle;
     }
+#elif IPC_OS_LINUX
+    std::string szSharedMemoryPath = (args.szSharedMemoryName[0] == '/') ? args.szSharedMemoryName : "/" + std::string(args.szSharedMemoryName);
+
+    int hSharedMemFd = shm_open(szSharedMemoryPath.c_str(), O_RDWR, IPC_S_RW_ALL);
+    if (hSharedMemFd == -1) {
+        free(handleInternal);
+        return k_hInvalidIpcHandle;
+    }
+
+    handleInternal->hSharedMemory = (IpcNativeHandle_t)(intptr_t)hSharedMemFd;
+    struct stat st = {};
+    fstat(hSharedMemFd, &st);
+    handleInternal->pSharedMemory = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, hSharedMemFd, 0);
+
+    std::string mutexName = szSharedMemoryPath + "_FUNC_MTX";
+    std::string eventName = szSharedMemoryPath + "_FUNC_EVT";
+    handleInternal->hNativeMutex = (IpcNativeHandle_t)sem_open(mutexName.c_str(), 1);
+    handleInternal->hNativeEvent = (IpcNativeHandle_t)sem_open(eventName.c_str(), 0);
+    if (handleInternal->hNativeMutex == SEM_FAILED || handleInternal->hNativeEvent == SEM_FAILED) {
+        IpcHandle_t hIpcHandle = ((IpcHandle_t)handleInternal);
+        ipc_client_shutdown(&hIpcHandle);
+        return k_hInvalidIpcHandle;
+    }
+#else
+#error "Unsupported platform"
+#endif
 
     for (size_t i = 0; i < args.dwFunctionCount; ++i) {
         const IpcFunction_t& reg = args.aFunctions[i];
@@ -270,9 +385,6 @@ IpcHandle_t ipc_client_init(IpcCreateArguments_t args) {
         };
         handleInternal->registed_functions.push_back(func);
     }
-#else
-#error "Unsupported platform"
-#endif
 
     return (IpcHandle_t)handleInternal;
 }
@@ -281,11 +393,11 @@ bool ipc_server_shutdown(IpcHandle_t* hIpcServer) {
     if (hIpcServer && *hIpcServer != k_hInvalidIpcHandle) {
         __internal__IpcHandle_t* handleInternal = (__internal__IpcHandle_t*)*hIpcServer;
 
-#if _WIN32
         handleInternal->is_running = false;
         if (handleInternal->poll_thread.joinable()) {
             handleInternal->poll_thread.join();
         }
+#if IPC_OS_WIN32
 
         for (size_t i = 0; i < handleInternal->registed_operations.size(); ++i) {
             if (handleInternal->registed_operations[i].hNativeEvent)
@@ -303,6 +415,40 @@ bool ipc_server_shutdown(IpcHandle_t* hIpcServer) {
             UnmapViewOfFile(handleInternal->pSharedMemory);
         if (handleInternal->hSharedMemory)
             CloseHandle(handleInternal->hSharedMemory);
+#elif IPC_OS_LINUX
+        std::string szSharedMemoryPath = (handleInternal->szSharedMemoryName[0] == '/') ? handleInternal->szSharedMemoryName : "/" + std::string(handleInternal->szSharedMemoryName);
+
+        if ((sem_t*)handleInternal->hNativeMutex != SEM_FAILED) {
+            sem_close((sem_t*)handleInternal->hNativeMutex);
+            sem_unlink((szSharedMemoryPath + "_FUNC_MTX").c_str());
+        }
+        if ((sem_t*)handleInternal->hNativeEvent != SEM_FAILED) {
+            sem_close((sem_t*)handleInternal->hNativeEvent);
+            sem_unlink((szSharedMemoryPath + "_FUNC_EVT").c_str());
+        }
+
+        for (size_t i = 0; i < handleInternal->registed_operations.size(); ++i) {
+            IpcOperation_t& op = handleInternal->registed_operations[i];
+            std::string opMutexName = szSharedMemoryPath + "_" + std::string(op.szIdentifier) + "_MTX";
+            std::string opEventName = szSharedMemoryPath + "_" + std::string(op.szIdentifier) + "_EVT";
+            if ((sem_t*)op.hNativeMutex != SEM_FAILED) {
+                sem_close((sem_t*)op.hNativeMutex);
+                sem_unlink(opMutexName.c_str());
+            }
+            if ((sem_t*)op.hNativeEvent != SEM_FAILED) {
+                sem_close((sem_t*)op.hNativeEvent);
+                sem_unlink(opEventName.c_str());
+            }
+        }
+
+        if (handleInternal->pSharedMemory) {
+            struct stat st = {};
+            fstat((int)(intptr_t)handleInternal->hSharedMemory, &st);
+            munmap(handleInternal->pSharedMemory, st.st_size);
+        }
+        if (handleInternal->hSharedMemory)
+            close((int)(intptr_t)handleInternal->hSharedMemory);
+        shm_unlink(szSharedMemoryPath.c_str());
 #else
 #error "Unsupported platform"
 #endif
@@ -317,7 +463,7 @@ bool ipc_client_shutdown(IpcHandle_t* hIpcClient) {
     if (hIpcClient && *hIpcClient != k_hInvalidIpcHandle) {
         __internal__IpcHandle_t* handleInternal = (__internal__IpcHandle_t*)*hIpcClient;
 
-#if _WIN32
+#if IPC_OS_WIN32
         for (size_t i = 0; i < handleInternal->registed_operations.size(); ++i) {
             if (handleInternal->registed_operations[i].hNativeEvent)
                 CloseHandle((HANDLE)handleInternal->registed_operations[i].hNativeEvent);
@@ -334,6 +480,29 @@ bool ipc_client_shutdown(IpcHandle_t* hIpcClient) {
             UnmapViewOfFile(handleInternal->pSharedMemory);
         if (handleInternal->hSharedMemory)
             CloseHandle(handleInternal->hSharedMemory);
+#elif IPC_OS_LINUX
+        std::string szSharedMemoryPath = (handleInternal->szSharedMemoryName[0] == '/') ? handleInternal->szSharedMemoryName : "/" + std::string(handleInternal->szSharedMemoryName);
+
+        for (size_t i = 0; i < handleInternal->registed_operations.size(); ++i) {
+            IpcOperation_t& op = handleInternal->registed_operations[i];
+            if ((sem_t*)op.hNativeMutex != SEM_FAILED)
+                sem_close((sem_t*)op.hNativeMutex);
+            if ((sem_t*)op.hNativeEvent != SEM_FAILED)
+                sem_close((sem_t*)op.hNativeEvent);
+        }
+
+        if ((sem_t*)handleInternal->hNativeMutex != SEM_FAILED)
+            sem_close((sem_t*)handleInternal->hNativeMutex);
+        if ((sem_t*)handleInternal->hNativeEvent != SEM_FAILED)
+            sem_close((sem_t*)handleInternal->hNativeEvent);
+
+        if (handleInternal->pSharedMemory) {
+            struct stat st = {};
+            fstat((int)(intptr_t)handleInternal->hSharedMemory, &st);
+            munmap(handleInternal->pSharedMemory, st.st_size);
+        }
+        if (handleInternal->hSharedMemory)
+            close((int)(intptr_t)handleInternal->hSharedMemory);
 #else
 #error "Unsupported platform"
 #endif
@@ -363,14 +532,23 @@ bool ipc_client_dispatch_function(IpcHandle_t hIpcClient, IpcCommandType_t unCmd
         return false;
     }
 
-#if _WIN32
+#if IPC_OS_WIN32
     WaitForSingleObject((HANDLE)handleInternal->hNativeMutex, INFINITE);
     void* pSharedMem = handleInternal->pSharedMemory;
     *((IpcCommandType_t*)pSharedMem) = unCmdType;
     memcpy((char*)pSharedMem + sizeof(IpcCommandType_t), pArgs, dwArgsSize);
     SetEvent((HANDLE)handleInternal->hNativeEvent);
-    WaitForSingleObject((HANDLE)handleInternal->hNativeEvent, INFINITE);
     ReleaseMutex((HANDLE)handleInternal->hNativeMutex);
+#elif IPC_OS_LINUX
+    sem_t* semMtx = (sem_t*)handleInternal->hNativeMutex;
+    sem_t* semEvt = (sem_t*)handleInternal->hNativeEvent;
+
+    sem_wait(semMtx);
+    void* pSharedMem = handleInternal->pSharedMemory;
+    *((IpcCommandType_t*)pSharedMem) = unCmdType;
+    memcpy((char*)pSharedMem + sizeof(IpcCommandType_t), pArgs, dwArgsSize);
+    sem_post(semEvt);
+    sem_post(semMtx);
 #else
 #error "Unsupported platform"
 #endif
@@ -384,7 +562,7 @@ bool ipc_server_register_operation(IpcHandle_t hIpcServer, IpcOperation_t* ipcOp
     }
     __internal__IpcHandle_t* handleInternal = (__internal__IpcHandle_t*)hIpcServer;
 
-#if _WIN32
+#if IPC_OS_WIN32
     std::string mutexName = std::string(handleInternal->szSharedMemoryName) + "_" + std::string(ipcOperation->szIdentifier) + "_MTX";
     std::string eventName = std::string(handleInternal->szSharedMemoryName) + "_" + std::string(ipcOperation->szIdentifier) + "_EVT";
 
@@ -398,11 +576,30 @@ bool ipc_server_register_operation(IpcHandle_t hIpcServer, IpcOperation_t* ipcOp
             CloseHandle((HANDLE)ipcOperation->hNativeEvent);
         return false;
     }
+#elif IPC_OS_LINUX
+    std::string szSharedMemoryPath = (handleInternal->szSharedMemoryName[0] == '/') ? handleInternal->szSharedMemoryName : "/" + std::string(handleInternal->szSharedMemoryName);
+    std::string mutexName = szSharedMemoryPath + "_" + std::string(ipcOperation->szIdentifier) + "_MTX";
+    std::string eventName = szSharedMemoryPath + "_" + std::string(ipcOperation->szIdentifier) + "_EVT";
 
-    handleInternal->registed_operations.push_back(*ipcOperation);
+    ipcOperation->hNativeMutex = (IpcNativeHandle_t)sem_open(mutexName.c_str(), O_CREAT, IPC_S_RW_ALL, 1);
+    ipcOperation->hNativeEvent = (IpcNativeHandle_t)sem_open(eventName.c_str(), O_CREAT, IPC_S_RW_ALL, 0);
+
+    if (ipcOperation->hNativeMutex == SEM_FAILED || ipcOperation->hNativeEvent == SEM_FAILED) {
+        if ((sem_t*)ipcOperation->hNativeMutex != SEM_FAILED) {
+            sem_close((sem_t*)ipcOperation->hNativeMutex);
+            sem_unlink(mutexName.c_str());
+        }
+        if ((sem_t*)ipcOperation->hNativeEvent != SEM_FAILED) {
+            sem_close((sem_t*)ipcOperation->hNativeEvent);
+            sem_unlink(eventName.c_str());
+        }
+        return false;
+    }
 #else
 #error "Unsupported platform"
 #endif
+
+    handleInternal->registed_operations.push_back(*ipcOperation);
 
     return true;
 }
@@ -415,16 +612,31 @@ bool ipc_server_write_shared_memory(IpcHandle_t hIpcServer, IpcOperation_t ipcOp
         return false;
     __internal__IpcHandle_t* handleInternal = (__internal__IpcHandle_t*)hIpcServer;
 
-#if _WIN32
+#if IPC_OS_WIN32
     DWORD ret = WaitForSingleObject((HANDLE)ipcOperation.hNativeMutex, 10);
     if (ret == WAIT_TIMEOUT) {
-        ReleaseMutex((HANDLE)ipcOperation.hNativeMutex);
         return false;
     }
     void* pDest = (char*)handleInternal->pSharedMemory + IPC_FUNCTION_ARGS_TOTAL_SIZE + ipcOperation.dwSharedMemoryOffset;
     memcpy(pDest, pSrc, destSize);
     SetEvent((HANDLE)ipcOperation.hNativeEvent);
     ReleaseMutex((HANDLE)ipcOperation.hNativeMutex);
+#elif IPC_OS_LINUX
+    sem_t* semMtx = (sem_t*)ipcOperation.hNativeMutex;
+    sem_t* semEvt = (sem_t*)ipcOperation.hNativeEvent;
+
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ts.tv_nsec += 10000000; // 10ms
+    if (ts.tv_nsec >= 1000000000) { ts.tv_sec += 1; ts.tv_nsec -= 1000000000; }
+
+    if (sem_timedwait(semMtx, &ts) != 0) {
+        return false;
+    }
+    void* pDest = (char*)handleInternal->pSharedMemory + IPC_FUNCTION_ARGS_TOTAL_SIZE + ipcOperation.dwSharedMemoryOffset;
+    memcpy(pDest, pSrc, destSize);
+    sem_post(semEvt);
+    sem_post(semMtx);
 #else
 #error "Unsupported platform"
 #endif
@@ -440,26 +652,39 @@ bool ipc_client_read_shared_memory(IpcHandle_t hIpcClient, IpcOperation_t ipcOpe
         return false;
     __internal__IpcHandle_t* handleInternal = (__internal__IpcHandle_t*)hIpcClient;
 
-#if _WIN32
-    DWORD ret = WaitForSingleObject((HANDLE)ipcOperation.hNativeEvent, 10);
+#if IPC_OS_WIN32
+    DWORD ret = WaitForSingleObject((HANDLE)ipcOperation.hNativeMutex, 10);
     if (ret == WAIT_TIMEOUT) {
-        ReleaseMutex((HANDLE)ipcOperation.hNativeMutex);
-        return false;
-    }
-    ret = WaitForSingleObject((HANDLE)ipcOperation.hNativeMutex, 10);
-    if (ret == WAIT_TIMEOUT) {
-        ReleaseMutex((HANDLE)ipcOperation.hNativeMutex);
         return false;
     }
     void* pSrc = (char*)handleInternal->pSharedMemory + IPC_FUNCTION_ARGS_TOTAL_SIZE + ipcOperation.dwSharedMemoryOffset;
     memcpy(pDest, pSrc, destSize);
     ReleaseMutex((HANDLE)ipcOperation.hNativeMutex);
+#elif IPC_OS_LINUX
+    sem_t* semMtx = (sem_t*)ipcOperation.hNativeMutex;
+    sem_t* semEvt = (sem_t*)ipcOperation.hNativeEvent;
+
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ts.tv_nsec += 10000000;
+    if (ts.tv_nsec >= 1000000000) { ts.tv_sec += 1; ts.tv_nsec -= 1000000000; }
+
+    if (sem_timedwait(semMtx, &ts) != 0) {
+        return false;
+    }
+    void* pSrc = (char*)handleInternal->pSharedMemory + IPC_FUNCTION_ARGS_TOTAL_SIZE + ipcOperation.dwSharedMemoryOffset;
+    memcpy(pDest, pSrc, destSize);
+    sem_post(semMtx);
 #else
 #error "Unsupported platform"
 #endif
 
     return true;
 }
+
+#if IPC_OS_LINUX
+#undef IPC_S_RW_ALL
+#endif
 
 #endif // IPC_IMPLEMENTATION
 #endif // HEKKY_IPC_INC

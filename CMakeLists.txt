@@ -21,6 +21,8 @@ endfunction()
 # windows prefers win8.1 sdk instead of win 10 sdk for some god forsaken reason
 if(WIN32)
     set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "Forcing Win10 SDK" FORCE)
+else()
+	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
 project("SpaceCalibrator")

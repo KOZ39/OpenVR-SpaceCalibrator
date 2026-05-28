@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <cstring>
 #include "tracked_device_provider.h"
+#include "platform.h"
 
-#if defined( _WIN32 )
+#if OS_WINDOWS
 #define SPACECALIBRATORDRIVER_EXPORT extern "C" __declspec( dllexport )
 #define SPACECALIBRATORDRIVER_IMPORT extern "C" __declspec( dllimport )
-#elif defined( __GNUC__ ) || defined( COMPILER_GCC ) || defined( __APPLE__ )
+#elif COMPILER_GCC || OS_LINUX
 #define SPACECALIBRATORDRIVER_EXPORT extern "C" __attribute__( ( visibility( "default" ) ) )
 #define SPACECALIBRATORDRIVER_IMPORT extern "C"
 #else

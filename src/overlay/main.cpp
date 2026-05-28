@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <windows.h>
 #include "util.h"
 #include "window.h"
 #include "platform.h"
@@ -8,13 +7,24 @@
 #include "localisation.h"
 #include "vr_core.h"
 #include "log.h"
+#if OS_WINDOWS
+#include <windows.h>
+#endif
 
+#if OS_WINDOWS
 // http://developer.download.nvidia.com/devzone/devcenter/gamegraphics/files/OptimusRenderingPolicies.pdf
 extern "C" __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 // http://developer.amd.com/community/blog/2015/10/02/amd-enduro-system-for-developers/
 extern "C" __declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0x00000001;
+#endif
 
+#if OS_WINDOWS
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
+#elif OS_LINUX
+int main(int argc, char* argv[])
+#else
+#error "Unsupported platform!"
+#endif
 {
     // Space Calibrator has to be single instance to work well with Steam
     bool bIsRunningViaSteam = false;

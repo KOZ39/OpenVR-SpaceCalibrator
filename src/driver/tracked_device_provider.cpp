@@ -6,6 +6,7 @@
 #include "interface_hook_injector.h"
 #include "vrmath.h"
 #include "virtual_desktop.h"
+#include <math.h>
 #include <Eigen/Dense>
 #include <openvr_driver.h>
 

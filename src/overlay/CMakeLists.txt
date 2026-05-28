@@ -3,10 +3,12 @@ cmake_minimum_required (VERSION 3.8)
 project(SpaceCalibratorOverlay CXX)
 message("SpaceCalibrator - Overlay")
 
-foreach(config_type RELEASE RELWITHDEBINFO MINSIZEREL)
-    set(CMAKE_CXX_FLAGS_${config_type} "${CMAKE_CXX_FLAGS_${config_type}} /Ob2 /Zc:inline")
-    set(CMAKE_SHARED_LINKER_FLAGS_${config_type} "${CMAKE_SHARED_LINKER_FLAGS_${config_type}} /LTCG /OPT:REF /OPT:ICF")
-endforeach()
+if (WIN32)
+    foreach(config_type RELEASE RELWITHDEBINFO MINSIZEREL)
+        set(CMAKE_CXX_FLAGS_${config_type} "${CMAKE_CXX_FLAGS_${config_type}} /Ob2 /Zc:inline")
+        set(CMAKE_SHARED_LINKER_FLAGS_${config_type} "${CMAKE_SHARED_LINKER_FLAGS_${config_type}} /LTCG /OPT:REF /OPT:ICF")
+    endforeach()
+endif()
 
 function(GroupSourcesByFolder target)
     set(SOURCE_GROUP_DELIMITER "/")
@@ -32,6 +34,60 @@ function(GroupSourcesByFolder target)
         source_group("${last_dir}" FILES ${files})
     endif()
 endfunction()
+
+set(OPENVR_LIB_DIR ${CMAKE_SOURCE_DIR}/vendor/openvr)
+
+# If not set, determine the platform architecture
+if (NOT PLATFORM)
+    if (CMAKE_SIZEOF_VOID_P MATCHES 8)
+        set(PLATFORM 64)
+    else ()
+        set(PLATFORM 32)
+    endif ()
+endif ()
+message(STATUS "Compilation set for ${PLATFORM}bits architectures.")
+
+# OpenVR compatibility checking
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    add_definitions(-DLINUX -DPOSIX)
+    
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+        set(ARCH_TARGET linux_arm64)
+        add_definitions(-DLINUXARM64)
+    else()
+        set(ARCH_TARGET linux64)
+        add_definitions(-DLINUX64)
+    endif()
+
+    if (${PLATFORM} MATCHES 32)
+        message(WARNING "OpenVR x86 binaries not provided on GNU/Linux.")
+    endif ()
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(CMAKE_MACOSX_RPATH 0)
+    add_definitions(-DOSX -DPOSIX)
+    set(ARCH_TARGET osx32)
+
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    add_definitions(-D_WIN32)
+    set(ARCH_TARGET win${PLATFORM})
+
+    # Binaries path for thirdparties are not generics so we try to guess their suffixes.
+    set(WINDOWS_PATH_SUFFIXES win${PLATFORM} Win${PLATFORM} x${PLATFORM})
+endif ()
+
+find_library(OPENVR_LIBRARIES
+        NAMES
+        openvr_api
+        PATHS
+        ${OPENVR_LIB_DIR}/bin
+        ${OPENVR_LIB_DIR}/lib
+        PATH_SUFFIXES
+        osx${PLATFORM}
+        linux${PLATFORM}
+        win${PLATFORM}
+        NO_DEFAULT_PATH
+        NO_CMAKE_FIND_ROOT_PATH
+        )
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -83,28 +139,33 @@ target_include_directories(SpaceCalibratorOverlay
 
 target_link_libraries(SpaceCalibratorOverlay
     PRIVATE SpaceCalibratorCommon
-    PRIVATE opengl32.lib
-    PRIVATE dwmapi.lib
     PRIVATE imgui
     PRIVATE glad
     PRIVATE glfw
     PRIVATE fmt
     PRIVATE quill
-    PRIVATE ${CMAKE_SOURCE_DIR}/vendor/openvr/lib/win64/openvr_api.lib)
+    PRIVATE ${OPENVR_LIBRARIES})
 
 target_compile_definitions(SpaceCalibratorOverlay
-    PRIVATE NOMINMAX
-    PRIVATE UNICODE
-    PRIVATE _CRT_SECURE_NO_WARNINGS
     PRIVATE IMGUI_DEFINE_MATH_OPERATORS
     PRIVATE IS_OVERLAY
 )
 
+if (WIN32)
+    target_link_libraries(SpaceCalibratorOverlay
+        PRIVATE opengl32.lib
+        PRIVATE dwmapi.lib)
+
+    target_compile_definitions(SpaceCalibratorOverlay
+        PRIVATE NOMINMAX
+        PRIVATE UNICODE
+        PRIVATE _CRT_SECURE_NO_WARNINGS
+    )
+endif()
+
 # Object files are too big with spacecal sooooo
 if (MSVC)
     target_compile_options(SpaceCalibratorOverlay PRIVATE /bigobj)
-else ()
-    target_compile_options(SpaceCalibratorOverlay PRIVATE -Wa,-mbig-obj)
 endif ()
 
 set(OVERLAY_BIN_DIR "$<TARGET_FILE_DIR:SpaceCalibratorOverlay>")
@@ -150,12 +211,21 @@ add_custom_command(
 )
 
 # Copy openvr_api.dll
-add_custom_command(
-    TARGET SpaceCalibratorOverlay POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/vendor/openvr/bin/win64/openvr_api.dll
-    ${OVERLAY_BIN_DIR}/openvr_api.dll
-)
+if (WIN32)
+    add_custom_command(
+        TARGET SpaceCalibratorOverlay POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/vendor/openvr/bin/${ARCH_TARGET}/openvr_api.dll
+        ${OVERLAY_BIN_DIR}/openvr_api.dll
+    )
+else()
+    add_custom_command(
+        TARGET SpaceCalibratorOverlay POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/vendor/openvr/bin/${ARCH_TARGET}/libopenvr_api.so
+        ${OVERLAY_BIN_DIR}/libopenvr_api.so
+    )
+endif()
 
 # Copy assets to output folder
 add_custom_command(
@@ -168,6 +238,8 @@ add_custom_command(
 )
 
 # Set as startup project
-set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT SpaceCalibratorOverlay)
-set_property(TARGET SpaceCalibratorOverlay PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${OVERLAY_BIN_DIR}")
+if (WIN32)
+    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT SpaceCalibratorOverlay)
+    set_property(TARGET SpaceCalibratorOverlay PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${OVERLAY_BIN_DIR}")
+endif()
 set_target_properties(SpaceCalibratorOverlay PROPERTIES OUTPUT_NAME "SpaceCalibrator")

@@ -13,10 +13,12 @@ set(TARGET_NAME 01spacecalibrator)
 # This is the name that the binary will be called (driver_01spacecalibrator)
 set(DRIVER_NAME "driver_${TARGET_NAME}")
 
-foreach(config_type RELEASE RELWITHDEBINFO MINSIZEREL)
-    set(CMAKE_CXX_FLAGS_${config_type} "${CMAKE_CXX_FLAGS_${config_type}} /Ob2 /Zc:inline")
-    set(CMAKE_SHARED_LINKER_FLAGS_${config_type} "${CMAKE_SHARED_LINKER_FLAGS_${config_type}} /LTCG /OPT:REF /OPT:ICF")
-endforeach()
+if (WIN32)
+    foreach(config_type RELEASE RELWITHDEBINFO MINSIZEREL)
+        set(CMAKE_CXX_FLAGS_${config_type} "${CMAKE_CXX_FLAGS_${config_type}} /Ob2 /Zc:inline")
+        set(CMAKE_SHARED_LINKER_FLAGS_${config_type} "${CMAKE_SHARED_LINKER_FLAGS_${config_type}} /LTCG /OPT:REF /OPT:ICF")
+    endforeach()
+endif()
 
 function(GroupSourcesByFolder target)
     set(SOURCE_GROUP_DELIMITER "/")
@@ -59,7 +61,14 @@ message(STATUS "Compilation set for ${PLATFORM}bits architectures.")
 # OpenVR compatibility checking
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_definitions(-DLINUX -DPOSIX)
-    set(ARCH_TARGET linux64)
+    
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+        set(ARCH_TARGET linux_arm64)
+        add_definitions(-DLINUXARM64)
+    else()
+        set(ARCH_TARGET linux64)
+        add_definitions(-DLINUX64)
+    endif()
 
     if (${PLATFORM} MATCHES 32)
         message(WARNING "OpenVR x86 binaries not provided on GNU/Linux.")
@@ -103,6 +112,7 @@ foreach(SOURCE IN ITEMS ${SOURCES_API})
 endforeach()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/${DRIVER_NAME}/bin/${ARCH_TARGET}>)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY $<1:${CMAKE_BINARY_DIR}/${DRIVER_NAME}/bin/${ARCH_TARGET}>)
 
 add_library(SpaceCalibratorDriver SHARED ${SOURCES_API} ${SOURCES_HEADERS})
 GroupSourcesByFolder(SpaceCalibratorDriver)
@@ -114,7 +124,6 @@ target_include_directories(SpaceCalibratorDriver
 	PRIVATE ${OPENVR_LIB_DIR}
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor
 	PUBLIC ${CMAKE_SOURCE_DIR}/vendor/openvr/headers
-	PUBLIC ${CMAKE_SOURCE_DIR}/vendor/minhook/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/quill/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/fmt/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/glaze/include
@@ -123,26 +132,40 @@ target_include_directories(SpaceCalibratorDriver
 target_link_libraries(SpaceCalibratorDriver
     PRIVATE SpaceCalibratorCommon
 	PRIVATE ${OPENVR_LIBRARIES}
-	PRIVATE minhook
     PRIVATE fmt
     PRIVATE quill
-    PRIVATE kernel32 user32 gdi32 winspool comdlg32 advapi32 shell32 ole32 oleaut32 uuid odbc32 odbccp32
 )
 
 target_compile_definitions(SpaceCalibratorDriver
     PRIVATE $<$<CONFIG:Debug>:_DEBUG>
     PRIVATE $<$<CONFIG:Release>:NDEBUG>
-    PRIVATE _WINDOWS
-    PRIVATE _USRDLL
-    PRIVATE NOMINMAX
-    PRIVATE UNICODE
     PRIVATE EIGEN_HAS_STD_RESULT_OF=0
-    PRIVATE _CRT_SECURE_NO_WARNINGS
     PRIVATE IS_DRIVER
 )
+
+if (WIN32)
+    target_include_directories(SpaceCalibratorDriver
+        PUBLIC ${CMAKE_SOURCE_DIR}/vendor/minhook/include)
+
+    target_link_libraries(SpaceCalibratorDriver
+        PRIVATE minhook
+        PRIVATE kernel32 user32 gdi32 winspool comdlg32 advapi32 shell32 ole32 oleaut32 uuid odbc32 odbccp32
+    )
+    
+    target_compile_definitions(SpaceCalibratorDriver
+        PRIVATE _WINDOWS
+        PRIVATE _USRDLL
+        PRIVATE NOMINMAX
+        PRIVATE UNICODE
+        PRIVATE _CRT_SECURE_NO_WARNINGS
+    )
+endif()
+
 set_target_properties(SpaceCalibratorDriver PROPERTIES OUTPUT_NAME ${DRIVER_NAME})
 
-set_target_properties(SpaceCalibratorOverlay PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+if (WIN32)
+    set_target_properties(SpaceCalibratorOverlay PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+endif()
 
 # Copy driver assets to output folder
 add_custom_command(

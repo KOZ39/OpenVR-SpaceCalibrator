@@ -64,6 +64,7 @@ namespace hooking {
     void InjectHooks(spacecal::ServerTrackedDeviceProvider* driver, vr::IVRDriverContext* pDriverContext) {
         g_mainDriver = driver;
 
+#if OS_WINDOWS
         MH_STATUS err = MH_Initialize();
         if (err == MH_OK) {
             GetGenericInterfaceHook.CreateHookInObjectVTable(pDriverContext, 0, reinterpret_cast<void*>(&DetourGetGenericInterface));
@@ -74,11 +75,21 @@ namespace hooking {
         } else {
             LOG_HOOKING_ERROR("MH_Initialize error: {}", MH_StatusToString(err));
         }
+#elif OS_LINUX
+        if (GetGenericInterfaceHook.CreateHookInObjectVTable(pDriverContext, 0, reinterpret_cast<void*>(&DetourGetGenericInterface))) {
+            IHook::Register(&GetGenericInterfaceHook);
+            LOG_HOOKING_INFO("Space Calibrator hooked into OpenVR PoseUpdate successfully");
+        } else {
+            LOG_HOOKING_ERROR("Failed to hook into OpenVR PoseUpdate.");
+        }
+#endif
     }
 
     void DisableHooks() {
         IHook::DestroyAll();
+#if OS_WINDOWS
         MH_Uninitialize();
+#endif
         LOG_HOOKING_INFO("Removed all hooks successfully");
     }
 }

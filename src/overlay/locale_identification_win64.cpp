@@ -1,5 +1,6 @@
 #include "localisation.h"
 
+#if OS_WINDOWS
 #include "log.h"
 
 #include <unordered_map>
@@ -385,3 +386,4 @@ namespace spacecal {
         return estimatedLocale;
     }
 } // namespace localisation
+#endif // OS_WINDOWS

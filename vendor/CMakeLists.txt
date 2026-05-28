@@ -5,8 +5,10 @@ project("vendor")
 # Includes all 3rd party libraries here
 
 # Minhook library
-message("Adding minhook...")
-add_subdirectory ("minhook")
+if (WIN32)
+	message("Adding minhook...")
+	add_subdirectory ("minhook")
+endif()
 
 # glad
 message("Adding glad...")
@@ -53,11 +55,13 @@ message ("Adding glaze...")
 add_subdirectory(glaze)
 
 # Assign solution dirs
-set_property(TARGET glfw PROPERTY FOLDER "vendor/glfw")
-set_property(TARGET update_mappings PROPERTY FOLDER "vendor/glfw")
+if (WIN32)
+	set_property(TARGET glfw PROPERTY FOLDER "vendor/glfw")
+	set_property(TARGET update_mappings PROPERTY FOLDER "vendor/glfw")
 
-set_property(TARGET minhook PROPERTY FOLDER "vendor") 
-set_property(TARGET imgui PROPERTY FOLDER "vendor")
-set_property(TARGET fmt PROPERTY FOLDER "vendor")
-set_property(TARGET quill PROPERTY FOLDER "vendor")
-set_property(TARGET glad PROPERTY FOLDER "vendor")
+	set_property(TARGET minhook PROPERTY FOLDER "vendor") 
+	set_property(TARGET imgui PROPERTY FOLDER "vendor")
+	set_property(TARGET fmt PROPERTY FOLDER "vendor")
+	set_property(TARGET quill PROPERTY FOLDER "vendor")
+	set_property(TARGET glad PROPERTY FOLDER "vendor")
+endif()
