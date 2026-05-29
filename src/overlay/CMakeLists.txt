@@ -134,7 +134,7 @@ target_include_directories(SpaceCalibratorOverlay
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/quill/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/fmt/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/glaze/include
-    PUBLIC ${CMAKE_SOURCE_DIR}/vendor/eigen
+    PRIVATE ${CMAKE_SOURCE_DIR}/vendor/eigen
 )
 
 target_link_libraries(SpaceCalibratorOverlay
@@ -147,7 +147,10 @@ target_link_libraries(SpaceCalibratorOverlay
     PRIVATE ${OPENVR_LIBRARIES})
 
 target_compile_definitions(SpaceCalibratorOverlay
+    PRIVATE $<$<CONFIG:Debug>:_DEBUG>
+    PRIVATE $<$<CONFIG:Release>:NDEBUG>
     PRIVATE IMGUI_DEFINE_MATH_OPERATORS
+    PRIVATE EIGEN_HAS_STD_RESULT_OF=0
     PRIVATE IS_OVERLAY
 )
 
