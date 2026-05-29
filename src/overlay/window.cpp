@@ -235,17 +235,24 @@ namespace spacecal {
                     auto textInfo = ImGui::GetInputTextState(id);
 
                     if (textInfo != nullptr) {
+#if 0
+                        // @TODO: do we even need this? imgui and openvr afaik are both utf8, so no need to convert encoding between the two
                         textBuf[0] = 0;
                         int len = WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)textInfo->TextA.Data, textInfo->TextA.Size, textBuf, sizeof(textBuf), nullptr, nullptr);
                         textBuf[std::min(static_cast<size_t>(len), sizeof(textBuf) - 1)] = 0;
+#endif                   
+                        memset(textBuf, 0, sizeof(textBuf));
+                        size_t dwTextLength = std::min(static_cast<size_t>(textInfo->TextLen), sizeof(textBuf) - 1);
+                        memcpy(textBuf, textInfo->TextA.Data, dwTextLength);
+
 
                         uint32_t unFlags = 0; // EKeyboardFlags 
 
-                        vr::VROverlay()->ShowKeyboardForOverlay(
+                        vr::EVROverlayError err = vr::VROverlay()->ShowKeyboardForOverlay(
                             hOverlayHandle, vr::k_EGamepadTextInputModeNormal, vr::k_EGamepadTextInputLineModeSingleLine,
                             unFlags, "Space Calibrator Overlay", sizeof(textBuf), textBuf, 0
                         );
-                        bKeyboardOpen = true;
+                        bKeyboardOpen = err == vr::EVROverlayError::VROverlayError_None;
                     }
                 }
 
@@ -270,15 +277,23 @@ namespace spacecal {
                         break;
                     }
                     case vr::VREvent_KeyboardDone: {
-                        vr::VROverlay()->GetKeyboardText(textBuf, sizeof(textBuf));
+                        uint32_t dwTextBufSize = vr::VROverlay()->GetKeyboardText(textBuf, sizeof(textBuf));
 
                         int id = ImGui::GetActiveID();
                         auto textInfo = ImGui::GetInputTextState(id);
+
+                        textInfo->TextA.resize(dwTextBufSize);
+                        memcpy(textInfo->TextA.Data, textBuf, dwTextBufSize);
+                        textInfo->TextLen = dwTextBufSize - 1;
+
+#if 0
+                        // @TODO: do we even need this? imgui and openvr afaik are both utf8, so no need to convert encoding between the two
                         int bufSize = MultiByteToWideChar(CP_UTF8, 0, textBuf, -1, nullptr, 0);
                         textInfo->TextA.resize(bufSize);
                         MultiByteToWideChar(CP_UTF8, 0, textBuf, -1, (LPWSTR)textInfo->TextA.Data, bufSize);
                         textInfo->TextLen = bufSize;
                         textInfo->TextLen = WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)textInfo->TextA.Data, textInfo->TextA.Size, nullptr, 0, nullptr, nullptr);
+#endif
 
                         bKeyboardJustClosed = true;
                         break;
