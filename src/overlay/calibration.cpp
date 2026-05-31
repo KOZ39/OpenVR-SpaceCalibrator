@@ -615,7 +615,8 @@ namespace spacecal {
                     args.referenceRotation = eigenAsVrQuat(m_calibRelative_refRotation);
                     args.referenceTranslation = eigenAsVrVec3d(m_calibRelative_refTranslation);
 
-                    args.hideContinuousTracker(isContinuousCalibration() && hideContinuousTracker);
+                    // should only apply to hmd tracker (eg head tracker)
+                    args.hideContinuousTracker(isContinuousCalibration() && hideContinuousTracker && i == targetDevice.deviceId);
                     args.lerpCalibrations(isContinuousCalibration());
                 }
 
