@@ -8,6 +8,7 @@
 namespace spacecal {
 
     constexpr double k_TICK_RATE_HZ = 20.0; // tick rate spacecal's internal logic runs at
+    constexpr double k_MAX_RETARGETING_RMS_ERROR_THRESHOLD = 0.1;
 
     enum class CalibrationState {
         // calibration is inactive
@@ -34,6 +35,8 @@ namespace spacecal {
     enum class CalibrationError {
         None,
         LackOfRotationalVariance, // move around more
+        RmsErrorTooHigh, // the RMS error was too poor to be worth using
+        WorseRmsThanLast, // the RMS error was worse than the last calibration attempt
         BadRelativeCalibration, // maths fucked up, try again soz
         Unknown,
     };
@@ -82,8 +85,7 @@ namespace spacecal {
         inline void clearSamples() { m_samples.clear(); }
         void calibrationTick(const double currentTime);
         void resetCalibrationForDevice(const CalibrationDevice& device); // resets the given device's pose to the raw pose
-        // applies the calibration to the VR runtime
-        void apply();
+        void apply(); // applies the calibration to the VR runtime
 
         // finds the device id given props, if and only if device id is invalid
         void assignTarget(CalibrationDevice& device);
@@ -141,11 +143,17 @@ namespace spacecal {
         inline double angleFromRotationMatrix3(Eigen::Matrix3d rot) {
             return acos((rot(0, 0) + rot(1, 1) + rot(2, 2) - 1.0) / 2.0);
         }
+
         DeltaSample_t deltaRotationSamples(const Sample_t& s1, const Sample_t& s2);
         Eigen::Quaterniond calibrateRotation(const std::vector<Sample_t>& samples);
         Eigen::Vector3d calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& R);
         bool makeCalibrationLocal(Eigen::Quaterniond& rotation, Eigen::Vector3d& translation);
         CalibrationError computeCalibrationOneshot(bool bForceCalibration); // computes instantaneous calibration
+
+        Pose_t applyTransform(const Pose_t& originalPose, const Eigen::AffineCompact3d& transform) const;
+        double retargetingErrorRMS(const Eigen::Vector3d& hmdToTargetPos, const Eigen::AffineCompact3d& calibration) const;
+        Eigen::Vector3d computeRefToTargetOffset(const Eigen::AffineCompact3d& calibration) const;
+        bool validateCalibration(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation, double& rmsError, Eigen::Vector3d& posOffset);
 
     private:
         Eigen::Quaterniond m_calibRelative_refRotation = Eigen::Quaterniond::Identity();
@@ -161,6 +169,8 @@ namespace spacecal {
         float m_xRefPrev = 0.0f;
         float m_yRefPrev = 0.0f;
         float m_zRefPrev = 0.0f;
+
+        double m_lastRmsError = INFINITY;
 
         std::vector<Sample_t> m_samples;
 

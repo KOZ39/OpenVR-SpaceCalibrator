@@ -1,4 +1,5 @@
 #include "calibration.h"
+#include "Eigen/Core"
 #include "Eigen/Geometry"
 #include "config/configuration_data_versions.h"
 #include "log.h"
@@ -235,8 +236,18 @@ namespace spacecal {
         if (computedRotation.squaredNorm() < 1e-6) {
             eCalibrationError = CalibrationError::LackOfRotationalVariance;
         }
+
+        double rmsError = 0.0;
+        Eigen::Vector3d posOffset = Eigen::Vector3d::Zero();
+        if (eCalibrationError == CalibrationError::None && (!validateCalibration(computedRotation, computedTranslation, rmsError, posOffset))) {
+            eCalibrationError = CalibrationError::RmsErrorTooHigh;
+        }
+
+        if (eCalibrationError == CalibrationError::None && (isContinuousCalibration() && rmsError > m_lastRmsError)) {
+            eCalibrationError = CalibrationError::WorseRmsThanLast;
+        }
         
-        if (isRelativeCalibration && !makeCalibrationLocal(computedRotation, computedTranslation)) {
+        if (eCalibrationError == CalibrationError::None && (isRelativeCalibration && !makeCalibrationLocal(computedRotation, computedTranslation))) {
             eCalibrationError = CalibrationError::BadRelativeCalibration;
         }
 
@@ -246,6 +257,8 @@ namespace spacecal {
             calibrationError = eCalibrationError;
             calibratedRotation = computedRotation;
             calibratedTranslation = computedTranslation;
+
+            m_lastRmsError = rmsError;
 
             LOG_CALIB_INFO("Finished calibration, profile saved");
 
@@ -258,6 +271,12 @@ namespace spacecal {
             case CalibrationError::LackOfRotationalVariance:
                 calibErrString = "lack of rotational variance";
                 break;
+            case CalibrationError::RmsErrorTooHigh:
+                calibErrString = "high RMS error";
+                break;
+            case CalibrationError::WorseRmsThanLast:
+                calibErrString = "worse RMS error than the last attempt";
+                break;
             case CalibrationError::BadRelativeCalibration:
                 calibErrString = "bad relative calibration";
                 break;
@@ -268,7 +287,7 @@ namespace spacecal {
                 calibErrString = "unknown";
                 break;
             }
-            LOG_CALIB_INFO("Rejecting calibration due to {}", calibErrString);
+            LOG_CALIB_INFO("Rejecting calibration due to {}; RMS: {}", calibErrString, rmsError);
         }
 
         return eCalibrationError;
@@ -296,6 +315,68 @@ namespace spacecal {
             return true;
         }
         return false;
+    }
+
+    Pose_t TrackingSystemCalibration::applyTransform(const Pose_t& originalPose, const Eigen::AffineCompact3d& transform) const {
+        Pose_t pose(originalPose);
+        pose.rot = transform.rotation() * pose.rot;
+        pose.trans = transform * pose.trans;
+        return pose;
+    }
+
+    double TrackingSystemCalibration::retargetingErrorRMS(const Eigen::Vector3d& hmdToTargetPos, const Eigen::AffineCompact3d& calibration) const {
+        double errorAccum = 0;
+        int sampleCount = 0;
+
+        for (auto& sample : m_samples) {
+            if (!sample.isPoseValid) continue;
+
+            // Apply transformation
+            const auto updatedPose = applyTransform(sample.target, calibration);
+
+            const Eigen::Vector3d hmdPoseSpace = sample.reference.rot * hmdToTargetPos + sample.reference.trans;
+
+            // Compute error term
+            double error = (updatedPose.trans - hmdPoseSpace).squaredNorm();
+            errorAccum += error;
+            sampleCount++;
+        }
+
+        return sqrt(errorAccum / sampleCount);
+    }
+
+    Eigen::Vector3d TrackingSystemCalibration::computeRefToTargetOffset(const Eigen::AffineCompact3d& calibration) const {
+        Eigen::Vector3d accum = Eigen::Vector3d::Zero();
+        int sampleCount = 0;
+
+        for (auto& sample : m_samples) {
+            if (!sample.isPoseValid) continue;
+
+            // Apply transformation
+            const auto updatedPose = applyTransform(sample.target, calibration);
+
+            // Now move the transform from world to HMD space
+            const auto hmdOriginPos = updatedPose.trans - sample.reference.trans;
+            const auto hmdSpace = sample.reference.rot.inverse() * hmdOriginPos;
+
+            accum += hmdSpace;
+            sampleCount++;
+        }
+
+        accum /= sampleCount;
+
+        return accum;
+    }
+
+    bool TrackingSystemCalibration::validateCalibration(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation, double& rmsError, Eigen::Vector3d& posOffset) {
+        bool ok = true;
+        
+        Eigen::Affine3d calibrationMatrix = Eigen::Translation3d(translation) * rotation;
+        posOffset = computeRefToTargetOffset(calibrationMatrix);
+        rmsError = retargetingErrorRMS(posOffset, calibrationMatrix);
+        if (rmsError > k_MAX_RETARGETING_RMS_ERROR_THRESHOLD) ok = false;
+
+        return ok;
     }
 
     Sample_t TrackingSystemCalibration::collectSample() const {
@@ -351,6 +432,8 @@ namespace spacecal {
         
         m_calibRelative_refRotation = Eigen::Quaterniond::Identity();
         m_calibRelative_refTranslation = Eigen::Vector3d::Zero();
+
+        m_lastRmsError = INFINITY;
     }
 
     void TrackingSystemCalibration::start() {
