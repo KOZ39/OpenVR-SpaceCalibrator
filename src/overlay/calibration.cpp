@@ -233,6 +233,14 @@ namespace spacecal {
             eCalibrationError = CalibrationError::LackOfRotationalVariance;
         }
 
+        if (isContinuousCalibration()) {
+            // re-compute the rms error for the current sample set, to ensure we keep state in sync with reality
+            // this handles the case of a hmd drifting over time
+            // this also handles the case of recentering (eg assume quest + vive trackers, i take headset off to do something, i come back, headset auto recenters invalidating calibration so we must reject the old calibration)
+            Eigen::Vector3d _posOffset_temp = Eigen::Vector3d::Zero();
+            validateCalibration(calibratedRotation, calibratedTranslation, m_lastRmsError, _posOffset_temp);
+        }
+
         double rmsError = 0.0;
         Eigen::Vector3d posOffset = Eigen::Vector3d::Zero();
         if (eCalibrationError == CalibrationError::None && (!validateCalibration(computedRotation, computedTranslation, rmsError, posOffset))) {

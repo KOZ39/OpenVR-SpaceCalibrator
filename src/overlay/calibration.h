@@ -173,6 +173,7 @@ namespace spacecal {
         float m_yRefPrev = 0.0f;
         float m_zRefPrev = 0.0f;
 
+        // @TODO: required? we recompute each time so maybe not even required ig
         double m_lastRmsError = INFINITY;
 
         std::vector<Sample_t> m_samples;
