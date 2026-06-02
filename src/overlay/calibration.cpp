@@ -112,8 +112,6 @@ namespace spacecal {
         // Reject samples that were too close to each other.
         double refA = angleFromRotationMatrix3(dref);
         double targetA = angleFromRotationMatrix3(dtarget);
-        constexpr double k_ROTATION_ANGLE_THRESHOLD = 0.4;
-        constexpr double k_ROTATION_MAGNITUDE_THRESHOLD = 0.1;
         ds.valid = refA > k_ROTATION_ANGLE_THRESHOLD && targetA > k_ROTATION_ANGLE_THRESHOLD && ds.reference.norm() > k_ROTATION_MAGNITUDE_THRESHOLD && ds.target.norm() > k_ROTATION_MAGNITUDE_THRESHOLD;
 
         ds.reference.normalize();
@@ -132,8 +130,6 @@ namespace spacecal {
             }
         }
         LOG_CALIB_INFO("Got {} samples with {} delta samples", samples.size(), deltas.size());
-
-        constexpr size_t k_MIN_DELTA_SAMPLE_COUNT = 5;
 
         if (deltas.size() < k_MIN_DELTA_SAMPLE_COUNT) {
             LOG_CALIB_WARN("No valid delta samples! Aborting calibration...");
