@@ -119,25 +119,25 @@ namespace spacecal {
         std::string langPath = (rootDir / (getLocaleAsRegionString(locale) + ".json")).string();
 
         FILE* localeFile = fopen(langPath.c_str(), "rb");
-        switch (errno) {
-        case 0: // OK
-            break;
-        case ENOENT:
-            LOG_WARNING("The locale file \"{0}\" does not exist on disk.", langPath);
-            return false;
-        case EACCES:
-            LOG_WARNING("The locale file \"{0}\" could not be loaded due to misconfigured permissions.", langPath);
-            return false;
-        case EMFILE:
-        case ENFILE:
-            LOG_WARNING("The locale file \"{0}\" could not be loaded as too many files are open on the system.", langPath);
-            return false;
-        case EFBIG:
-            LOG_WARNING("The locale file \"{0}\" could not be loaded as it was too large.", langPath);
-            return false;
-        default:
-            LOG_WARNING("The locale file \"{0}\" could not be loaded due to an unknown error ({1}).", langPath, errno);
-            return false;
+        if (!localeFile) {
+            switch (errno) {
+            case ENOENT:
+                LOG_WARNING("The locale file \"{0}\" does not exist on disk.", langPath);
+                return false;
+            case EACCES:
+                LOG_WARNING("The locale file \"{0}\" could not be loaded due to misconfigured permissions.", langPath);
+                return false;
+            case EMFILE:
+            case ENFILE:
+                LOG_WARNING("The locale file \"{0}\" could not be loaded as too many files are open on the system.", langPath);
+                return false;
+            case EFBIG:
+                LOG_WARNING("The locale file \"{0}\" could not be loaded as it was too large.", langPath);
+                return false;
+            default:
+                LOG_WARNING("The locale file \"{0}\" could not be loaded due to an unknown error ({1}).", langPath, errno);
+                return false;
+            }
         }
         if (localeFile) {
             // Read to std::string
@@ -204,29 +204,25 @@ namespace spacecal {
         m_nativeLanguageNames[locale] = getString(expectedKey);
 
         FILE* file = fopen(langPath.c_str(), "rb");
-        switch (errno) {
-        case 0: // OK
-            break;
-        case ENOENT:
-            LOG_WARNING("The locale file \"{0}\" does not exist on disk.", langPath);
-            return;
-        case EACCES:
-            LOG_WARNING("The locale file \"{0}\" could not be loaded due to misconfigured permissions.", langPath);
-            return;
-        case EMFILE:
-        case ENFILE:
-            LOG_WARNING("The locale file \"{0}\" could not be loaded as too many files are open on the system.", langPath);
-            return;
-        case EFBIG:
-            LOG_WARNING("The locale file \"{0}\" could not be loaded as it was too large.", langPath);
-            return;
-        default:
-            LOG_WARNING("The locale file \"{0}\" could not be loaded due to an unknown error ({1}).", langPath, errno);
-            return;
-        }
-
         if (!file) {
-            return;
+            switch (errno) {
+            case ENOENT:
+                LOG_WARNING("The locale file \"{0}\" does not exist on disk.", langPath);
+                return;
+            case EACCES:
+                LOG_WARNING("The locale file \"{0}\" could not be loaded due to misconfigured permissions.", langPath);
+                return;
+            case EMFILE:
+            case ENFILE:
+                LOG_WARNING("The locale file \"{0}\" could not be loaded as too many files are open on the system.", langPath);
+                return;
+            case EFBIG:
+                LOG_WARNING("The locale file \"{0}\" could not be loaded as it was too large.", langPath);
+                return;
+            default:
+                LOG_WARNING("The locale file \"{0}\" could not be loaded due to an unknown error ({1}).", langPath, errno);
+                return;
+            }
         }
 
         fseek(file, 0, SEEK_END);

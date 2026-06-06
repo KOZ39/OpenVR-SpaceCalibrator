@@ -9,7 +9,7 @@ namespace ipc {
         bool Connect();
         void Shutdown();
 
-        const bool IsConnected() const { return m_connected; }
+        inline const bool IsConnected() const { return m_connected; }
 
         void SetDeviceTransform(protocol::Command_SetDeviceTransform_t deviceTransform);
         void SetAlignmentSpeed(protocol::Command_SetAlignmentSpeedParams_t alignmentParams);
