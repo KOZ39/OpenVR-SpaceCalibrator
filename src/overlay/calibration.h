@@ -11,6 +11,7 @@ namespace spacecal {
     constexpr double k_MAX_RETARGETING_RMS_ERROR_THRESHOLD = 0.1;
     constexpr double k_ROTATION_ANGLE_THRESHOLD = 0.4;
     constexpr double k_ROTATION_MAGNITUDE_THRESHOLD = 0.1;
+    constexpr double k_MAX_INVALID_CALIBRATION_TIME_SEC = 60.0; // 60s between invalid calibrations
     constexpr size_t k_MIN_DELTA_SAMPLE_COUNT = 200;
 
     enum class CalibrationState {
@@ -130,6 +131,7 @@ namespace spacecal {
     private:
         Sample_t collectSample() const;
         inline size_t getSampleCount() const { return (size_t) calibrationSpeed; }
+        [[nodiscard]] inline size_t getMaxSampleHistorySize() const { return (size_t) calibrationSpeed * 5; }
 
         // a delta sample, used for calibration internal maths
         struct DeltaSample_t {
@@ -151,12 +153,15 @@ namespace spacecal {
         Eigen::Quaterniond calibrateRotation(const std::vector<Sample_t>& samples);
         Eigen::Vector3d calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& R);
         bool makeCalibrationLocal(Eigen::Quaterniond& rotation, Eigen::Vector3d& translation);
-        CalibrationError computeCalibrationOneshot(bool bForceCalibration); // computes instantaneous calibration
+        CalibrationError computeCalibrationOneshot(double currentTime, bool bForceCalibration); // computes instantaneous calibration
 
         Pose_t applyTransform(const Pose_t& originalPose, const Eigen::AffineCompact3d& transform) const;
         double retargetingErrorRMS(const Eigen::Vector3d& hmdToTargetPos, const Eigen::AffineCompact3d& calibration) const;
         Eigen::Vector3d computeRefToTargetOffset(const Eigen::AffineCompact3d& calibration) const;
         bool validateCalibration(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation, double& rmsError, Eigen::Vector3d& posOffset);
+
+        // we collect a series of **VALID** calibrations' worth of samples to improve RMS error accuracy
+        void trackCollectedSamplesForErrorTracking();
 
     private:
         Eigen::Quaterniond m_calibRelative_refRotation = Eigen::Quaterniond::Identity();
@@ -175,8 +180,10 @@ namespace spacecal {
 
         // @TODO: required? we recompute each time so maybe not even required ig
         double m_lastRmsError = INFINITY;
+        double m_lastSuccessfulCalibTime = 0.0;
 
         std::vector<Sample_t> m_samples;
+        std::deque<Sample_t> m_sampleHistory; // used ONLY for RMS validation
 
         friend class CalibrationManager;
     };

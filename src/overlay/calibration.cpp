@@ -219,8 +219,28 @@ namespace spacecal {
         return trans;
     }
 
-    CalibrationError TrackingSystemCalibration::computeCalibrationOneshot(bool bForceCalibration) {
+    void TrackingSystemCalibration::trackCollectedSamplesForErrorTracking() {
+        if (m_samples.empty()) return;
+
+        // m_sampleHistory is sort of like a ring buffer here, we use it to keep track of 5 calibrations' worth of samples, we append here
+        // and keep the size constrained to keep speed and recency bias acceptable
+        m_sampleHistory.insert(m_sampleHistory.end(), m_samples.begin(), m_samples.end());
+
+        if (m_sampleHistory.size() > getMaxSampleHistorySize()) {
+            size_t numElementsToRemove = m_sampleHistory.size() - getMaxSampleHistorySize();
+            m_sampleHistory.erase(m_sampleHistory.begin(), m_sampleHistory.begin() + numElementsToRemove);
+        }
+    }
+
+    CalibrationError TrackingSystemCalibration::computeCalibrationOneshot(double currentTime, bool bForceCalibration) {
         // @TODO: do NOT apply until we are certain this is a better calibration.
+        
+        // we clear calibration history if the calibration was invalid for a long time. this is to prevent a deadlock.
+        // say im using continuous and i took my hmd off, and when i came back it recentered. the calibration history would be invalid and thus we want to invalidate it.
+        if (m_lastSuccessfulCalibTime > 0.0 && (currentTime - m_lastSuccessfulCalibTime) > k_MAX_INVALID_CALIBRATION_TIME_SEC) {
+            LOG_CALIB_INFO("Clearing calibration history due to old calibration data expiring.");
+            m_sampleHistory.clear();
+        }
 
         // apply samples to avoid sampling twice
         Eigen::Quaterniond computedRotation = calibrateRotation(m_samples);
@@ -228,10 +248,11 @@ namespace spacecal {
         
         CalibrationError eCalibrationError = CalibrationError::None;
         // ensure rotation is valid
-        // @TODO: propagate rejection reason to UI to provide user with feedback on how to improve calibration
         if (computedRotation.squaredNorm() < 1e-6) {
             eCalibrationError = CalibrationError::LackOfRotationalVariance;
         }
+
+        // @TODO: spatial gating, go through m_samples and measure the rotational and spatial variance, if its not high enough reject
 
         if (isContinuousCalibration()) {
             // re-compute the rms error for the current sample set, to ensure we keep state in sync with reality
@@ -266,11 +287,17 @@ namespace spacecal {
 
             LOG_CALIB_INFO("Finished calibration, profile saved");
 
+            if (eCalibrationError == CalibrationError::None && isContinuousCalibration()) {
+                trackCollectedSamplesForErrorTracking();
+                m_lastSuccessfulCalibTime = currentTime;
+            }
+
             apply();
             CalibrationManager::getInstance()->saveConfig();
         } else {
+            // @TODO: propagate rejection reason to UI to provide user with feedback on how to improve calibration
             // @TODO: make this better to maintain -> log formatters ?
-            std::string calibErrString = "unknown";
+            std::string calibErrString = "an unknown reason";
             switch (eCalibrationError) {
             case CalibrationError::LackOfRotationalVariance:
                 calibErrString = "lack of rotational variance";
@@ -288,7 +315,7 @@ namespace spacecal {
                 calibErrString = "none";
                 break;
             default:
-                calibErrString = "unknown";
+                calibErrString = "an unknown reason";
                 break;
             }
             LOG_CALIB_INFO("Rejecting calibration due to {}; RMS: {}", calibErrString, rmsError);
@@ -332,6 +359,21 @@ namespace spacecal {
         double errorAccum = 0;
         int sampleCount = 0;
 
+        // we accumulate samples for the sample history + these samples, to hopefully have a trustworthy error term
+        for (auto& sample : m_sampleHistory) {
+            if (!sample.isPoseValid) continue;
+
+            // Apply transformation
+            const auto updatedPose = applyTransform(sample.target, calibration);
+
+            const Eigen::Vector3d hmdPoseSpace = sample.reference.rot * hmdToTargetPos + sample.reference.trans;
+
+            // Compute error term
+            double error = (updatedPose.trans - hmdPoseSpace).squaredNorm();
+            errorAccum += error;
+            sampleCount++;
+        }
+
         for (auto& sample : m_samples) {
             if (!sample.isPoseValid) continue;
 
@@ -352,6 +394,21 @@ namespace spacecal {
     Eigen::Vector3d TrackingSystemCalibration::computeRefToTargetOffset(const Eigen::AffineCompact3d& calibration) const {
         Eigen::Vector3d accum = Eigen::Vector3d::Zero();
         int sampleCount = 0;
+
+        // we accumulate samples for the sample history + these samples, to hopefully have a trustworthy error term
+        for (auto& sample : m_sampleHistory) {
+            if (!sample.isPoseValid) continue;
+
+            // Apply transformation
+            const auto updatedPose = applyTransform(sample.target, calibration);
+
+            // Now move the transform from world to HMD space
+            const auto hmdOriginPos = updatedPose.trans - sample.reference.trans;
+            const auto hmdSpace = sample.reference.rot.inverse() * hmdOriginPos;
+
+            accum += hmdSpace;
+            sampleCount++;
+        }
 
         for (auto& sample : m_samples) {
             if (!sample.isPoseValid) continue;
@@ -599,7 +656,8 @@ namespace spacecal {
             switch (state) {
             case CalibrationState::SAMPLE:
             {
-                computeCalibrationOneshot(false); // @TODO: force here? idk how to handle minimising the error term
+                // @TODO: force here? idk how to handle minimising the error term
+                computeCalibrationOneshot(currentTime, false);
 
                 LOG_CALIB_INFO("Finished standard calibration, profile saved");
 
@@ -609,7 +667,7 @@ namespace spacecal {
             case CalibrationState::CONTINUOUS:
             {
                 // @TODO: force here? idk how to handle minimising the error term
-                if (computeCalibrationOneshot(false) == CalibrationError::None) {
+                if (computeCalibrationOneshot(currentTime, false) == CalibrationError::None) {
                     LOG_CALIB_INFO("Finished continuous calibration, profile saved");
                 }
 
