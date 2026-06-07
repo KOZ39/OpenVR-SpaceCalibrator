@@ -13,7 +13,7 @@ Continuous calibration is a tracking mode which automatically aligns playspaces 
 ### Steam
 
 > [!NOTE]  
-> **Space Calibrator is also available to Steam.**
+> **Space Calibrator is also available on Steam.**
 
 You may find [Space Calibrator on Steam here](https://s.team/a/3368750).
 
