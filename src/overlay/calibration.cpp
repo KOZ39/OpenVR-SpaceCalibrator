@@ -486,6 +486,7 @@ namespace spacecal {
     
     void TrackingSystemCalibration::reset() {
         m_samples.clear();
+        m_sampleHistory.clear();
         // @NOTE: should we do this? need to compare with live behaviour
         calibratedRotation = Eigen::Quaterniond::Identity();
         calibratedTranslation = Eigen::Vector3d::Zero();
