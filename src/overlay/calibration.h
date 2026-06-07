@@ -11,7 +11,7 @@ namespace spacecal {
     constexpr double k_MAX_RETARGETING_RMS_ERROR_THRESHOLD = 0.1;
     constexpr double k_ROTATION_ANGLE_THRESHOLD = 0.4;
     constexpr double k_ROTATION_MAGNITUDE_THRESHOLD = 0.1;
-    constexpr size_t k_MIN_DELTA_SAMPLE_COUNT = 50;
+    constexpr size_t k_MIN_DELTA_SAMPLE_COUNT = 200;
 
     enum class CalibrationState {
         // calibration is inactive
