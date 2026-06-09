@@ -9,6 +9,7 @@ namespace spacecal {
 
     constexpr double k_TICK_RATE_HZ = 20.0; // tick rate spacecal's internal logic runs at
     constexpr double k_MAX_RETARGETING_RMS_ERROR_THRESHOLD = 0.1;
+    constexpr double k_MAX_AXIS_VARIANCE_THRESHOLD = 0.001;
     constexpr double k_ROTATION_ANGLE_THRESHOLD = 0.4;
     constexpr double k_ROTATION_MAGNITUDE_THRESHOLD = 0.1;
     constexpr double k_MAX_INVALID_CALIBRATION_TIME_SEC = 60.0; // 60s between invalid calibrations
@@ -41,6 +42,8 @@ namespace spacecal {
         LackOfRotationalVariance, // move around more
         RmsErrorTooHigh, // the RMS error was too poor to be worth using
         WorseRmsThanLast, // the RMS error was worse than the last calibration attempt
+        AxisVarianceTooHigh, // the axis variance was unacceptably high
+        WorseAxisVarianceThanLast, // the axis variance was worse than the last calibration attempt
         BadRelativeCalibration, // maths fucked up, try again soz
         Unknown,
     };
@@ -158,6 +161,7 @@ namespace spacecal {
         Pose_t applyTransform(const Pose_t& originalPose, const Eigen::AffineCompact3d& transform) const;
         double retargetingErrorRMS(const Eigen::Vector3d& hmdToTargetPos, const Eigen::AffineCompact3d& calibration) const;
         Eigen::Vector3d computeRefToTargetOffset(const Eigen::AffineCompact3d& calibration) const;
+        Eigen::Vector4d computeAxisVariance(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation) const;
         bool validateCalibration(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation, double& rmsError, Eigen::Vector3d& posOffset);
 
         // we collect a series of **VALID** calibrations' worth of samples to improve RMS error accuracy
@@ -180,6 +184,7 @@ namespace spacecal {
 
         // @TODO: required? we recompute each time so maybe not even required ig
         double m_lastRmsError = INFINITY;
+        double m_lastAxisVariance = 0.0;
         double m_lastSuccessfulCalibTime = 0.0;
 
         std::vector<Sample_t> m_samples;

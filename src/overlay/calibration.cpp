@@ -271,6 +271,15 @@ namespace spacecal {
         if (eCalibrationError == CalibrationError::None && (isContinuousCalibration() && rmsError > m_lastRmsError)) {
             eCalibrationError = CalibrationError::WorseRmsThanLast;
         }
+
+        double axisVariance = computeAxisVariance(computedRotation, computedTranslation)(1);;
+        if (eCalibrationError == CalibrationError::None && axisVariance < k_MAX_AXIS_VARIANCE_THRESHOLD) {
+            eCalibrationError = CalibrationError::AxisVarianceTooHigh;
+        }
+
+        if (eCalibrationError == CalibrationError::None && axisVariance < m_lastAxisVariance) {
+            eCalibrationError = CalibrationError::WorseAxisVarianceThanLast;
+        }
         
         if (eCalibrationError == CalibrationError::None && (isRelativeCalibration && !makeCalibrationLocal(computedRotation, computedTranslation))) {
             eCalibrationError = CalibrationError::BadRelativeCalibration;
@@ -310,6 +319,12 @@ namespace spacecal {
                 break;
             case CalibrationError::BadRelativeCalibration:
                 calibErrString = "bad relative calibration";
+                break;
+            case CalibrationError::AxisVarianceTooHigh:
+                calibErrString = "axis variance being too high";
+                break;
+            case CalibrationError::WorseAxisVarianceThanLast:
+                calibErrString = "worse axis variance than the last attempt";
                 break;
             case CalibrationError::None:
                 calibErrString = "none";
@@ -429,6 +444,56 @@ namespace spacecal {
         return accum;
     }
 
+    // taken from legacy codebase
+    Eigen::Vector4d TrackingSystemCalibration::computeAxisVariance(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation) const {
+        // We want to determine if the user rotated in enough axis to find a unique solution.
+        // It's sufficient to rotate in two axis - this is because once we constrain the mapping
+        // of those two orthogonal basis vectors, the third is determined by the cross product of
+        // those two basis vectors. So, the question we then have to answer is - after accounting for
+        // translational movement of the HMD itself, are we too close to having only moved on a plane?
+
+        // To determine this, we perform primary component analysis on the rotation quaternions themselves.
+        // Since an angle axis quaternion is defined as the sum of Qidentity*cos(angle/2) + Qaxis*sin(angle/2),
+        // we expect that rotations around a single axis will have two primary components: One corresponding
+        // to the identity component, and one to the axis component. Thus, we check the variance (eigenvalue) of
+        // the third primary component to see if we've moved in two axis.
+        Eigen::Affine3d calibration = Eigen::Translation3d(translation) * rotation;
+
+        std::ostringstream dbgStream;
+
+        std::vector<Eigen::Vector4d> points;
+
+        Eigen::Vector4d mean = Eigen::Vector4d::Zero();
+
+        for (auto& sample : m_samples) {
+            if (!sample.isPoseValid) continue;
+
+            auto q = Eigen::Quaterniond(sample.target.rot);
+            auto point = Eigen::Vector4d(q.w(), q.x(), q.y(), q.z());
+            mean += point;
+
+            points.push_back(point);
+        }
+        mean /= (double)points.size();
+
+        // Compute covariance matrix
+        Eigen::Matrix4d covMatrix = Eigen::Matrix4d::Zero();
+
+        for (auto& point : points) {
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    covMatrix(i, j) += (point(i) - mean(i)) * (point(j) - mean(j));
+                }
+            }
+        }
+        covMatrix /= (double)points.size();
+
+        Eigen::SelfAdjointEigenSolver<Eigen::Matrix4d> solver;
+        solver.compute(covMatrix);
+
+        return solver.eigenvalues();
+    }
+
     bool TrackingSystemCalibration::validateCalibration(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation, double& rmsError, Eigen::Vector3d& posOffset) {
         bool ok = true;
         
@@ -496,6 +561,7 @@ namespace spacecal {
         m_calibRelative_refTranslation = Eigen::Vector3d::Zero();
 
         m_lastRmsError = INFINITY;
+        m_lastAxisVariance = 0.0;
     }
 
     void TrackingSystemCalibration::start() {
