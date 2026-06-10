@@ -227,7 +227,6 @@ namespace spacecal {
 
     void ServerTrackedDeviceProvider::SetDeviceTransform(ipc::protocol::Command_SetDeviceTransform_t& transform) {
         m_transforms[transform.unTargetOpenVrDeviceId].unTargetOpenVrDeviceId = transform.unTargetOpenVrDeviceId;
-        m_transforms[transform.unTargetOpenVrDeviceId].unRelativeTargetOpenvrDeviceId = transform.unRelativeTargetOpenvrDeviceId;
         m_transforms[transform.unTargetOpenVrDeviceId].enabled(transform.enabled());
         m_transforms[transform.unTargetOpenVrDeviceId].hideContinuousTracker(transform.hideContinuousTracker());
         m_transforms[transform.unTargetOpenVrDeviceId].lerpCalibrations(transform.lerpCalibrations());

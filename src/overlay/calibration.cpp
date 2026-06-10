@@ -351,9 +351,6 @@ namespace spacecal {
             rotation = Eigen::Quaterniond(localCalib.rotation());
             translation = localCalib.translation();
 
-            m_calibRelative_refRotation = lastSample.reference.rot;
-            m_calibRelative_refTranslation = lastSample.reference.trans;
-
             Eigen::Vector3d euler = rotation.toRotationMatrix().canonicalEulerAngles(2, 1, 0) * (180.0 / EIGEN_PI);
             LOG_CALIB_INFO("Converted to local space. rotation (deg): yaw={:.2f} pitch={:.2f} roll={:.2f} ; translation (cm): x={:.2f} y={:.2f} z={:.2f}",
                 euler[1], euler[2], euler[0],
@@ -557,9 +554,6 @@ namespace spacecal {
         calibratedRotation = Eigen::Quaterniond::Identity();
         calibratedTranslation = Eigen::Vector3d::Zero();
         calibratedScale = 1.0;
-        
-        m_calibRelative_refRotation = Eigen::Quaterniond::Identity();
-        m_calibRelative_refTranslation = Eigen::Vector3d::Zero();
 
         m_lastRmsError = INFINITY;
         m_lastAxisVariance = 0.0;
@@ -769,7 +763,6 @@ namespace spacecal {
 
         args.unTargetOpenVrDeviceId = device.deviceId;
         args.unRelativeReferenceOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
-        args.unRelativeTargetOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         args.enabled(false);
         args.relativeCoordSystem(false);
         args.updateTranslation(true);
@@ -823,10 +816,7 @@ namespace spacecal {
 
                     // for relative calibrations
                     args.relativeCoordSystem(isRelativeCalibration);
-                    args.unRelativeTargetOpenvrDeviceId = targetDevice.deviceId;
                     args.unRelativeReferenceOpenvrDeviceId = referenceDevice.deviceId;
-                    args.referenceRotation = eigenAsVrQuat(m_calibRelative_refRotation);
-                    args.referenceTranslation = eigenAsVrVec3d(m_calibRelative_refTranslation);
 
                     // should only apply to hmd tracker (eg head tracker)
                     args.hideContinuousTracker(isContinuousCalibration() && hideContinuousTracker && i == targetDevice.deviceId);
