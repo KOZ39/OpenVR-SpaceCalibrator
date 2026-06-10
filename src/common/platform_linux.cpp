@@ -76,7 +76,7 @@ namespace platform {
         if (ec) {
             return std::filesystem::path();
         }
-        return exePath;
+        return exePath.parent_path();
     }
 
     std::string getEnvVariable(const std::string& szEnvVarName) {
