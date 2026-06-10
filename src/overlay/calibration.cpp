@@ -178,6 +178,7 @@ namespace spacecal {
 
     Eigen::Vector3d TrackingSystemCalibration::calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& calibratedRotation) {
         std::vector<std::pair<Eigen::Vector3d, Eigen::Matrix3d>> deltas;
+        deltas.reserve(samples.size() * (samples.size() - 1)); // combination(2, 1)
 
         // rotation is only applied to the target tracking system, as that's the tracking system the calibration is targeting! we do not need to modify the reference pose!
         for (size_t i = 0; i < samples.size(); i++) {
