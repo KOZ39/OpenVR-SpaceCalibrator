@@ -220,6 +220,36 @@ namespace spacecal {
         return trans;
     }
 
+    Eigen::Vector3d calibrateScale(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& calibratedRotation) {
+        const Eigen::Matrix3d rotMatrix = calibratedRotation.toRotationMatrix();
+        Eigen::Vector3d numerator = Eigen::Vector3d::Zero();
+        Eigen::Vector3d denominator = Eigen::Vector3d::Zero();
+
+        for (size_t i = 1; i < samples.size(); i++) {
+            if (!samples[i].isPoseValid || !samples[i - 1].isPoseValid)
+                continue;
+
+            Eigen::Vector3d d_ref = samples[i].reference.trans - samples[i - 1].reference.trans;
+            Eigen::Vector3d d_rot = rotMatrix * (samples[i].target.trans - samples[i - 1].target.trans);
+
+            for (int j = 0; j < 3; j++) {
+                if (std::abs(d_rot[j]) > 1e-4) {
+                    numerator[j] += d_ref[j] * d_rot[j];
+                    denominator[j] += d_rot[j] * d_rot[j];
+                }
+            }
+        }
+
+        Eigen::Vector3d scale = Eigen::Vector3d::Ones();
+        for (int j = 0; j < 3; j++) {
+            if (denominator[j] > 1e-10)
+                scale[j] = numerator[j] / denominator[j];
+        }
+
+        LOG_CALIB_INFO("Calibrated scale: x={:.4f} y={:.4f} z={:.4f}", scale[0], scale[1], scale[2]);
+        return scale;
+    }
+
     void TrackingSystemCalibration::trackCollectedSamplesForErrorTracking() {
         if (m_samples.empty()) return;
 
@@ -246,6 +276,7 @@ namespace spacecal {
         // apply samples to avoid sampling twice
         Eigen::Quaterniond computedRotation = calibrateRotation(m_samples);
         Eigen::Vector3d computedTranslation = calibrateTranslation(m_samples, computedRotation);
+        Eigen::Vector3d computedScale = calibrateScale(m_samples, computedRotation);
         
         CalibrationError eCalibrationError = CalibrationError::None;
         // ensure rotation is valid
