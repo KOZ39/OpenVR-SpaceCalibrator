@@ -588,6 +588,7 @@ namespace spacecal {
 
         m_lastRmsError = INFINITY;
         m_lastAxisVariance = 0.0;
+        m_lastSuccessfulCalibTime = 0.0;
     }
 
     void TrackingSystemCalibration::start() {
@@ -832,7 +833,7 @@ namespace spacecal {
                 args.unTargetOpenVrDeviceId = i;
                 args.enabled(device.bIsConnected && this->isActive);
 
-                if (device.bIsConnected) {
+                if (args.enabled()) {
                     LOG_CALIB_INFO("  applying device [{}]: class: {} connected: {} role: {} tracking: {} model: {} serial: {} idx: {}", i, device.eDeviceClass, device.bIsConnected, device.eControllerRole, device.szTrackingSystemId, device.szModel, device.szSerial, device.dwDeviceIndex);
                     args.quirks = ipc::protocol::DeviceQuirks_t::QUIRK_NONE;
 
@@ -903,13 +904,13 @@ namespace spacecal {
                 // update state
                 m_calibrations[i].hmdIsInReferenceTrackingSystem = hmdDevice.szTrackingSystemId == m_calibrations[i].referenceDevice.trackingSystem;
             }
-            
-            apply();
         }
 
         for (auto& calibration : m_calibrations) {
             calibration.init();
         }
+            
+        apply();
     }
     
     void CalibrationManager::shutdown() {
