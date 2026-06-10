@@ -273,7 +273,7 @@ namespace spacecal {
             eCalibrationError = CalibrationError::WorseRmsThanLast;
         }
 
-        double axisVariance = computeAxisVariance(computedRotation, computedTranslation)(1);;
+        double axisVariance = computeAxisVariance(computedRotation, computedTranslation)(1);
         if (eCalibrationError == CalibrationError::None && axisVariance < k_MAX_AXIS_VARIANCE_THRESHOLD) {
             eCalibrationError = CalibrationError::AxisVarianceTooHigh;
         }
@@ -345,8 +345,8 @@ namespace spacecal {
             Sample_t& lastSample = m_samples.back();
             // take calibration as a worldspace transformation matrix; take its inverse and apply it to the last known worldspace pose of the ref device
             Eigen::Affine3d worldCalib = Eigen::Translation3d(translation) * rotation;
-            Eigen::Affine3d targetPose = Eigen::Translation3d(lastSample.target.trans) * lastSample.target.rot;
-            Eigen::Affine3d localCalib = targetPose.inverse() * worldCalib;
+            Eigen::Affine3d refPose = Eigen::Translation3d(lastSample.reference.trans) * lastSample.reference.rot;
+            Eigen::Affine3d localCalib = refPose.inverse() * worldCalib;
 
             rotation = Eigen::Quaterniond(localCalib.rotation());
             translation = localCalib.translation();

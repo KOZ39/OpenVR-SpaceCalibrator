@@ -16,5 +16,6 @@ namespace util {
 #ifndef _DEBUG
 #define ASSERT(cond, msg)
 #else
-#define ASSERT(cond, msg)
+#include <assert.h>
+#define ASSERT(cond, msg) assert(cond)
 #endif
