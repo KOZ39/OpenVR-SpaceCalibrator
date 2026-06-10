@@ -63,7 +63,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_definitions(-DLINUX -DPOSIX)
     
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-        set(ARCH_TARGET linux_arm64)
+        set(ARCH_TARGET linuxarm64)
         add_definitions(-DLINUXARM64)
     else()
         set(ARCH_TARGET linux64)

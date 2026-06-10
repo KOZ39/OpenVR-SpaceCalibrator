@@ -51,8 +51,9 @@ message(STATUS "Compilation set for ${PLATFORM}bits architectures.")
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_definitions(-DLINUX -DPOSIX)
     
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-        set(ARCH_TARGET linux_arm64)
+    if (CMAKE_CXX_LIBRARY_ARCHITECTURE MATCHES "aarch64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64" OR
+        CMAKE_CXX_LIBRARY_ARCHITECTURE MATCHES "arm64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+        set(ARCH_TARGET linuxarm64)
         add_definitions(-DLINUXARM64)
     else()
         set(ARCH_TARGET linux64)
@@ -82,6 +83,7 @@ find_library(OPENVR_LIBRARIES
         ${OPENVR_LIB_DIR}/bin
         ${OPENVR_LIB_DIR}/lib
         PATH_SUFFIXES
+        ${ARCH_TARGET}
         osx${PLATFORM}
         linux${PLATFORM}
         win${PLATFORM}
