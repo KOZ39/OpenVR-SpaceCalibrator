@@ -163,6 +163,11 @@ endif()
 
 set_target_properties(SpaceCalibratorDriver PROPERTIES OUTPUT_NAME ${DRIVER_NAME})
 
+if(UNIX AND NOT APPLE)
+    # remove lib prefix so that steamvr can find the driver
+    set_target_properties(SpaceCalibratorDriver PROPERTIES PREFIX "")
+endif()
+
 if (WIN32)
     set_target_properties(SpaceCalibratorOverlay PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
 endif()
