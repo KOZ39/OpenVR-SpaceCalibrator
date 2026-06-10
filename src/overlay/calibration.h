@@ -154,7 +154,7 @@ namespace spacecal {
 
         DeltaSample_t deltaRotationSamples(const Sample_t& s1, const Sample_t& s2);
         Eigen::Quaterniond calibrateRotation(const std::vector<Sample_t>& samples);
-        Eigen::Vector3d calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& R);
+        Eigen::Vector3d calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& calibratedRotation);
         bool makeCalibrationLocal(Eigen::Quaterniond& rotation, Eigen::Vector3d& translation);
         CalibrationError computeCalibrationOneshot(double currentTime, bool bForceCalibration); // computes instantaneous calibration
 
