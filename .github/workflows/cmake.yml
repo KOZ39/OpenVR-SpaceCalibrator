@@ -1,0 +1,53 @@
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  BUILD_TYPE: RelWithDebInfo
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-x64
+            os: windows-2025-vs2026
+            artifact-name: space-calibrator-win64
+            
+          - name: linux-x64
+            os: ubuntu-latest
+            container: registry.gitlab.steamos.cloud/steamrt/steamrt4/sdk:latest
+            artifact-name: space-calibrator-linux-x64
+            
+          - name: linux-arm64
+            os: ubuntu-latest
+            container: registry.gitlab.steamos.cloud/steamrt/steamrt4/sdk/arm64:latest
+            artifact-name: space-calibrator-linux-arm64
+
+    container: ${{ matrix.container }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact-name }}
+        path: |
+          ${{ github.workspace }}/build/**/artifacts/
+          ${{ github.workspace }}/build/driver_01spacecalibrator/
