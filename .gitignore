@@ -7,4 +7,6 @@ ipch
 .code
 /install/*.exe
 [bB]in
+[bB]in_linux64
+[bB]in_linuxaarch64
 [oO]ut
