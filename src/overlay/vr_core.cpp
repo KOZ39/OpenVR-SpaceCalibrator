@@ -266,15 +266,25 @@ namespace spacecal {
                 // @TODO: Handle these??
             case vr::EVREventType::VREvent_TrackedDeviceActivated:
                 LOG_OPENVR_INFO("New device connected at index {}", vrEvent.trackedDeviceIndex);
+                updateSteamVRDevice(vrEvent.trackedDeviceIndex);
+                m_bStateDirty = true;
             case vr::EVREventType::VREvent_TrackedDeviceDeactivated:
+                LOG_OPENVR_INFO("Device disconnected at index {}", vrEvent.trackedDeviceIndex);
+                updateSteamVRDevice(vrEvent.trackedDeviceIndex);
+                m_bStateDirty = true;
             case vr::EVREventType::VREvent_TrackedDeviceUpdated:
+                LOG_OPENVR_INFO("Device update at index {}", vrEvent.trackedDeviceIndex);
+                updateSteamVRDevice(vrEvent.trackedDeviceIndex);
+                m_bStateDirty = true;
             case vr::EVREventType::VREvent_TrackedDeviceRoleChanged:
+                LOG_OPENVR_INFO("Device role change at index {}", vrEvent.trackedDeviceIndex);
                 updateSteamVRDevice(vrEvent.trackedDeviceIndex);
                 m_bStateDirty = true;
                 break;
             case vr::EVREventType::VREvent_TrackedDeviceUserInteractionStarted: // something may have happened
             case vr::EVREventType::VREvent_TrackedDeviceUserInteractionEnded: // something may have happened
             case vr::EVREventType::VREvent_TrackersSectionSettingChanged: // tracker role
+                LOG_OPENVR_INFO("Unknown tracker event at index {}", vrEvent.trackedDeviceIndex);
                 m_bStateDirty = true;
                 break;
 

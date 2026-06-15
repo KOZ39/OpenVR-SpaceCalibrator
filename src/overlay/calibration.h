@@ -40,6 +40,7 @@ namespace spacecal {
     enum class CalibrationError {
         None,
         LackOfRotationalVariance, // move around more
+        LackOfTranslationVariance, // move around more
         RmsErrorTooHigh, // the RMS error was too poor to be worth using
         WorseRmsThanLast, // the RMS error was worse than the last calibration attempt
         AxisVarianceTooHigh, // the axis variance was unacceptably high
@@ -47,6 +48,14 @@ namespace spacecal {
         BadRelativeCalibration, // maths fucked up, try again soz
         Unknown,
     };
+
+    struct CalibrationErrorMapping {
+        CalibrationError eError;
+        std::string szLogString;
+        std::string szTranslationKey;
+    };
+
+    CalibrationErrorMapping getCalibrationErrorMapping(CalibrationError eCalibrationError);
 
     // An instantaneous pose, SteamVR poses are mapped to this for ease of use with
     // Eigen
@@ -112,7 +121,8 @@ namespace spacecal {
         [[nodiscard]] inline const bool isValidCalibration() const {
             return calibrationError == CalibrationError::None;
         }
-
+        
+    public:
         bool isActive = false; // enabled in the UI
         CalibrationError calibrationError = CalibrationError::Unknown; // error state of the last calibration, to be used by ui
         bool hmdIsInReferenceTrackingSystem = false; // whether the hmd is part of the reference device tracking system

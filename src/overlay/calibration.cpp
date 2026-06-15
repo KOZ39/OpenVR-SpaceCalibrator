@@ -5,6 +5,7 @@
 #include "log.h"
 #include "openvr.h"
 #include "platform.h"
+#include "util.h"
 #include "constants.h"
 #include "configuration.h"
 #include "vr_core.h"
@@ -13,6 +14,27 @@
 namespace spacecal {
 
     CalibrationManager* CalibrationManager::s_instance = nullptr;
+
+    // Format mapping table. The rows must be in the exactly same order as Format enum members are defined.
+    static const CalibrationErrorMapping c_calibrationErrorMapping[] = {
+        { CalibrationError::None, "no error", "calibration_error_ok" },
+        { CalibrationError::LackOfRotationalVariance, "lack of rotational variance", "calibration_error_lack_of_rotational_variance" },
+        { CalibrationError::LackOfTranslationVariance, "lack of translational variance", "calibration_error_lack_of_translational_variance" },
+        { CalibrationError::RmsErrorTooHigh, "high RMS error", "calibration_error_rms_error_too_high" },
+        { CalibrationError::WorseRmsThanLast, "worse RMS error than the last attempt", "calibration_error_worse_rms_than_last" },
+        { CalibrationError::AxisVarianceTooHigh, "axis variance being too high", "calibration_error_axis_variance_too_high" },
+        { CalibrationError::WorseAxisVarianceThanLast, "worse axis variance than the last attempt", "calibration_error_worse_axis_variance_than_last" },
+        { CalibrationError::BadRelativeCalibration, "bad relative calibration", "calibration_error_bad_relative_calibration" },
+    };
+
+    CalibrationErrorMapping getCalibrationErrorMapping(CalibrationError eCalibrationError) {
+        static_assert(sizeof(c_calibrationErrorMapping) / sizeof(CalibrationErrorMapping) == size_t(CalibrationError::Unknown),
+            "The format mapping table doesn't have the correct number of elements");
+
+        const CalibrationErrorMapping mapping = c_calibrationErrorMapping[uint32_t(eCalibrationError)];
+        ASSERT(mapping.eError == eCalibrationError, "Format mapping is invalid!");
+        return mapping;
+    }
 
     // 3x4 pose matrix decomposition
     Pose_t::Pose_t(const vr::HmdMatrix34_t hmdMatrix) {
@@ -132,7 +154,7 @@ namespace spacecal {
         LOG_CALIB_INFO("Got {} samples with {} delta samples", samples.size(), deltas.size());
 
         if (deltas.size() < k_MIN_DELTA_SAMPLE_COUNT) {
-            LOG_CALIB_WARN("No valid delta samples! Aborting calibration...");
+            LOG_CALIB_WARN("Not enough valid delta samples! Aborting calibration...");
             return Eigen::Quaterniond(0, 0, 0, 0);
         }
 
@@ -337,34 +359,7 @@ namespace spacecal {
             CalibrationManager::getInstance()->saveConfig();
         } else {
             // @TODO: propagate rejection reason to UI to provide user with feedback on how to improve calibration
-            // @TODO: make this better to maintain -> log formatters ?
-            std::string calibErrString = "an unknown reason";
-            switch (eCalibrationError) {
-            case CalibrationError::LackOfRotationalVariance:
-                calibErrString = "lack of rotational variance";
-                break;
-            case CalibrationError::RmsErrorTooHigh:
-                calibErrString = "high RMS error";
-                break;
-            case CalibrationError::WorseRmsThanLast:
-                calibErrString = "worse RMS error than the last attempt";
-                break;
-            case CalibrationError::BadRelativeCalibration:
-                calibErrString = "bad relative calibration";
-                break;
-            case CalibrationError::AxisVarianceTooHigh:
-                calibErrString = "axis variance being too high";
-                break;
-            case CalibrationError::WorseAxisVarianceThanLast:
-                calibErrString = "worse axis variance than the last attempt";
-                break;
-            case CalibrationError::None:
-                calibErrString = "none";
-                break;
-            default:
-                calibErrString = "an unknown reason";
-                break;
-            }
+            std::string calibErrString = getCalibrationErrorMapping(eCalibrationError).szLogString;
             LOG_CALIB_INFO("Rejecting calibration due to {}; RMS: {}", calibErrString, rmsError);
         }
 
