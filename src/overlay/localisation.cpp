@@ -118,6 +118,7 @@ namespace spacecal {
         auto rootDir = util::getSpaceCalibratorLangsDir();
         std::string langPath = (rootDir / (getLocaleAsRegionString(locale) + ".json")).string();
 
+        errno = 0;
         FILE* localeFile = fopen(langPath.c_str(), "rb");
         if (!localeFile) {
             switch (errno) {
@@ -203,6 +204,7 @@ namespace spacecal {
         // fallback to the loaded locale string
         m_nativeLanguageNames[locale] = getString(expectedKey);
 
+        errno = 0;
         FILE* file = fopen(langPath.c_str(), "rb");
         if (!file) {
             switch (errno) {

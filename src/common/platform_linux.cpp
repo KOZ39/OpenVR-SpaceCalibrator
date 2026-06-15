@@ -63,6 +63,7 @@ namespace platform {
             return std::filesystem::path();
         }
 
+        errno = 0;
         if (chmod(fallback.c_str(), 0700) != 0) {
             LOG_ERROR("Failed to set permissions on runtime dir fallback {}: {}", fallback.string(), strerror(errno));
         }
@@ -104,6 +105,7 @@ namespace platform {
                 return false; 
             }
 
+            errno = 0;
             if (flock(s_hSteamMutex, LOCK_EX | LOCK_NB) == INVALID_FD) {
                 if (errno == EWOULDBLOCK) {
                     close(s_hSteamMutex);
