@@ -152,9 +152,6 @@ namespace spacecal {
             }
         }
 
-        // @TODO: recompute velocity
-        // @TODO: recompute angular velocity
-
         return true;
     }
 
@@ -236,28 +233,5 @@ namespace spacecal {
 
     void ServerTrackedDeviceProvider::SetAlignmentSpeedParams(ipc::protocol::Command_SetAlignmentSpeedParams_t& params) {
         m_alignmentParams = params;
-    }
-
-    void ServerTrackedDeviceProvider::SetDeviceTransform(ipc::protocol::Command_SetDeviceTransform_t& transform) {
-        m_transforms[transform.unTargetOpenVrDeviceId].unTargetOpenVrDeviceId = transform.unTargetOpenVrDeviceId;
-        m_transforms[transform.unTargetOpenVrDeviceId].enabled(transform.enabled());
-        m_transforms[transform.unTargetOpenVrDeviceId].hideContinuousTracker(transform.hideContinuousTracker());
-        m_transforms[transform.unTargetOpenVrDeviceId].lerpCalibrations(transform.lerpCalibrations());
-        m_transforms[transform.unTargetOpenVrDeviceId].relativeCoordSystem(transform.relativeCoordSystem());
-        m_transforms[transform.unTargetOpenVrDeviceId].quirks = transform.quirks;
-
-        // @FIXME: i dont like how much this branches, we can probably make this branchless but thats a problem for future me
-        if (transform.updateRotation()) {
-            m_transforms[transform.unTargetOpenVrDeviceId].updateRotation(transform.updateRotation());
-            m_transforms[transform.unTargetOpenVrDeviceId].rotation = transform.rotation;
-        }
-        if (transform.updateTranslation()) {
-            m_transforms[transform.unTargetOpenVrDeviceId].updateTranslation(transform.updateTranslation());
-            m_transforms[transform.unTargetOpenVrDeviceId].translation = transform.translation;
-        }
-        if (transform.updateScale()) {
-            m_transforms[transform.unTargetOpenVrDeviceId].updateScale(transform.updateScale());
-            m_transforms[transform.unTargetOpenVrDeviceId].scale = transform.scale;
-        }
     }
 }

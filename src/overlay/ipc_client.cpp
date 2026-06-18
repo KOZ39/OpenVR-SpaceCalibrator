@@ -10,10 +10,6 @@ namespace ipc {
             .szFunctionName = "SpaceCalibratorNova_Handshake",
         },
         {
-            .commandType = protocol::IPC_COMMAND_SET_DEVICE_TRANSFORM,
-            .szFunctionName = "SpaceCalibratorNova_SetDeviceTransform",
-        },
-        {
             .commandType = protocol::IPC_COMMAND_SET_ALIGNMENT_SPEED_PARAMS,
             .szFunctionName = "SpaceCalibratorNova_SetAlignmentSpeedParams",
         },
@@ -89,8 +85,6 @@ namespace ipc {
         if (!ipc_server_write_shared_memory(m_hIpc, m_deviceTransformOperation, m_transforms, sizeof(m_transforms))) {
             LOG_IPC_ERROR("Tried updating device transform buffer, but operation is invalid!");
         }
-
-        // ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_SET_DEVICE_TRANSFORM, &deviceTransform, sizeof(deviceTransform));
     }
     void IpcClient::SetAlignmentSpeed(protocol::Command_SetAlignmentSpeedParams_t alignmentParams) {
         ipc_client_dispatch_function(m_hIpc, protocol::IPC_COMMAND_SET_ALIGNMENT_SPEED_PARAMS, &alignmentParams, sizeof(alignmentParams));

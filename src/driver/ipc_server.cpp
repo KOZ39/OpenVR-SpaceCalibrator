@@ -13,11 +13,6 @@ namespace ipc {
             .callback = &Server::Callback_Handshake,
         },
         {
-            .commandType = protocol::IPC_COMMAND_SET_DEVICE_TRANSFORM,
-            .szFunctionName = "SpaceCalibratorNova_SetDeviceTransform",
-            .callback = &Server::Callback_SetDeviceTransform,
-        },
-        {
             .commandType = protocol::IPC_COMMAND_SET_ALIGNMENT_SPEED_PARAMS,
             .szFunctionName = "SpaceCalibratorNova_SetAlignmentSpeedParams",
             .callback = &Server::Callback_SetAlignmentSpeedParams,
@@ -52,18 +47,6 @@ namespace ipc {
                 // @TODO: invoke function in client telling it server ipc version to verify version and refuse interop
             } else {
                 LOG_IPC_INFO("Overlay connected. Using IPC {}", pHandshakeParams->version);
-            }
-        }
-    }
-
-    void Server::Callback_SetDeviceTransform(::IpcCommandType_t cmdType, ::IpcHandle_t hIpcServer, void* pArguments, void* userdata) {
-        if (pArguments) {
-            protocol::Command_SetDeviceTransform_t* pDeviceTransform = reinterpret_cast<protocol::Command_SetDeviceTransform_t*>(pArguments);
-            Server* pThis = reinterpret_cast<Server*>(userdata);
-            if (pThis && pDeviceTransform) {
-                pThis->m_driver->SetDeviceTransform(*pDeviceTransform);
-            } else {
-                LOG_IPC_ERROR("Server::Callback_SetDeviceTransform failed due to nullptr");
             }
         }
     }
