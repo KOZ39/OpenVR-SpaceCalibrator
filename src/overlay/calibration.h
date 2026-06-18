@@ -4,6 +4,7 @@
 #include "vr_core.h"
 #include "ipc_client.h"
 #include <Eigen/Dense>
+#include <deque>
 
 namespace spacecal {
 
