@@ -31,25 +31,30 @@ namespace spacecal {
         ImGui::SetNextWindowPos(ImVec2(10.0f, ImGui::GetWindowHeight() - ImGui::GetFrameHeightWithSpacing()));
         ImGui::BeginChild("spacecal_version_box", ImVec2(ImGui::GetWindowWidth() - 20.0f, ImGui::GetFrameHeightWithSpacing() * 2), ImGuiChildFlags_None);
         if (bIsRunningInOverlay) {
-            ImGui::Text("%s", LOCALE_FORMAT("app_title_vr", "Space Calibrator Nova", SPACECAL_VERSION_STRING).c_str()); // Space Calibrator 2.0.0 - close VR overlay to use mouse
+            ImGui::TextUnformatted(LOCALE_FORMAT("app_title_vr", "Space Calibrator Nova", SPACECAL_VERSION_STRING).c_str()); // Space Calibrator 2.0.0 - close VR overlay to use mouse
         } else {
-            ImGui::Text("%s", LOCALE_FORMAT("app_title", "Space Calibrator Nova", SPACECAL_VERSION_STRING).c_str()); // Space Calibrator 2.0.0
+            ImGui::TextUnformatted(LOCALE_FORMAT("app_title", "Space Calibrator Nova", SPACECAL_VERSION_STRING).c_str()); // Space Calibrator 2.0.0
         }
         ImGui::EndChild();
     }
 
     inline void buildTrackingSystemSelection(spacecal::TrackingSystemCalibration& calibration) {
         if (VRState::getInstance()->getTrackingSystemCount() == 0) {
-            ImGui::Text("%s", LOCALE_GET("tracking_system_no_systems").c_str()); // No tracked devices present. Please turn on a device to continue.
+            ImGui::TextUnformatted(LOCALE_GET("tracking_system_no_systems").c_str()); // No tracked devices present. Please turn on a device to continue.
             return;
         }
 
         ImGuiStyle& style = ImGui::GetStyle();
         float paneWidth = ImGui::GetContentRegionAvail().x / 2 - style.FramePadding.x;
 
-        ImGui::TextWithWidth("ReferenceSystemLabel", LOCALE_GET("reference_space").c_str(), paneWidth);
+        ImGui::HeadingWithWidth("ReferenceSystemLabel", LOCALE_GET("reference_device").c_str(), paneWidth);
         ImGui::SameLine();
-        ImGui::TextWithWidth("TargetSystemLabel", LOCALE_GET("target_space").c_str(), paneWidth);
+        ImGui::HeadingWithWidth("TargetSystemLabel", LOCALE_GET("target_device").c_str(), paneWidth);
+
+        ImGui::TextWrappedDisabledWithWidth("ReferenceSystemDescription", LOCALE_GET("reference_device_description").c_str(), paneWidth);
+        ImGui::SameLine();
+        ImGui::TextWrappedDisabledWithWidth("TargetSystemDescription", LOCALE_GET("target_device_description").c_str(), paneWidth);
+
         ImGui::PushItemWidth(paneWidth);
 
         std::string refPreview = calibration.referenceDevice.trackingSystem.empty() ? LOCALE_GET("select_reference_device") : getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
@@ -101,8 +106,6 @@ namespace spacecal {
 
     inline void buildDeviceSelection(spacecal::TrackingSystemCalibration& calibration, spacecal::CalibrationDevice& device) {
         vr::TrackedDeviceIndex_t selected = device.deviceId;
-        std::string szFriendlyTrackingSystemName = getTrackingSystemFriendlyName(device.trackingSystem);
-        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1), "%s", LOCALE_FORMAT("devices_from_space", szFriendlyTrackingSystemName).c_str());
 
         // check if the selected device was disconnected or is not present
         if (selected != vr::k_unTrackedDeviceIndexInvalid) {
@@ -209,6 +212,7 @@ namespace spacecal {
             std::string uniqueId = fmt::format("{}_pass1_{}", label, iterator);
             iterator++;
             ImGui::PushID(uniqueId.c_str());
+            // @TODO: somehow i need to add icons to this
             if (ImGui::Selectable(label.c_str(), selected == vrDevice.dwDeviceIndex)) {
                 selected = vrDevice.dwDeviceIndex;
             }
@@ -338,7 +342,7 @@ namespace spacecal {
             auto speed = calibration.calibrationSpeed;
 
             ImGui::Columns(4, nullptr, false);
-            ImGui::Text("%s",  LOCALE_GET("calibration_speed").c_str());
+            ImGui::TextUnformatted(LOCALE_GET("calibration_speed").c_str());
 
             ImGui::NextColumn();
             if (ImGui::RadioButton(LOCALE_GET("calibration_speed_fast").c_str(), speed == CalibrationSpeed::FAST))
@@ -409,13 +413,15 @@ namespace spacecal {
                 }
             }
 
-            ImGui::Checkbox("DEBUG: relative transform. RECALIBRATE TO APPLY", &calibration.isRelativeCalibration);
+            if (ImGui::Checkbox("DEBUG: relative transform. RECALIBRATE TO APPLY", &calibration.isRelativeCalibration)) {
+                calibration.forceNextCalibration();
+            }
 
             ImGui::NewLine();
             auto speed = calibration.calibrationSpeed;
 
             ImGui::Columns(4, nullptr, false);
-            ImGui::Text("%s", LOCALE_GET("calibration_speed").c_str());
+            ImGui::TextUnformatted(LOCALE_GET("calibration_speed").c_str());
 
             ImGui::NextColumn();
             if (ImGui::RadioButton(LOCALE_GET("calibration_speed_fast").c_str(), speed == CalibrationSpeed::FAST)) {
@@ -437,14 +443,14 @@ namespace spacecal {
 
             ImGui::Columns(1);
 
-            ImGui::Text("%s", LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());
+            ImGui::TextUnformatted(LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());
             ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2));
             float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
             ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
         }
         else
         {
-            ImGui::Text("%s", LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());
+            ImGui::TextUnformatted(LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());
             ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2));
             float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
             ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
@@ -453,28 +459,28 @@ namespace spacecal {
 
     inline void drawTroubleshootView() {
         if (!VRState::getInstance()->isSteamVrAvailable()) {
-            ImGui::Text("%s", LOCALE_GET("steamvr_unavailable").c_str());
+            ImGui::TextUnformatted(LOCALE_GET("steamvr_unavailable").c_str());
             vr::EVRInitError eVrErr = VRState::getInstance()->getVrInitError();
             switch (eVrErr) {
             case vr::EVRInitError::VRInitError_Driver_WirelessHmdNotConnected:
-                ImGui::Text("%s", LOCALE_GET("vr_troubleshooting_connect_steamlink").c_str());
+                ImGui::TextUnformatted(LOCALE_GET("vr_troubleshooting_connect_steamlink").c_str());
                 break;
             case vr::EVRInitError::VRInitError_Init_HmdNotFound:
-                ImGui::Text("%s", LOCALE_GET("vr_troubleshooting_hmd_not_found").c_str());
+                ImGui::TextUnformatted(LOCALE_GET("vr_troubleshooting_hmd_not_found").c_str());
                 break;
             default:
                 // need to pass by ref, cant pass as literal value
                 uint32_t dwVrErr = (uint32_t)eVrErr;
-                ImGui::Text("%s", LOCALE_FORMAT("vr_troubleshooting_generic", dwVrErr, eVrErr).c_str());
+                ImGui::TextUnformatted(LOCALE_FORMAT("vr_troubleshooting_generic", dwVrErr, eVrErr).c_str());
                 break;
             }
         } else if (CalibrationManager::getInstance()->getIpcClient().IsConnected()) {
-            ImGui::Text("%s", LOCALE_GET("ipc_unavailable").c_str());
+            ImGui::TextUnformatted(LOCALE_GET("ipc_unavailable").c_str());
         }
     }
 
     inline void buildLocaleSelector() {
-        ImGui::Text("%s", LOCALE_GET("settings_locale").c_str());
+        ImGui::TextUnformatted(LOCALE_GET("settings_locale").c_str());
         ImGui::SameLine();
 
         std::string& szLocale = ConfigurationManager::getInstance()->getConfiguration()->uiLocale;
@@ -511,10 +517,14 @@ namespace spacecal {
         }
 
         ImGui::TextDisabled("Note: does practically nothing right now!");
+
+        // @HACK: temp for testing if this unfucks overlay input lmao
+        static char fooText[1024 * 8] = {};
+        ImGui::InputText("test textbox (keyboard shouldnt be corrupt)", fooText, sizeof(fooText));
     }
 
     inline void buildSettingsView() {
-        ImGui::Text("%s", LOCALE_GET("settings_title").c_str());
+        ImGui::TextUnformatted(LOCALE_GET("settings_title").c_str());
         ImGui::TextDisabled("This layout is temporary.");
         buildLocaleSelector();
     }

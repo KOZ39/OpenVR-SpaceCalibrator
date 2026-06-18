@@ -125,6 +125,11 @@ namespace spacecal {
         [[nodiscard]] inline const bool isValidCalibration() const {
             return calibrationError == CalibrationError::None;
         }
+
+        inline void forceNextCalibration() {
+            m_lastRmsError = INFINITY;
+            m_lastAxisVariance = 0.0;
+        }
         
     public:
         bool isActive = false; // enabled in the UI

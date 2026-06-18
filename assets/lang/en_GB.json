@@ -10,12 +10,13 @@
   "vr_troubleshooting_generic": "Please connect your VR headset and launch SteamVR first. ({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
 
   // space here refers to a tracking space / tracking system.
-  "reference_space": "Reference space",
-  "target_space": "Target space",
+  "reference_device": "Reference device",
+  "reference_device_description": "This device is what you are calibrating with, usually your VR headset or a controller.",
+  "target_device": "Target device",
+  "target_device_description": "This device will be used to line up your trackers or controllers with the reference device, usually your VR headset.",
   "select_reference_device": "Select reference device",
   "select_target_device": "Select target device",
 
-  "devices_from_space": "Devices from: {0}", /* 0 : tracking system name, eg SteamVR Tracking*/
   "identify_selected_devices": "Identify selected devices (blinks LED or vibrates)",
   "calibration_error_reference_hmd_missing": "Reference ({0}) HMD not detected, profile disabled", /* 0 : tracking system name, eg SteamVR Tracking*/
 
