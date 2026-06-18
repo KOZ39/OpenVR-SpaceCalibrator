@@ -951,7 +951,8 @@ namespace spacecal {
     }
 
     void CalibrationManager::apply() {
-        // @TODO: maybe more logic here?
+        if (!m_ipcClient.IsConnected())
+            return;
 
         for (auto& calibration : m_calibrations) {
             calibration.apply();
