@@ -49,5 +49,5 @@ jobs:
       with:
         name: ${{ matrix.artifact-name }}
         path: |
-          ${{ github.workspace }}/build/**/artifacts/
+          ${{ github.workspace }}/build/artifacts/
           ${{ github.workspace }}/build/driver_01spacecalibrator/
