@@ -986,6 +986,8 @@ namespace spacecal {
         // now load the calibration data
         for (size_t i = 0; i < pConfig->calibrations.size(); i++) {
             this->m_calibrations[i].isActive = pConfig->calibrations[i].is_active;
+            // if a calibration was active we assume that the calibration is valid otherwise it wont apply
+            this->m_calibrations[i].calibrationError = pConfig->calibrations[i].is_active ? CalibrationError::None : CalibrationError::Unknown;
 
             // copy device props
             this->m_calibrations[i].targetDevice.deviceModel            = pConfig->calibrations[i].target_device.model;
