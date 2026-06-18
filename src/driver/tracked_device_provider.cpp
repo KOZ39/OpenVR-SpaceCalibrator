@@ -112,32 +112,51 @@ namespace spacecal {
             HandleQuirks(transform.quirks, modifiedPose);
 
             if (transform.relativeCoordSystem()) {
-                if (IsDeviceIndexValid(transform.unRelativeReferenceOpenvrDeviceId) && m_poses[transform.unRelativeReferenceOpenvrDeviceId].poseIsValid) {
+                if (IsDeviceIndexValid(transform.unRelativeReferenceOpenvrDeviceId) && m_poses[transform.unRelativeReferenceOpenvrDeviceId].poseIsValid &&
+                    IsDeviceIndexValid(transform.unRelativeTargetOpenvrDeviceId) && m_poses[transform.unRelativeTargetOpenvrDeviceId].poseIsValid) {
                     const vr::DriverPose_t& refPose = m_poses[transform.unRelativeReferenceOpenvrDeviceId];
+                    const vr::DriverPose_t& targetPose = m_poses[transform.unRelativeTargetOpenvrDeviceId];
 
-                    // world-space pose of ref device
+                    // world-space pose of ref device (H')
                     Eigen::Quaterniond refWorldFromDriverRot = eigenFromHmdQuat(refPose.qWorldFromDriverRotation);
                     Eigen::Vector3d    refWorldFromDriverPos = eigenVecFromHmdVec(refPose.vecWorldFromDriverTranslation);
 
                     Eigen::Quaterniond refRot = refWorldFromDriverRot * eigenFromHmdQuat(refPose.qRotation);
                     Eigen::Vector3d    refPos = refWorldFromDriverPos + refWorldFromDriverRot * eigenVecFromHmdVec(refPose.vecPosition);
 
+                    // H'
                     Eigen::Affine3d refWorldNow = Eigen::Translation3d(refPos) * refRot;
 
-                    // local-space calibration transform
+                    // world-space pose of target device (T')
+                    Eigen::Quaterniond targetWorldFromDriverRot = eigenFromHmdQuat(targetPose.qWorldFromDriverRotation);
+                    Eigen::Vector3d    targetWorldFromDriverPos = eigenVecFromHmdVec(targetPose.vecWorldFromDriverTranslation);
+
+                    Eigen::Quaterniond targetRot = targetWorldFromDriverRot * eigenFromHmdQuat(targetPose.qRotation);
+                    Eigen::Vector3d    targetPos = targetWorldFromDriverPos + targetWorldFromDriverRot * eigenVecFromHmdVec(targetPose.vecPosition);
+
+                    // T'
+                    Eigen::Affine3d targetWorldNow = Eigen::Translation3d(targetPos) * targetRot;
+
+                    // local-space calibration transform (C_L)
                     Eigen::Affine3d calibrationLocal =
                         eigenTransFromHmdVec(transform.translation.v) *
                         eigenFromHmdQuat(transform.rotation);
 
-                    // apply transformation matrices
-                    Eigen::Affine3d worldCalib = refWorldNow * calibrationLocal;
+                    // To compute the calibration for now, we need to compute where we expect the tracker to be (by applying the local calibration),
+                    // and then computing a mapping from the tracker's raw pose to the expected pose to get a calibration thats valid for now.
+
+                    // T_H = H' * C_L
+                    Eigen::Affine3d expectedTargetWorld = refWorldNow * calibrationLocal;
+
+                    // C' = (T')^-1 * T_H
+                    Eigen::Affine3d worldCalib = expectedTargetWorld * targetWorldNow.inverse();
 
                     // decompose to worldspace calibration pose data
                     Eigen::Quaterniond worldCalibRot(worldCalib.rotation());
                     worldCalibRot.normalize();
                     vr::HmdQuaternion_t worldCalibRotVr = { worldCalibRot.w(), worldCalibRot.x(), worldCalibRot.y(), worldCalibRot.z() };
                     vr::HmdVector3d_t worldCalibPosVr = { .v = { worldCalib.translation().x(), worldCalib.translation().y(), worldCalib.translation().z() } };
-                    
+
                     // apply like classic world-space calibration
                     applyCalibrationToPose(modifiedPose, worldCalibRotVr, worldCalibPosVr, transform.scale);
                 

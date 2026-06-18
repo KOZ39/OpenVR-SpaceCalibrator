@@ -372,7 +372,16 @@ namespace spacecal {
             // take calibration as a worldspace transformation matrix; take its inverse and apply it to the last known worldspace pose of the ref device
             Eigen::Affine3d worldCalib = Eigen::Translation3d(translation) * rotation;
             Eigen::Affine3d refPose = Eigen::Translation3d(lastSample.reference.trans) * lastSample.reference.rot;
-            Eigen::Affine3d localCalib = refPose.inverse() * worldCalib;
+            Eigen::Affine3d targetPose = Eigen::Translation3d(lastSample.target.trans) * lastSample.target.rot;
+
+            // We estimate C_L, a matrix mapping the tracker to it's position in HMD space relative to the HMD.
+            // To do this we apply the calibration and then make it relative to the HMD.
+            
+            // T_W = C * T
+            Eigen::Affine3d calibratedTarget = worldCalib * targetPose;
+
+            // C_L = H^-1 * T_W
+            Eigen::Affine3d localCalib = refPose.inverse() * calibratedTarget;
 
             rotation = Eigen::Quaterniond(localCalib.rotation());
             translation = localCalib.translation();
@@ -790,6 +799,7 @@ namespace spacecal {
 
         args.unTargetOpenVrDeviceId = device.deviceId;
         args.unRelativeReferenceOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
+        args.unRelativeTargetOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         args.enabled(false);
         args.relativeCoordSystem(false);
         args.updateTranslation(true);
@@ -844,6 +854,7 @@ namespace spacecal {
                     // for relative calibrations
                     args.relativeCoordSystem(isRelativeCalibration);
                     args.unRelativeReferenceOpenvrDeviceId = referenceDevice.deviceId;
+                    args.unRelativeTargetOpenvrDeviceId = targetDevice.deviceId;
 
                     // should only apply to hmd tracker (eg head tracker)
                     args.hideContinuousTracker(isContinuousCalibration() && hideContinuousTracker && i == targetDevice.deviceId);

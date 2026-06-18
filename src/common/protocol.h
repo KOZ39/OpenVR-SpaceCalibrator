@@ -161,6 +161,7 @@ namespace ipc::protocol
         DeviceQuirks_t quirks;
         vr::TrackedDeviceIndex_t unTargetOpenVrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         vr::TrackedDeviceIndex_t unRelativeReferenceOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
+        vr::TrackedDeviceIndex_t unRelativeTargetOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         vr::HmdVector3d_t translation;
         vr::HmdQuaternion_t rotation;
         double scale = 1.0;
