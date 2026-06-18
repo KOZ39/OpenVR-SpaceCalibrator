@@ -8,11 +8,15 @@
 namespace spacecal {
 
     constexpr double k_TICK_RATE_HZ = 20.0; // tick rate spacecal's internal logic runs at
+    constexpr double k_MAX_INVALID_CALIBRATION_TIME_SEC = 60.0; // 60s between invalid calibrations
+
+    // thresholds and bounds to ensure the underlying mathematical algorithms maintain a high enough accuracy to be useful for real-world use.
     constexpr double k_MAX_RETARGETING_RMS_ERROR_THRESHOLD = 0.1;
     constexpr double k_MAX_AXIS_VARIANCE_THRESHOLD = 0.001;
     constexpr double k_ROTATION_ANGLE_THRESHOLD = 0.4;
     constexpr double k_ROTATION_MAGNITUDE_THRESHOLD = 0.1;
-    constexpr double k_MAX_INVALID_CALIBRATION_TIME_SEC = 60.0; // 60s between invalid calibrations
+    constexpr double k_TRANSLATION_MIN_MOTION_THRESHOLD = 0.01; // @TODO: fine tune
+    constexpr double k_TRANSLATION_MAX_AMPLIFIED_NOISE_FACTOR = 50.0; // @TODO: fine tune
     constexpr size_t k_MIN_DELTA_SAMPLE_COUNT = 200;
 
     enum class CalibrationState {

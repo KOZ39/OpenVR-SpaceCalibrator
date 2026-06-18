@@ -199,6 +199,7 @@ namespace spacecal {
     }
 
     Eigen::Vector3d TrackingSystemCalibration::calibrateTranslation(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& calibratedRotation) {
+        // @TODO: optimise this, this is REALLY slow -> up to 2 SECOND LAG SPIKE IN DEBUG
         std::vector<std::pair<Eigen::Vector3d, Eigen::Matrix3d>> deltas;
         deltas.reserve(samples.size() * (samples.size() - 1)); // combination(2, 1)
 
@@ -237,39 +238,25 @@ namespace spacecal {
             }
         }
 
-        Eigen::Vector3d trans = coefficients.bdcSvd<Eigen::ComputeThinU | Eigen::ComputeThinV>().solve(constants);
+        auto svd = coefficients.bdcSvd<Eigen::ComputeThinU | Eigen::ComputeThinV>();
+        Eigen::Vector3d singularValues = svd.singularValues();
+
+        // min singular value represents how varied the motion is
+        double motionVariance = singularValues(2);
+        // condition number represents the noise factor, and is ratio of max to min
+        double amplifiedNoiseFactor = singularValues(0) / motionVariance;
+
+        LOG_CALIB_INFO("Translation motion variance: {:.4f}, amplified noise factor: {:.2f}x",  motionVariance, amplifiedNoiseFactor);
+
+        // we want to only accept well-conditioned solutions, to minimise the discrepenancy of the error term
+        if (motionVariance < k_TRANSLATION_MIN_MOTION_THRESHOLD || amplifiedNoiseFactor > k_TRANSLATION_MAX_AMPLIFIED_NOISE_FACTOR) {
+            return Eigen::Vector3d(NAN, NAN, NAN);
+        }
+
+        Eigen::Vector3d trans = svd.solve(constants);
+
         LOG_CALIB_INFO("Calibrated translation (cm): x={:.2f} y={:.2f} z={:.2f}", trans[0] * 100.0, trans[1] * 100.0, trans[2] * 100.0);
         return trans;
-    }
-
-    Eigen::Vector3d calibrateScale(const std::vector<Sample_t>& samples, const Eigen::Quaterniond& calibratedRotation) {
-        const Eigen::Matrix3d rotMatrix = calibratedRotation.toRotationMatrix();
-        Eigen::Vector3d numerator = Eigen::Vector3d::Zero();
-        Eigen::Vector3d denominator = Eigen::Vector3d::Zero();
-
-        for (size_t i = 1; i < samples.size(); i++) {
-            if (!samples[i].isPoseValid || !samples[i - 1].isPoseValid)
-                continue;
-
-            Eigen::Vector3d d_ref = samples[i].reference.trans - samples[i - 1].reference.trans;
-            Eigen::Vector3d d_rot = rotMatrix * (samples[i].target.trans - samples[i - 1].target.trans);
-
-            for (int j = 0; j < 3; j++) {
-                if (std::abs(d_rot[j]) > 1e-4) {
-                    numerator[j] += d_ref[j] * d_rot[j];
-                    denominator[j] += d_rot[j] * d_rot[j];
-                }
-            }
-        }
-
-        Eigen::Vector3d scale = Eigen::Vector3d::Ones();
-        for (int j = 0; j < 3; j++) {
-            if (denominator[j] > 1e-10)
-                scale[j] = numerator[j] / denominator[j];
-        }
-
-        LOG_CALIB_INFO("Calibrated scale: x={:.4f} y={:.4f} z={:.4f}", scale[0], scale[1], scale[2]);
-        return scale;
     }
 
     void TrackingSystemCalibration::trackCollectedSamplesForErrorTracking() {
@@ -298,7 +285,6 @@ namespace spacecal {
         // apply samples to avoid sampling twice
         Eigen::Quaterniond computedRotation = calibrateRotation(m_samples);
         Eigen::Vector3d computedTranslation = calibrateTranslation(m_samples, computedRotation);
-        Eigen::Vector3d computedScale = calibrateScale(m_samples, computedRotation);
         
         CalibrationError eCalibrationError = CalibrationError::None;
         // ensure rotation is valid
@@ -306,9 +292,15 @@ namespace spacecal {
             eCalibrationError = CalibrationError::LackOfRotationalVariance;
         }
 
+        // ensure translation is valid
+        if (eCalibrationError == CalibrationError::None && (isnan(computedTranslation.x()) || isnan(computedTranslation.y()) || isnan(computedTranslation.z()))) {
+            eCalibrationError = CalibrationError::LackOfTranslationVariance;
+        }
+
         // @TODO: spatial gating, go through m_samples and measure the rotational and spatial variance, if its not high enough reject
 
-        if (isContinuousCalibration()) {
+        // we do not recompute RMS if it wasn't set, otherwise we are near garuanteed to ignore the first calibration!
+        if (isinf(m_lastRmsError) && isContinuousCalibration()) {
             // re-compute the rms error for the current sample set, to ensure we keep state in sync with reality
             // this handles the case of a hmd drifting over time
             // this also handles the case of recentering (eg assume quest + vive trackers, i take headset off to do something, i come back, headset auto recenters invalidating calibration so we must reject the old calibration)
