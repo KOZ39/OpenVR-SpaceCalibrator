@@ -246,7 +246,7 @@ namespace spacecal {
                         memcpy(textBuf, textInfo->TextA.Data, dwTextLength);
 
 
-                        uint32_t unFlags = 0; // EKeyboardFlags 
+                        uint32_t unFlags = vr::EKeyboardFlags::KeyboardFlag_Minimal | vr::EKeyboardFlags::KeyboardFlag_ShowArrowKeys; // EKeyboardFlags 
 
                         vr::EVROverlayError err = vr::VROverlay()->ShowKeyboardForOverlay(
                             hOverlayHandle, vr::k_EGamepadTextInputModeNormal, vr::k_EGamepadTextInputLineModeSingleLine,
@@ -282,9 +282,9 @@ namespace spacecal {
                         int id = ImGui::GetActiveID();
                         auto textInfo = ImGui::GetInputTextState(id);
 
-                        textInfo->TextA.resize(dwTextBufSize);
+                        textInfo->TextA.resize(dwTextBufSize + 1); // null terminator
                         memcpy(textInfo->TextA.Data, textBuf, dwTextBufSize);
-                        textInfo->TextLen = dwTextBufSize - 1;
+                        textInfo->TextLen = dwTextBufSize;
 
 #if 0
                         // @TODO: do we even need this? imgui and openvr afaik are both utf8, so no need to convert encoding between the two
