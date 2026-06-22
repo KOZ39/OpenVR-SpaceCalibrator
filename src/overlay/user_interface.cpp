@@ -483,7 +483,7 @@ namespace spacecal {
         ImGui::TextUnformatted(LOCALE_GET("settings_locale").c_str());
         ImGui::SameLine();
 
-        std::string& szLocale = ConfigurationManager::getInstance()->getConfiguration()->uiLocale;
+        std::string& szLocale = ConfigurationManager::getInstance()->getConfiguration()->ui_locale;
         Locale eLocale = LocalisationManager::getInstance()->getLocaleFromRegionString(szLocale);
         std::string selectedLocaleNativeName = LocalisationManager::getInstance()->getNativeTongueLocaleName(eLocale);
 

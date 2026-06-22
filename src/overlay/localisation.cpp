@@ -58,7 +58,7 @@ namespace spacecal {
         m_nativeLanguageNames.clear();
 
         // config will be valid by this point, so we can read it
-        m_selectedLocale = getLocaleFromRegionString(ConfigurationManager::getInstance()->getConfiguration()->uiLocale);
+        m_selectedLocale = getLocaleFromRegionString(ConfigurationManager::getInstance()->getConfiguration()->ui_locale);
         if (m_selectedLocale == Locale::System) {
             m_selectedLocale = estimateSystemLocale();
         }

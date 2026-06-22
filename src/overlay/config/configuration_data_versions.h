@@ -99,21 +99,20 @@ namespace spacecal {
                 struct Calibration_t {
                     bool is_active = false;
 
-                    Transform ref_to_target_transform; // @TODO: redundant?
                     Transform calibrated_transform;
 
-                    Transform anchor_transform; // @TODO: redundant?
                     AnchorMode anchor_mode = AnchorMode::FixedWorld;
                     ContinuousCalibrationData continuous;
 
+                    bool calibrate_motion_vectors = false;
                     uint64_t calibration_speed = 0;
-                    std::string hmd_tracking_system; // @TODO: redundant?
 
                     TrackingDevice reference_device;
                     TrackingDevice target_device;
                 };
 
-                std::string uiLocale = "system";
+                std::string ui_locale = "system";
+                bool advanced_settings = false;
 
                 std::vector<Calibration_t> calibrations;
             };
