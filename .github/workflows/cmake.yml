@@ -27,7 +27,7 @@ jobs:
             artifact-name: space-calibrator-linux-x64
             
           - name: linux-arm64
-            os: ubuntu-latest
+            os: ubuntu-24.04-arm
             container: registry.gitlab.steamos.cloud/steamrt/steamrt4/sdk/arm64:latest
             artifact-name: space-calibrator-linux-arm64
 
