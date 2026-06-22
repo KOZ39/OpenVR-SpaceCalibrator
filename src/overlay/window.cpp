@@ -92,7 +92,7 @@ namespace spacecal {
         }
 
         // Minimise the window
-        glfwIconifyWindow(m_glfwWindow);
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 #if OS_WINDOWS
         HWND windowHwmd = glfwGetWin32Window(m_glfwWindow);
         EnableDarkModeTopBar(windowHwmd);
