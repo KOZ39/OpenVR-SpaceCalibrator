@@ -300,8 +300,7 @@ namespace spacecal {
 
         // @TODO: spatial gating, go through m_samples and measure the rotational and spatial variance, if its not high enough reject
 
-        // we do not recompute RMS if it wasn't set, otherwise we are near garuanteed to ignore the first calibration!
-        if (isinf(m_lastRmsError) && isContinuousCalibration()) {
+        if (isContinuousCalibration()) {
             // re-compute the rms error for the current sample set, to ensure we keep state in sync with reality
             // this handles the case of a hmd drifting over time
             // this also handles the case of recentering (eg assume quest + vive trackers, i take headset off to do something, i come back, headset auto recenters invalidating calibration so we must reject the old calibration)
