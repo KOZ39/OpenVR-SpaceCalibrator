@@ -11,6 +11,11 @@ namespace spacecal {
         std::chrono::high_resolution_clock::time_point last_poll;
     };
 
+    struct DeviceCalibration_t {
+        vr::HmdQuaternion_t calibrationRotation;
+        vr::HmdVector3d_t calibrationPosition;
+    };
+
     class ServerTrackedDeviceProvider : public vr::IServerTrackedDeviceProvider {
     public:
         vr::EVRInitError Init(vr::IVRDriverContext* pDriverContext) override;
@@ -40,7 +45,9 @@ namespace spacecal {
         ipc::protocol::Command_SetAlignmentSpeedParams_t m_alignmentParams = {};
 
         ipc::protocol::SharedData_HmdMetadata m_hmdMetaData = {};
-        vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {};
+        
+        DeviceCalibration_t m_cachedCalibrations[vr::k_unMaxTrackedDeviceCount] = {}; // cache of calibrations for relative calibration
+        vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {}; // raw poses
         friend class ipc::Server;
     };
 }

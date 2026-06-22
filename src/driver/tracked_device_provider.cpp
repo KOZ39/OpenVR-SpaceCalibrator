@@ -155,6 +155,9 @@ namespace spacecal {
                     Eigen::Quaterniond worldCalibRot(worldCalib.rotation());
                     worldCalibRot.normalize();
 
+                    // keep track of calibrations so that we can keep using them even when either the ref or target device lose tracking
+                    m_cachedCalibrations[unWhichDevice].calibrationRotation = { worldCalibRot.w(), worldCalibRot.x(), worldCalibRot.y(), worldCalibRot.z() };
+                    m_cachedCalibrations[unWhichDevice].calibrationPosition = { .v = { worldCalib.translation().x(), worldCalib.translation().y(), worldCalib.translation().z() } };
                 } 
 
                 // @TODO: Lerping for continuous calibration?
