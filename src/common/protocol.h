@@ -124,7 +124,7 @@ namespace ipc::protocol
     // these quirks enable unique behaviour depending on what device is detected, to correct for poor vendor implementations
     enum DeviceQuirks_t : uint16_t {
         QUIRK_NONE = 0,
-        QUIRK_SCALE = 1 << 0, // 1 unit in this playspace is not 1 meter
+        QUIRK_SCALE = 1 << 0, // 1 unit in this playspace is not 1 meter // @TODO: re-evalute if this is even necessary? we batch scale into device transforms already so i think this is redundant
         QUIRK_RECOMPUTE_VELOCITY = 1 << 1, // The velocity of this device is not considered to be reliable. We shall thus recompute it entirely from first principles.
         QUIRK_RECOMPUTE_ANGULAR_VELOCITY = 1 << 2, // The angular velocity of this device is not considered to be reliable. We shall thus recompute it entirely from first principles.
         QUIRK_HAS_WORLDSPACE_ANGULAR_VELOCITY = 1 << 3, // The angular velocity of this device is given in world space rather than object space by the vendor. We shall transform it to local space to improve SteamVR prediction.
