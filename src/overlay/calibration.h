@@ -134,7 +134,6 @@ namespace spacecal {
         
     public:
         bool isActive = false; // enabled in the UI
-        CalibrationError calibrationError = CalibrationError::Unknown; // error state of the last calibration, to be used by ui
         bool hmdIsInReferenceTrackingSystem = false; // whether the hmd is part of the reference device tracking system
         bool isRelativeCalibration = false; // whether the calibration is stored such that its coordinate system is relative to the reference device. this hides tracking anomalies from the reference device and keeps calibrations "valid" for longer
         bool hideContinuousTracker = false;
