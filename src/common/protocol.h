@@ -175,12 +175,10 @@ namespace ipc::protocol
         }
 
         FLAG(enabled,               0b00000001)
-        FLAG(updateTranslation,     0b00000010)
-        FLAG(updateRotation,        0b00000100)
-        FLAG(updateScale,           0b00001000)
-        FLAG(lerpCalibrations,      0b00010000)
-        FLAG(hideContinuousTracker, 0b00100000)
-        FLAG(relativeCoordSystem,   0b01000000) // the calibration values are interpreted as relative to the hmd if this is set
+        FLAG(lerpCalibrations,      0b00000010)
+        FLAG(hideContinuousTracker, 0b00000100)
+        FLAG(relativeCoordSystem,   0b00001000) // the calibration values are interpreted as relative to the hmd if this is set
+        FLAG(calibrateMotionVecs,   0b00010000) // the calibration will be applied to velocity, angular velocity, acceleration and angular acceleration as well for improved accuracy
 #undef FLAG
     };
 

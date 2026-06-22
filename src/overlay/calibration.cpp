@@ -369,7 +369,7 @@ namespace spacecal {
 
             // We estimate C_L, a matrix mapping the tracker to it's position in HMD space relative to the HMD.
             // To do this we apply the calibration and then make it relative to the HMD.
-            
+
             // T_W = C * T
             Eigen::Affine3d calibratedTarget = worldCalib * targetPose;
 
@@ -795,12 +795,10 @@ namespace spacecal {
         args.unRelativeTargetOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         args.enabled(false);
         args.relativeCoordSystem(false);
-        args.updateTranslation(true);
+        args.calibrateMotionVecs(true);
         args.translation = posOrigin;
-        args.updateRotation(true);
         args.rotation = identityQuat;
-        args.updateScale(true);
-        args.scale = calibratedScale;
+        args.scale = 1.0;
 
         CalibrationManager::getInstance()->m_ipcClient.SetDeviceTransform(args);
     }
@@ -835,17 +833,13 @@ namespace spacecal {
                     LOG_CALIB_INFO("  applying device [{}]: class: {} connected: {} role: {} tracking: {} model: {} serial: {} idx: {}", i, device.eDeviceClass, device.bIsConnected, device.eControllerRole, device.szTrackingSystemId, device.szModel, device.szSerial, device.dwDeviceIndex);
                     args.quirks = ipc::protocol::DeviceQuirks_t::QUIRK_NONE;
 
-                    args.updateTranslation(true);
                     args.translation = eigenAsVrVec3d((calibratedTranslation));
-
-                    args.updateRotation(true);
                     args.rotation = eigenAsVrQuat((calibratedRotation));
-
-                    args.updateScale(true);
                     args.scale = calibratedScale;
 
                     // for relative calibrations
                     args.relativeCoordSystem(isRelativeCalibration);
+                    args.calibrateMotionVecs(calibrateMotionVectors);
                     args.unRelativeReferenceOpenvrDeviceId = referenceDevice.deviceId;
                     args.unRelativeTargetOpenvrDeviceId = targetDevice.deviceId;
 

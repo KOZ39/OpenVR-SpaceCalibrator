@@ -154,27 +154,21 @@ namespace spacecal {
                     // decompose to worldspace calibration pose data
                     Eigen::Quaterniond worldCalibRot(worldCalib.rotation());
                     worldCalibRot.normalize();
-                    vr::HmdQuaternion_t worldCalibRotVr = { worldCalibRot.w(), worldCalibRot.x(), worldCalibRot.y(), worldCalibRot.z() };
-                    vr::HmdVector3d_t worldCalibPosVr = { .v = { worldCalib.translation().x(), worldCalib.translation().y(), worldCalib.translation().z() } };
 
-                    // apply like classic world-space calibration
-                    applyCalibrationToPose(modifiedPose, worldCalibRotVr, worldCalibPosVr, transform.scale);
-                
-                    // @TODO: Lerping for continuous calibration?
+                } 
 
-                } else {
-                    // @TODO: use last re-constructed world calib?
-                }
+                // @TODO: Lerping for continuous calibration?
+                applyCalibrationToPose(modifiedPose, m_cachedCalibrations[unWhichDevice].calibrationRotation, m_cachedCalibrations[unWhichDevice].calibrationPosition, transform.scale, transform.calibrateMotionVecs());
             } else {
-                // classic world-space application   
-                applyCalibrationToPose(modifiedPose, transform.rotation, transform.translation, transform.scale);
+                // classic world-space application
+                applyCalibrationToPose(modifiedPose, transform.rotation, transform.translation, transform.scale, transform.calibrateMotionVecs());
             }
         }
 
         return true;
     }
 
-    void ServerTrackedDeviceProvider::applyCalibrationToPose(vr::DriverPose_t& pose, vr::HmdQuaternion_t rotation, vr::HmdVector3d_t pos, double scale) {
+    void ServerTrackedDeviceProvider::applyCalibrationToPose(vr::DriverPose_t& pose, vr::HmdQuaternion_t rotation, vr::HmdVector3d_t pos, double scale, bool calibrateMotionVecs) {
         // apply like classic world-space calibration
         pose.qWorldFromDriverRotation = rotation * pose.qWorldFromDriverRotation;
 
@@ -187,29 +181,31 @@ namespace spacecal {
         pose.vecWorldFromDriverTranslation[1] = rotatedTranslation.v[1] + pos.v[1];
         pose.vecWorldFromDriverTranslation[2] = rotatedTranslation.v[2] + pos.v[2];
 
-        // velocity
-        // SRT order
-        pose.vecVelocity[0] *= scale;
-        pose.vecVelocity[1] *= scale;
-        pose.vecVelocity[2] *= scale;
-        vr::HmdVector3d_t rotatedVelocityRel = quaternionRotateVector(rotation, pose.vecVelocity);
-        copyVec3(pose.vecVelocity, rotatedVelocityRel);
+        if (calibrateMotionVecs) {
+            // velocity
+            // SRT order
+            pose.vecVelocity[0] *= scale;
+            pose.vecVelocity[1] *= scale;
+            pose.vecVelocity[2] *= scale;
+            vr::HmdVector3d_t rotatedVelocityRel = quaternionRotateVector(rotation, pose.vecVelocity);
+            copyVec3(pose.vecVelocity, rotatedVelocityRel);
 
-        // acceleration
-        // SRT order
-        pose.vecAcceleration[0] *= scale;
-        pose.vecAcceleration[1] *= scale;
-        pose.vecAcceleration[2] *= scale;
-        vr::HmdVector3d_t rotatedAccelerationRel = quaternionRotateVector(rotation, pose.vecAcceleration);
-        copyVec3(pose.vecAcceleration, rotatedAccelerationRel);
+            // acceleration
+            // SRT order
+            pose.vecAcceleration[0] *= scale;
+            pose.vecAcceleration[1] *= scale;
+            pose.vecAcceleration[2] *= scale;
+            vr::HmdVector3d_t rotatedAccelerationRel = quaternionRotateVector(rotation, pose.vecAcceleration);
+            copyVec3(pose.vecAcceleration, rotatedAccelerationRel);
 
-        // angular velocity
-        vr::HmdVector3d_t rotatedAngularVelRel = quaternionRotateVector(rotation, pose.vecAngularVelocity);
-        copyVec3(pose.vecAngularVelocity, rotatedAngularVelRel);
+            // angular velocity
+            vr::HmdVector3d_t rotatedAngularVelRel = quaternionRotateVector(rotation, pose.vecAngularVelocity);
+            copyVec3(pose.vecAngularVelocity, rotatedAngularVelRel);
 
-        // angular accel
-        vr::HmdVector3d_t rotatedAngularAccel = quaternionRotateVector(rotation, pose.vecAngularAcceleration);
-        copyVec3(pose.vecAngularAcceleration, rotatedAngularAccel);
+            // angular accel
+            vr::HmdVector3d_t rotatedAngularAccel = quaternionRotateVector(rotation, pose.vecAngularAcceleration);
+            copyVec3(pose.vecAngularAcceleration, rotatedAngularAccel);
+        }
     }
 
     void ServerTrackedDeviceProvider::HandleQuirks(ipc::protocol::DeviceQuirks_t quirks, vr::DriverPose_t& pose) {
