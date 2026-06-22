@@ -39,15 +39,15 @@ jobs:
         submodules: recursive
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ./build --config ${{env.BUILD_TYPE}}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.artifact-name }}
         path: |
-          ${{ github.workspace }}/build/artifacts/
-          ${{ github.workspace }}/build/driver_01spacecalibrator/
+          ./build/artifacts/
+          ./build/driver_01spacecalibrator/
