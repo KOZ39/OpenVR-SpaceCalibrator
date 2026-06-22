@@ -55,6 +55,8 @@
 
   /* settings */
   "settings_title": "Settings",
+  "settings_calibrate_motion_vectors": "Calibrate motion vectors",
+  "settings_calibrate_motion_vectors_description": "Improves movement prediction for more responsive tracking. May affect physics heavy games.",
   "settings_locale": "Language",
 
   /* Names of the various languages one may select. Shown in settings */

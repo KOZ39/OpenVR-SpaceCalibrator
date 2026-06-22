@@ -357,6 +357,9 @@ namespace spacecal {
                 calibration.calibrationSpeed = CalibrationSpeed::VERY_SLOW;
 
             ImGui::Columns(1);
+
+            ImGui::Checkbox(LOCALE_GET("settings_calibrate_motion_vectors").c_str(), &calibration.calibrateMotionVectors);
+            ImGui::TextDisabled("%s", LOCALE_GET("settings_calibrate_motion_vectors_description").c_str());
         }
 #if 0
         else if (calibration.state == CalibrationState::EDITING)
