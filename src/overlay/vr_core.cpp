@@ -291,10 +291,52 @@ namespace spacecal {
                 m_bStateDirty = true;
                 break;
 
+            // suspect: lighthouse "universe" jumps are actually chaperone being weird
+            case vr::EVREventType::VREvent_ChaperoneDataHasChanged:
+                LOG_OPENVR_INFO("Chaperone data change event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+            case vr::EVREventType::VREvent_ChaperoneUniverseHasChanged:
+                LOG_OPENVR_INFO("Chaperone universe change event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+            case vr::EVREventType::VREvent_ChaperoneTempDataHasChanged:
+                LOG_OPENVR_INFO("Chaperone temp data change event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+            case vr::EVREventType::VREvent_ChaperoneSettingsHaveChanged:
+                LOG_OPENVR_INFO("Chaperone settings change event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+            case vr::EVREventType::VREvent_SeatedZeroPoseReset:
+                LOG_OPENVR_INFO("Chaperone seated recenter event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+            case vr::EVREventType::VREvent_ChaperoneFlushCache:
+                LOG_OPENVR_INFO("Chaperone flush cache event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+            case vr::EVREventType::VREvent_ChaperoneRoomSetupStarting:
+                LOG_OPENVR_INFO("Chaperone room setup init event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+            case vr::EVREventType::VREvent_ChaperoneRoomSetupCommitted:
+                LOG_OPENVR_INFO("Chaperone room setup commit event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+            case vr::EVREventType::VREvent_StandingZeroPoseReset:
+                LOG_OPENVR_INFO("Chaperone standing recenter event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+            case vr::EVREventType::VREvent_Reserved_0809:
+                LOG_OPENVR_INFO("Chaperone unk 809 event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+            case vr::EVREventType::VREvent_Reserved_0810:
+                LOG_OPENVR_INFO("Chaperone unk 810 event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+            case vr::EVREventType::VREvent_Reserved_0811:
+                LOG_OPENVR_INFO("Chaperone unk 811 event at index {}", vrEvent.trackedDeviceIndex);
+                break;
+
                 // @TODO: inform the calibration algorithm about this state? need to test
             case vr::EVREventType::VREvent_EnterStandbyMode:
                 break;
             case vr::EVREventType::VREvent_LeaveStandbyMode:
+                break;
+
+            default:
+                LOG_OPENVR_INFO("Unknown evt with id {}", vrEvent.eventType);
                 break;
             }
         }
