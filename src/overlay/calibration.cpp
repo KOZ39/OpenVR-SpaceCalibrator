@@ -781,8 +781,8 @@ namespace spacecal {
             switch (state) {
             case CalibrationState::SAMPLE:
             {
-                // @TODO: force here? idk how to handle minimising the error term
-                computeCalibrationOneshot(currentTime, false);
+                // force calibration in standard mode
+                computeCalibrationOneshot(currentTime, true);
 
                 LOG_CALIB_INFO("Finished standard calibration, profile saved");
 
@@ -791,7 +791,6 @@ namespace spacecal {
             }
             case CalibrationState::CONTINUOUS:
             {
-                // @TODO: force here? idk how to handle minimising the error term
                 if (computeCalibrationOneshot(currentTime, false) == CalibrationError::None) {
                     LOG_CALIB_INFO("Finished continuous calibration, profile saved");
                 }
