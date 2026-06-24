@@ -123,6 +123,10 @@ namespace spacecal {
             return state == CalibrationState::CONTINUOUS_IDLE || state == CalibrationState::CONTINUOUS;
         }
 
+        [[nodiscard]] inline const bool isCalibrating() const {
+            return state == CalibrationState::START || state == CalibrationState::SAMPLE;
+        }
+
         [[nodiscard]] inline const bool isValidCalibration() const {
             return calibrationError == CalibrationError::None;
         }
@@ -241,7 +245,9 @@ namespace spacecal {
         double m_wantedUpdateInterval = 1.0;
         bool m_needToApplyTransformsAfterInit = false;
 
+    public: // @HACK: i just want something in the ui for now
         vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {};
+    private:
         std::vector<TrackingSystemCalibration> m_calibrations;
         VRState m_vrState;
 

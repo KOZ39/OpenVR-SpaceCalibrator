@@ -1,4 +1,5 @@
 #include "user_interface.h"
+#include "log.h"
 #include "imgui.h"
 #include "imgui_extensions.h"
 #include "constants.h"
@@ -8,7 +9,7 @@
 
 namespace spacecal {
 
-    bool bIsRunningInOverlay = false;
+    UserInterfaceState_t g_state = {};
 
     inline std::string getTrackingSystemFriendlyName(const std::string& szTrackingSystemName) {
 
@@ -30,7 +31,7 @@ namespace spacecal {
     inline void buildVersionInfo() {
         ImGui::SetNextWindowPos(ImVec2(10.0f, ImGui::GetWindowHeight() - ImGui::GetFrameHeightWithSpacing()));
         ImGui::BeginChild("spacecal_version_box", ImVec2(ImGui::GetWindowWidth() - 20.0f, ImGui::GetFrameHeightWithSpacing() * 2), ImGuiChildFlags_None);
-        if (bIsRunningInOverlay) {
+        if (g_state.bIsRunningInOverlay) {
             ImGui::TextUnformatted(LOCALE_FORMAT("app_title_vr", "Space Calibrator Nova", SPACECAL_VERSION_STRING).c_str()); // Space Calibrator 2.0.0 - close VR overlay to use mouse
         } else {
             ImGui::TextUnformatted(LOCALE_FORMAT("app_title", "Space Calibrator Nova", SPACECAL_VERSION_STRING).c_str()); // Space Calibrator 2.0.0
@@ -45,15 +46,15 @@ namespace spacecal {
         }
 
         ImGuiStyle& style = ImGui::GetStyle();
-        float paneWidth = ImGui::GetContentRegionAvail().x / 2 - style.FramePadding.x;
+        float paneWidth = (ImGui::GetContentRegionAvail().x - style.FramePadding.x) / 2;
 
-        ImGui::HeadingWithWidth("ReferenceSystemLabel", LOCALE_GET("reference_device").c_str(), paneWidth);
-        ImGui::SameLine();
-        ImGui::HeadingWithWidth("TargetSystemLabel", LOCALE_GET("target_device").c_str(), paneWidth);
+        ImGui::HeadingWithWidth(LOCALE_GET("reference_device").c_str(), paneWidth);
+        ImGui::SameLine(paneWidth + style.FramePadding.x * 3.5);
+        ImGui::HeadingWithWidth(LOCALE_GET("target_device").c_str(), paneWidth);
 
-        ImGui::TextWrappedDisabledWithWidth("ReferenceSystemDescription", LOCALE_GET("reference_device_description").c_str(), paneWidth);
+        ImGui::TextWrappedDisabledWithWidth(LOCALE_GET("reference_device_description").c_str(), paneWidth);
         ImGui::SameLine();
-        ImGui::TextWrappedDisabledWithWidth("TargetSystemDescription", LOCALE_GET("target_device_description").c_str(), paneWidth);
+        ImGui::TextWrappedDisabledWithWidth(LOCALE_GET("target_device_description").c_str(), paneWidth);
 
         ImGui::PushItemWidth(paneWidth);
 
@@ -250,209 +251,98 @@ namespace spacecal {
                 std::this_thread::sleep_for(std::chrono::milliseconds(5));
             }
         }
+
+        if (ImGui::Button(LOCALE_GET("identify_auto_detect_devices").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeightWithSpacing() + 4.0f))) {
+            LOG_WARN("identify_auto_detect_devices:: Not implemented");
+        }
     }
 
     inline bool isSpacecalRunningStateOk() {
         return VRState::getInstance()->isSteamVrAvailable() && CalibrationManager::getInstance()->getIpcClient().IsConnected();
     }
 
-    inline void buildStandardCalibrationMenu(spacecal::TrackingSystemCalibration& calibration) {
+    inline void buildCalibrationCommonControls(spacecal::TrackingSystemCalibration& calibration) {
         auto& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();
         ImGui::NewLine();
 
-        if (calibration.state == CalibrationState::NONE)
+        if (calibration.isValidCalibration() && !calibration.isActive)
         {
-            if (calibration.isValidCalibration() && !calibration.isActive)
-            {
-                std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
-                ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1), "%s", LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
-                ImGui::NewLine();
-            }
-
-            float width = ImGui::GetWindowContentRegionWidth() - style.FramePadding.x * 2.0f;
-            float scale = 1.0f / 2.0f;
-            if (calibration.isValidCalibration())
-            {
-                width -= style.FramePadding.x * 4.0f;
-                scale = 1.0f / 4.0f;
-            }
-
-            if (ImGui::Button(LOCALE_GET("calibration_action_start").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
-            {
-                // ImGui::OpenPopup("calibration_progress");
-                calibration.start();
-            }
-
-            ImGui::SameLine();
-            if (ImGui::Button(LOCALE_GET("calibration_action_continuous").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2))) {
-                calibration.startContinuous();
-            }
-
-            if (calibration.isValidCalibration())
-            {
-                // ImGui::SameLine();
-                // if (ImGui::Button(LOCALE_GET("calibration_action_edit").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
-                // {
-                //     calibration.state = CalibrationState::EDITING;
-                // }
-
-                ImGui::SameLine();
-                if (ImGui::Button(LOCALE_GET("calibration_action_clear").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
-                {
-                    calibration.reset();
-                    // spacecal::ConfigurationManager::getInstance()->updateCalibration(calibration);
-                    // spacecal::ConfigurationManager::getInstance()->saveConfiguration();
-                }
-            }
-
-#if 0
-            width = ImGui::GetWindowContentRegionWidth();
-            scale = 1.0f;
-            if (calibration.chaperone.valid)
-            {
-                width -= style.FramePadding.x * 2.0f;
-                scale = 0.5;
-            }
-
+            std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
+            ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1), "%s", LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
             ImGui::NewLine();
-            if (ImGui::Button("Copy Chaperone Bounds to profile", ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
-            {
-                LoadChaperoneBounds();
-                SaveProfile(calibration);
-            }
-
-            if (calibration.chaperone.valid)
-            {
-                ImGui::SameLine();
-                if (ImGui::Button("Paste Chaperone Bounds", ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
-                {
-                    ApplyChaperoneBounds();
-                }
-
-                if (ImGui::Checkbox(" Paste Chaperone Bounds automatically when geometry resets", &calibration.chaperone.autoApply))
-                {
-                    SaveProfile(calibration);
-                }
-            }
-#endif
-            ImGui::Checkbox("DEBUG: relative transform. RECALIBRATE TO APPLY", &calibration.isRelativeCalibration);
-
-            ImGui::NewLine();
-            auto speed = calibration.calibrationSpeed;
-
-            ImGui::Columns(4, nullptr, false);
-            ImGui::TextUnformatted(LOCALE_GET("calibration_speed").c_str());
-
-            ImGui::NextColumn();
-            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_fast").c_str(), speed == CalibrationSpeed::FAST))
-                calibration.calibrationSpeed = CalibrationSpeed::FAST;
-
-            ImGui::NextColumn();
-            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_slow").c_str(), speed == CalibrationSpeed::SLOW))
-                calibration.calibrationSpeed = CalibrationSpeed::SLOW;
-
-            ImGui::NextColumn();
-            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_very_slow").c_str(), speed == CalibrationSpeed::VERY_SLOW))
-                calibration.calibrationSpeed = CalibrationSpeed::VERY_SLOW;
-
-            ImGui::Columns(1);
-
-            ImGui::Checkbox(LOCALE_GET("settings_calibrate_motion_vectors").c_str(), &calibration.calibrateMotionVectors);
-            ImGui::TextDisabled("%s", LOCALE_GET("settings_calibrate_motion_vectors_description").c_str());
         }
-#if 0
-        else if (calibration.state == CalibrationState::EDITING)
-        {
-            BuildProfileEditor();
 
-            if (ImGui::Button("Save Profile", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2)))
+        float width = ImGui::GetWindowContentRegionWidth() - style.FramePadding.x * 2.0f;
+        float scale = 1.0f / 2.0f;
+        if (calibration.isValidCalibration())
+        {
+            width -= style.FramePadding.x * 4.0f;
+            scale = 1.0f / 4.0f;
+        }
+
+        if (ImGui::Button(LOCALE_GET("calibration_action_start").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
+        {
+            calibration.start();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button(LOCALE_GET("calibration_action_continuous").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2))) {
+            calibration.startContinuous();
+        }
+
+        if (calibration.isValidCalibration())
+        {
+            ImGui::SameLine();
+            if (ImGui::Button(LOCALE_GET("calibration_action_clear").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
             {
-                SaveProfile(calibration);
-                calibration.state = CalibrationState::NONE;
+                calibration.reset();
             }
         }
-#endif
-        else if (calibration.isContinuousCalibration()) {
 
-            if (calibration.isValidCalibration() && !calibration.isActive)
-            {
-                std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
-                ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1), "%s", LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
-                ImGui::NewLine();
-            }
-
-            float width = ImGui::GetWindowContentRegionWidth() - style.FramePadding.x * 2.0f;
-            float scale = 1.0f / 2.0f;
-            if (calibration.isValidCalibration())
-            {
-                width -= style.FramePadding.x * 4.0f;
-                scale = 1.0f / 4.0f;
-            }
-
-            if (ImGui::Button(LOCALE_GET("calibration_action_start").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
-            {
-                calibration.start();
-            }
-
-            ImGui::SameLine();
-            if (ImGui::Button(LOCALE_GET("calibration_action_continuous").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2))) {
-                calibration.startContinuous();
-            }
-
-            if (calibration.isValidCalibration())
-            {
-                ImGui::SameLine();
-                if (ImGui::Button(LOCALE_GET("calibration_action_clear").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
-                {
-                    calibration.reset();
-                }
-            }
-
-            // continuous settings
-            if (calibration.isContinuousCalibration()) {
-                if (ImGui::Checkbox(LOCALE_GET("continuous_hide_tracker").c_str(), &calibration.hideContinuousTracker)) {
-                    CalibrationManager::getInstance()->saveConfig();
-                }
+        // continuous settings
+        if (calibration.isContinuousCalibration()) {
+            if (ImGui::Checkbox(LOCALE_GET("continuous_hide_tracker").c_str(), &calibration.hideContinuousTracker)) {
+                CalibrationManager::getInstance()->saveConfig();
             }
 
             if (ImGui::Checkbox("DEBUG: relative transform. RECALIBRATE TO APPLY", &calibration.isRelativeCalibration)) {
                 calibration.forceNextCalibration();
             }
-
-            ImGui::NewLine();
-            auto speed = calibration.calibrationSpeed;
-
-            ImGui::Columns(4, nullptr, false);
-            ImGui::TextUnformatted(LOCALE_GET("calibration_speed").c_str());
-
-            ImGui::NextColumn();
-            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_fast").c_str(), speed == CalibrationSpeed::FAST)) {
-                calibration.calibrationSpeed = CalibrationSpeed::FAST;
-                calibration.clearSamples();
-            }
-
-            ImGui::NextColumn();
-            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_slow").c_str(), speed == CalibrationSpeed::SLOW)) {
-                calibration.calibrationSpeed = CalibrationSpeed::SLOW;
-                calibration.clearSamples();
-            }
-
-            ImGui::NextColumn();
-            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_very_slow").c_str(), speed == CalibrationSpeed::VERY_SLOW)) {
-                calibration.calibrationSpeed = CalibrationSpeed::VERY_SLOW;
-                calibration.clearSamples();
-            }
-
-            ImGui::Columns(1);
-
-            ImGui::TextUnformatted(LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());
-            ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2));
-            float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
-            ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
         }
-        else
-        {
+
+        ImGui::NewLine();
+        auto speed = calibration.calibrationSpeed;
+
+        ImGui::Columns(4, nullptr, false);
+        ImGui::TextUnformatted(LOCALE_GET("calibration_speed").c_str());
+
+        ImGui::NextColumn();
+        if (ImGui::RadioButton(LOCALE_GET("calibration_speed_fast").c_str(), speed == CalibrationSpeed::FAST)) {
+            calibration.calibrationSpeed = CalibrationSpeed::FAST;
+            calibration.clearSamples();
+        }
+
+        ImGui::NextColumn();
+        if (ImGui::RadioButton(LOCALE_GET("calibration_speed_slow").c_str(), speed == CalibrationSpeed::SLOW)) {
+            calibration.calibrationSpeed = CalibrationSpeed::SLOW;
+            calibration.clearSamples();
+        }
+
+        ImGui::NextColumn();
+        if (ImGui::RadioButton(LOCALE_GET("calibration_speed_very_slow").c_str(), speed == CalibrationSpeed::VERY_SLOW)) {
+            calibration.calibrationSpeed = CalibrationSpeed::VERY_SLOW;
+            calibration.clearSamples();
+        }
+
+        ImGui::Columns(1);
+
+        if (g_state.bIsSettingsAdvanced) {
+            ImGui::Checkbox(LOCALE_GET("settings_calibrate_motion_vectors").c_str(), &calibration.calibrateMotionVectors);
+            ImGui::TextDisabled("%s", LOCALE_GET("settings_calibrate_motion_vectors_description").c_str());
+        }
+
+        if (calibration.isCalibrating()) {
             ImGui::TextUnformatted(LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());
             ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2));
             float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
@@ -518,22 +408,285 @@ namespace spacecal {
             }
             ImGui::EndCombo();
         }
-
-        ImGui::TextDisabled("Note: does practically nothing right now!");
-
-        // @HACK: temp for testing if this unfucks overlay input lmao
-        static char fooText[1024 * 8] = {};
-        ImGui::InputText("test textbox (keyboard shouldnt be corrupt)", fooText, sizeof(fooText));
     }
 
-    inline void buildSettingsView() {
-        ImGui::TextUnformatted(LOCALE_GET("settings_title").c_str());
-        ImGui::TextDisabled("This layout is temporary.");
+    void page_calibration() {
+        ImGui::TextHeading("%s", LOCALE_GET("calibration_title").c_str());
+        ImGui::Separator();
+
+        if (!isSpacecalRunningStateOk()) {
+            drawTroubleshootView();
+        }
+        else {
+            const size_t dwNumCalibrations = spacecal::CalibrationManager::getInstance()->getCalibrationCount();
+
+            if (dwNumCalibrations == 0) {
+                // @TODO: no calibrations edge case handling
+            }
+
+            for (size_t i = 0; i < dwNumCalibrations; i++) {
+                spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(i);
+                if (calibration.hmdIsInReferenceTrackingSystem) {
+                    // @TODO: hmd identification
+                }
+                else {
+                    // @TODO: idfk
+                }
+
+                // @TODO: build ui
+                buildTrackingSystemSelection(calibration);
+                buildDeviceSelection(calibration);
+                if (!calibration.isContinuousCalibration()) {
+                    if (calibration.state == CalibrationState::EDITING) {
+                        // BuildProfileEditor();
+                        // 
+                        // if (ImGui::Button("Save Profile", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2)))
+                        // {
+                        //     SaveProfile(calibration);
+                        //     calibration.state = CalibrationState::NONE;
+                        // }
+                    }
+                }
+                buildCalibrationCommonControls(calibration);
+            }
+        }
+    }
+    
+    void page_graphs() {
+        ImGui::TextHeading("%s", "Graphs");
+        ImGui::TextDisabled("COMING LATER");
+    }
+
+    void page_settings() {
+        ImGui::TextHeading("%s", LOCALE_GET("settings_title").c_str());
+
+        // advanced settings
+        if (ImGui::Checkbox(LOCALE_GET("settings_advanced").c_str(), &g_state.bIsSettingsAdvanced)) {
+            ConfigurationManager::getInstance()->getConfiguration()->advanced_settings = g_state.bIsSettingsAdvanced;
+            ConfigurationManager::getInstance()->saveConfiguration();
+        }
+        ImGui::TextDisabled("%s", LOCALE_GET("settings_advanced_description").c_str());
+
         buildLocaleSelector();
     }
 
+    void page_base_station_management() {
+        ImGui::TextHeading("%s", "Base Station Management");
+        ImGui::TextDisabled("COMING LATER");
+    }
+
+    inline const char* get_tracking_result_name(vr::ETrackingResult result) {
+        switch (result) {
+        case vr::TrackingResult_Uninitialized:          return "Uninitialized";
+        case vr::TrackingResult_Calibrating_InProgress: return "Calibrating (In Progress)";
+        case vr::TrackingResult_Calibrating_OutOfRange: return "Calibrating (Out of Range)";
+        case vr::TrackingResult_Running_OK:             return "Running (OK)";
+        case vr::TrackingResult_Running_OutOfRange:     return "Running (Out of Range)";
+        case vr::TrackingResult_Fallback_RotationOnly:  return "Fallback (Rotation Only)";
+        default:                                        return "Unknown";
+        }
+    }
+
+    inline void debug_driver_pose_viewer(const char* label, const vr::DriverPose_t& pose) {
+
+#define SHOW_BOOL_STATUS(label, value)                                                  \
+    ImGui::Text(label ":");                                                             \
+    ImGui::SameLine();                                                                  \
+    if (value) {                                                                        \
+        ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "TRUE");                     \
+    } else {                                                                            \
+        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "FALSE");                    \
+    }
+
+        if (ImGui::CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)) {
+            ImGui::Indent();
+            ImGui::PushID(label);
+            if (ImGui::CollapsingHeader("Metadata", ImGuiTreeNodeFlags_DefaultOpen)) {
+                SHOW_BOOL_STATUS("Device Connected", pose.deviceIsConnected);
+                SHOW_BOOL_STATUS("Pose Is Valid", pose.poseIsValid);
+                SHOW_BOOL_STATUS("Will Drift In Yaw", pose.willDriftInYaw);
+                SHOW_BOOL_STATUS("Should Apply Head", pose.shouldApplyHeadModel);
+
+                ImGui::Separator();
+
+                ImGui::Text("Tracking Result:"); ImGui::SameLine();
+                if (pose.result == vr::TrackingResult_Running_OK) {
+                    ImGui::TextColored(ImVec4(0.0f, 0.8f, 1.0f, 1.0f), "%s", get_tracking_result_name(pose.result));
+                } else {
+                    ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.0f, 1.0f), "%s", get_tracking_result_name(pose.result));
+                }
+
+                ImGui::Text("Prediction Time: %f s", pose.poseTimeOffset);
+            }
+            if (ImGui::CollapsingHeader("Motion data")) {
+                ImGui::Text("Position:     %.4f, %.4f, %.4f", pose.vecPosition[0], pose.vecPosition[1], pose.vecPosition[2]);
+                ImGui::Text("Velocity:     %.4f, %.4f, %.4f", pose.vecVelocity[0], pose.vecVelocity[1], pose.vecVelocity[2]);
+                ImGui::Text("Accel:        %.4f, %.4f, %.4f", pose.vecAcceleration[0], pose.vecAcceleration[1], pose.vecAcceleration[2]);
+                ImGui::Separator();
+                ImGui::Text("Ang Velocity: %.4f, %.4f, %.4f", pose.vecAngularVelocity[0], pose.vecAngularVelocity[1], pose.vecAngularVelocity[2]);
+                ImGui::Text("Ang Accel:    %.4f, %.4f, %.4f", pose.vecAngularAcceleration[0], pose.vecAngularAcceleration[1], pose.vecAngularAcceleration[2]);
+                ImGui::Separator();
+                ImGui::Text("Quat (WXYZ):  %.4f, %.4f, %.4f, %.4f", pose.qRotation.w, pose.qRotation.x, pose.qRotation.y, pose.qRotation.z);
+            }
+            if (ImGui::CollapsingHeader("Coordinate Transforms")) {
+                ImGui::TextDisabled("World From Driver-Space");
+                ImGui::Text("Translation:  %.4f, %.4f, %.4f", pose.vecWorldFromDriverTranslation[0], pose.vecWorldFromDriverTranslation[1], pose.vecWorldFromDriverTranslation[2]);
+                ImGui::Text("Quat (WXYZ):  %.4f, %.4f, %.4f, %.4f", pose.qWorldFromDriverRotation.w, pose.qWorldFromDriverRotation.x, pose.qWorldFromDriverRotation.y, pose.qWorldFromDriverRotation.z);
+
+                ImGui::Separator();
+
+                ImGui::TextDisabled("Driver From Head-Space");
+                ImGui::Text("Translation:  %.4f, %.4f, %.4f", pose.vecDriverFromHeadTranslation[0], pose.vecDriverFromHeadTranslation[1], pose.vecDriverFromHeadTranslation[2]);
+                ImGui::Text("Quat (WXYZ):  %.4f, %.4f, %.4f, %.4f", pose.qDriverFromHeadRotation.w, pose.qDriverFromHeadRotation.x, pose.qDriverFromHeadRotation.y, pose.qDriverFromHeadRotation.z);
+            }
+            ImGui::PopID();
+            ImGui::Unindent();
+        }
+#undef SHOW_BOOL_STATUS
+    }
+    
+    void page_debug() {
+        ImGui::TextHeading("%s", "Debug");
+
+        // @TODO: driverpose_t view
+        spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(g_state.dwSelectedCalibrationIndex);
+        if (calibration.referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
+            debug_driver_pose_viewer("Reference device DriverPose_t", CalibrationManager::getInstance()->m_poses[calibration.referenceDevice.deviceId]);
+        }
+        if (calibration.targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
+            debug_driver_pose_viewer("Target device DriverPose_t", CalibrationManager::getInstance()->m_poses[calibration.targetDevice.deviceId]);
+        }
+
+        // @HACK: temp for testing if this unfucks overlay input lmao
+        ImGui::InputText("test textbox (keyboard shouldnt be corrupt)", g_state.fooText, sizeof(g_state.fooText));
+    }
+
+    void page_about() {
+        ImGui::TextHeading("%s", "About");
+        ImGui::TextDisabled("COMING LATER");
+    }
+
+    // UI CORE LAYOUT
+
+    SpaceCalibratorVerticalTab_t g_spaceCalUiTabs[] = {
+        { .szLocaleKey = "tab_page_calibration", .fnDrawTab = page_calibration, },
+        { .szLocaleKey = "tab_page_graphs", .fnDrawTab = page_graphs, },
+        { .szLocaleKey = "tab_page_base_station_management", .fnDrawTab = page_base_station_management, },
+        { .szLocaleKey = "tab_page_settings", .fnDrawTab = page_settings, },
+#if _DEBUG || 1 // @TODO: reserved exclusively for debug mode, may make sense to enable with a flag?
+        { .szLocaleKey = "tab_page_debug", .fnDrawTab = page_debug, },
+#endif
+        { .szLocaleKey = "tab_page_about", .fnDrawTab = page_about, },
+    };
+    constexpr size_t k_SIZE_SPACECAL_UI_TABS = sizeof(g_spaceCalUiTabs) / sizeof(g_spaceCalUiTabs[0]);
+
+    inline bool verticalTab(const SpaceCalibratorVerticalTab_t& tabData, bool selected, const ImVec2& size) {
+        ImGuiWindow* window = ImGui::GetCurrentWindow();
+        if (window->SkipItems) return false;
+
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(tabData.szLocaleKey);
+
+        ImVec2 pos = window->DC.CursorPos;
+        const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+        ImGui::ItemSize(size, style.FramePadding.y);
+        if (!ImGui::ItemAdd(bb, id))
+            return false;
+
+        bool hovered, held;
+        bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held);
+
+        constexpr ImU32 k_TRANSPARENT = IM_COL32(0, 0, 0, 0);
+        constexpr float k_IndicatorWidth = 4.0f; 
+        const float k_LeftTextMargin  = style.FramePadding.x * 2 + k_IndicatorWidth; 
+
+        if (selected || hovered) {
+            ImU32 col_bg_max = k_TRANSPARENT;
+            ImU32 col_bg_min = k_TRANSPARENT;
+            if (selected) {
+                col_bg_max = ImGui::GetColorU32(ImGuiCol_HeaderActive);
+                col_bg_max = IM_COL32_SET_ALPHA(col_bg_max, 90); // 35% opacity
+                col_bg_min = IM_COL32_SET_ALPHA(col_bg_max, 27); // 10% opacity
+            } else if (hovered) {
+                col_bg_max = ImGui::GetColorU32(ImGuiCol_HeaderHovered);
+                col_bg_max = IM_COL32_SET_ALPHA(col_bg_max, 45); // 17.5% opacity
+                col_bg_min = IM_COL32_SET_ALPHA(col_bg_max, 14); // 5% opacity
+            }
+            
+            window->DrawList->AddRectFilledMultiColor(bb.Min, bb.Max, col_bg_max, col_bg_min, col_bg_min, col_bg_max);
+        }
+
+        if (selected) {
+            ImVec2 line_min = bb.Min;
+            ImVec2 line_max = ImVec2(bb.Min.x + k_IndicatorWidth, bb.Max.y);
+            ImU32 col_line = ImGui::GetColorU32(ImGuiCol_SliderGrab); 
+
+            window->DrawList->AddRectFilled(line_min, line_max, col_line, style.FrameRounding, ImDrawFlags_RoundCornersLeft);
+        }
+
+        if (!selected && hovered) {
+            ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        }
+
+        std::string textStr = LOCALE_GET(tabData.szLocaleKey);
+        ImVec2 textSize = ImGui::CalcTextSize(textStr.c_str(), nullptr, true);
+        float text_y_offset = (size.y - textSize.y) * 0.5f;
+        float final_text_padding_x = k_LeftTextMargin + (selected ? k_IndicatorWidth : 0.0f);
+        ImVec2 text_pos = ImVec2(bb.Min.x + final_text_padding_x, bb.Min.y + text_y_offset);
+
+        ImGui::RenderText(text_pos, textStr.c_str());
+
+        return pressed;
+    }
+
+    inline void drawMainView() {
+        // @TODO: temp hardcode, move to header or some ui_config.h idk
+        const float k_SIDEBAR_WIDTH = 180.0f;
+        const float k_SIDEBAR_TAB_HEIGHT = 40.0f;
+        const float k_CONTENT_AREA_PADDING = 5.0f;
+
+        // sidebar
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::BeginChild("Sidebar", ImVec2(k_SIDEBAR_WIDTH, 0), ImGuiChildFlags_None);
+        ImGui::Spacing(); 
+
+        for (size_t i = 0; i < k_SIZE_SPACECAL_UI_TABS; ++i) {
+            ImGui::PushID((int)i);
+
+            float itemWidth = ImGui::GetContentRegionAvail().x;
+
+            if (verticalTab(g_spaceCalUiTabs[i], g_state.dwSelectedUiPage == i, ImVec2(itemWidth, k_SIDEBAR_TAB_HEIGHT))) {
+                g_state.dwSelectedUiPage = i;
+            }
+
+            ImGui::PopID();
+            ImGui::Spacing();
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleVar();
+
+        ImGui::SameLine();
+
+        // content
+        ImGui::BeginChild("ContentArea", ImVec2(0, 0), ImGuiChildFlags_None);
+
+        ImGui::Dummy(ImVec2(0, k_CONTENT_AREA_PADDING)); 
+        ImGui::Indent(k_CONTENT_AREA_PADDING);
+
+        if (g_state.dwSelectedUiPage < k_SIZE_SPACECAL_UI_TABS) {
+            g_spaceCalUiTabs[g_state.dwSelectedUiPage].fnDrawTab();
+        }
+
+        ImGui::Unindent(k_CONTENT_AREA_PADDING);
+        ImGui::EndChild();
+    }
+
+    // UI ENTRY POINT
+
     void drawInterface(bool isOverlay) {
-        bIsRunningInOverlay = isOverlay;
+        g_state.bIsRunningInOverlay = isOverlay;
+        g_state.bIsSettingsAdvanced = ConfigurationManager::getInstance()->getConfiguration()->advanced_settings;
         auto& io = ImGui::GetIO();
 
         // disable ctrl + tab, pointless in a VR overlay https://github.com/ocornut/imgui/issues/7987
@@ -553,34 +706,7 @@ namespace spacecal {
 
         ImGui::Begin("Space Calibrator", nullptr, k_bareWindowFlags);
 
-        // @TODO: Build ui
-
-        if (!isSpacecalRunningStateOk()) {
-            drawTroubleshootView();
-        } else {
-            const size_t dwNumCalibrations = spacecal::CalibrationManager::getInstance()->getCalibrationCount();
-
-            if (dwNumCalibrations == 0) {
-                // @TODO: no calibrations edge case handling
-            }
-
-            for (size_t i = 0; i < dwNumCalibrations; i++) {
-                spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(i);
-                if (calibration.hmdIsInReferenceTrackingSystem) {
-                    // @TODO: hmd identification
-                }
-                else {
-                    // @TODO: idfk
-                }
-
-                // @TODO: build ui
-                buildTrackingSystemSelection(calibration);
-                buildDeviceSelection(calibration);
-                buildStandardCalibrationMenu(calibration);
-            }
-        }
-
-        buildSettingsView();
+        drawMainView();
 
         buildVersionInfo();
         ImGui::End();

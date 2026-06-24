@@ -9,6 +9,12 @@
   "vr_troubleshooting_connect_steamlink": "Please open SteamLink on your VR headset and connect to SteamVR first.",
   "vr_troubleshooting_generic": "Please connect your VR headset and launch SteamVR first. ({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
 
+  "calibration_title": "Calibration",
+  "calibration_new": "New Calibration",
+  "calibration_delete": "Delete Calibration",
+  "calibration_next": "Next Calibration",
+  "calibration_previous": "Previous Calibration",
+
   // space here refers to a tracking space / tracking system.
   "reference_device": "Reference device",
   "reference_device_description": "This device is what you are calibrating with, usually your VR headset or a controller.",
@@ -18,6 +24,7 @@
   "select_target_device": "Select target device",
 
   "identify_selected_devices": "Identify selected devices (blinks LED or vibrates)",
+  "identify_auto_detect_devices": "Auto-detect devices",
   "calibration_error_reference_hmd_missing": "Reference ({0}) HMD not detected, profile disabled", /* 0 : tracking system name, eg SteamVR Tracking*/
 
   "calibration_action_start": "Start Calibration",
@@ -53,8 +60,18 @@
   "virtual_desktop_hmd_samsung_galaxy_xr": "Samsung Galaxy XR",
   "virtual_desktop_hmd_play_for_dream_mr": "Play For Dream MR",
 
+  /* vertical tabs on the left */
+  "tab_page_calibration": "Calibration",
+  "tab_page_graphs": "Graphs",
+  "tab_page_base_station_management": "Base Stations",
+  "tab_page_settings": "Settings",
+  "tab_page_debug": "Debug",
+  "tab_page_about": "About",
+
   /* settings */
   "settings_title": "Settings",
+  "settings_advanced": "Advanced settings",
+  "settings_advanced_description": "Shows more settings for who want more control over how things work.",
   "settings_calibrate_motion_vectors": "Calibrate motion vectors",
   "settings_calibrate_motion_vectors_description": "Improves movement prediction for more responsive tracking. May affect physics heavy games.",
   "settings_locale": "Language",
