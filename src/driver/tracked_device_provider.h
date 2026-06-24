@@ -36,6 +36,14 @@ namespace spacecal {
         [[nodiscard]] inline bool IsDeviceIndexValid(const vr::TrackedDeviceIndex_t index) const {
             return index < vr::k_unMaxTrackedDeviceCount && index != vr::k_unTrackedDeviceIndexInvalid && index != vr::k_unTrackedDeviceIndexOther;
         }
+
+        [[nodiscard]] inline bool IsPoseValid(const vr::DriverPose_t pose) const {
+            return pose.deviceIsConnected && pose.poseIsValid && pose.result == vr::ETrackingResult::TrackingResult_Running_OK;
+        }
+
+        [[nodiscard]] inline bool IsPoseValid(const vr::TrackedDevicePose_t pose) const {
+            return pose.bDeviceIsConnected && pose.bPoseIsValid && pose.eTrackingResult == vr::ETrackingResult::TrackingResult_Running_OK;
+        }
     private:
         void applyCalibrationToPose(vr::DriverPose_t& pose, vr::HmdQuaternion_t rotation, vr::HmdVector3d_t pos, double scale, bool calibrateMotionVecs);
 
