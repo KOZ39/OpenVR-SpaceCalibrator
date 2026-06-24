@@ -36,7 +36,7 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES "Clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL
 	add_compile_options(-Werror=return-type)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 	# add_compile_options(-Werror=return-type -Wall -Wextra -Wpedantic)
-	add_compile_options(-Werror=return-type)
+	add_compile_options(-Werror=return-type -Wno-psabi)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
 	# add_compile_options(-Werror=return-type -Wall -Wextra -Wpedantic)
 	add_compile_options(/Qdiag-error-return)
