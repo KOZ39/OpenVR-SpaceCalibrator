@@ -298,19 +298,17 @@ namespace spacecal {
             eCalibrationError = CalibrationError::LackOfTranslationVariance;
         }
 
-        // @TODO: spatial gating, go through m_samples and measure the rotational and spatial variance, if its not high enough reject
-
         if (isContinuousCalibration()) {
             // re-compute the rms error for the current sample set, to ensure we keep state in sync with reality
             // this handles the case of a hmd drifting over time
             // this also handles the case of recentering (eg assume quest + vive trackers, i take headset off to do something, i come back, headset auto recenters invalidating calibration so we must reject the old calibration)
             Eigen::Vector3d _posOffset_temp = Eigen::Vector3d::Zero();
-            validateCalibration(calibratedRotation, calibratedTranslation, m_lastRmsError, _posOffset_temp);
+            validateCalibration(calibratedRotation, calibratedTranslation, m_lastRmsError, _posOffset_temp, isRelativeCalibration);
         }
 
         double rmsError = 0.0;
         Eigen::Vector3d posOffset = Eigen::Vector3d::Zero();
-        if (eCalibrationError == CalibrationError::None && (!validateCalibration(computedRotation, computedTranslation, rmsError, posOffset))) {
+        if (eCalibrationError == CalibrationError::None && (!validateCalibration(computedRotation, computedTranslation, rmsError, posOffset, false))) {
             eCalibrationError = CalibrationError::RmsErrorTooHigh;
         }
 
@@ -519,10 +517,47 @@ namespace spacecal {
         return solver.eigenvalues();
     }
 
-    bool TrackingSystemCalibration::validateCalibration(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation, double& rmsError, Eigen::Vector3d& posOffset) {
+    bool TrackingSystemCalibration::validateCalibration(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation, double& rmsError, Eigen::Vector3d& posOffset, bool isRelative) {
         bool ok = true;
         
         Eigen::Affine3d calibrationMatrix = Eigen::Translation3d(translation) * rotation;
+
+        // recompute world space calibration from relative calibration
+        if (isRelative) {
+            Eigen::Vector3d sampleCalibTrans = Eigen::Vector3d::Zero();
+            Eigen::Quaterniond sampleCalibRot = Eigen::Quaterniond::Identity();
+            size_t validCount = 0;
+
+            for (auto& sample : m_samples) {
+                if (!sample.isPoseValid) continue;
+
+                // compute H' and T'
+                Eigen::Affine3d refWorldNow = Eigen::Translation3d(sample.reference.trans) * sample.reference.rot;
+                Eigen::Affine3d targetWorldNow = Eigen::Translation3d(sample.target.trans) * sample.target.rot;
+
+                // T_H = H' * C_L
+                Eigen::Affine3d expectedTargetWorld = refWorldNow * calibrationMatrix;
+
+                // C' = T_H * (T')^-1
+                Eigen::Affine3d worldCalib = expectedTargetWorld * targetWorldNow.inverse();
+
+                // averaging
+                sampleCalibTrans += worldCalib.translation();
+                Eigen::Quaterniond q(worldCalib.linear());
+                if (validCount == 0) {
+                    sampleCalibRot = q;
+                }
+                else {
+                    sampleCalibRot = sampleCalibRot.slerp(1.0 / (validCount + 1), q);
+                }
+                validCount++;
+            }
+
+            if (validCount > 0) {
+                calibrationMatrix = Eigen::Translation3d(sampleCalibTrans / static_cast<double>(validCount)) * sampleCalibRot;
+            }
+        }
+
         posOffset = computeRefToTargetOffset(calibrationMatrix);
         rmsError = retargetingErrorRMS(posOffset, calibrationMatrix);
         if (rmsError > k_MAX_RETARGETING_RMS_ERROR_THRESHOLD) ok = false;
@@ -625,7 +660,7 @@ namespace spacecal {
                 auto targetPose = CalibrationManager::getInstance()->m_poses[targetDevice.deviceId].vecPosition;
                 if ((targetPose[0] == 0.0 && targetPose[1] == 0.0 && targetPose[2] == 0.0) ||
                     (m_xTargetPrev == targetPose[0] && m_yTargetPrev == targetPose[1] && m_zTargetPrev == targetPose[2])) {
-                    // LOG_CALIB_WARN("HMD tracking didn't update, skipping update");
+                    // LOG_CALIB_WARN("Target device tracking didn't update, skipping update");
                     return;
                 }
             }
@@ -633,7 +668,7 @@ namespace spacecal {
                 auto refPose = CalibrationManager::getInstance()->m_poses[referenceDevice.deviceId].vecPosition;
                 if ((refPose[0] == 0.0 && refPose[1] == 0.0 && refPose[2] == 0.0) ||
                     (m_xRefPrev == refPose[0] && m_yRefPrev == refPose[1] && m_zRefPrev == refPose[2])) {
-                    // LOG_CALIB_WARN("HMD tracking didn't update, skipping update");
+                    // LOG_CALIB_WARN("Reference device tracking didn't update, skipping update");
                     return;
                 }
             }
