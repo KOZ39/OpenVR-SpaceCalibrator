@@ -158,12 +158,12 @@ namespace ipc::protocol
     private:
         uint8_t _boolFlags = 0;
     public:
-        DeviceQuirks_t quirks;
+        DeviceQuirks_t quirks = DeviceQuirks_t::QUIRK_NONE;
         vr::TrackedDeviceIndex_t unTargetOpenVrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         vr::TrackedDeviceIndex_t unRelativeReferenceOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
         vr::TrackedDeviceIndex_t unRelativeTargetOpenvrDeviceId = vr::k_unTrackedDeviceIndexInvalid;
-        vr::HmdVector3d_t translation;
-        vr::HmdQuaternion_t rotation;
+        vr::HmdVector3d_t translation = { .v = { 0.0, 0.0, 0.0 } };
+        vr::HmdQuaternion_t rotation = { .w = 1.0, .x = 0.0,.y = 0.0,.z = 0.0 };
         double scale = 1.0;
 
 #define FLAG(name, bitfield) \

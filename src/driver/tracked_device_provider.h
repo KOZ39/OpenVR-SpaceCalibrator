@@ -8,8 +8,9 @@
 namespace spacecal {
 
     struct DeviceCalibration_t {
-        Eigen::Quaterniond calibrationRotation;
-        Eigen::Vector3d calibrationPosition;
+        Eigen::Quaterniond calibrationRotation = Eigen::Quaterniond::Identity();
+        Eigen::Vector3d    calibrationPosition = Eigen::Vector3d::Zero();
+        bool               hasCalibration = false;
     };
 
     class ServerTrackedDeviceProvider : public vr::IServerTrackedDeviceProvider {
