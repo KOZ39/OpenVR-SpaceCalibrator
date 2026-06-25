@@ -56,20 +56,6 @@ namespace spacecal {
     void ServerTrackedDeviceProvider::EnterStandby() {}
     void ServerTrackedDeviceProvider::LeaveStandby() {}
 
-    void ServerTrackedDeviceProvider::BlendTransform(const DeviceTransformation_t device) const {
-        std::chrono::high_resolution_clock::time_point timestamp = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed_seconds = timestamp - device.last_poll;
-        double lerp = elapsed_seconds.count();
-
-        // lerp *= GetTransformRate(device.currentRate);
-        if (lerp > 1.0)
-            lerp = 1.0;
-        if (lerp < 0 || isnan(lerp))
-            lerp = 0;
-
-        // device.transform = device.transform.interpolateAround(lerp, device.targetTransform, deviceWorldPose.translation);
-    }
-
     inline vr::HmdVector3d_t quaternionRotateVector(const vr::HmdQuaternion_t& quat, const double(&vector)[3]) {
         vr::HmdQuaternion_t vectorQuat = { 0.0, vector[0], vector[1] , vector[2] };
         auto rotatedVectorQuat = quat * vectorQuat * -quat;

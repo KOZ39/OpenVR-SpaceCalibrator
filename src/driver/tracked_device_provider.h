@@ -7,11 +7,6 @@
 
 namespace spacecal {
 
-    struct DeviceTransformation_t {
-        bool hideDevice = false;
-        std::chrono::high_resolution_clock::time_point last_poll;
-    };
-
     struct DeviceCalibration_t {
         Eigen::Quaterniond calibrationRotation;
         Eigen::Vector3d calibrationPosition;
@@ -27,7 +22,6 @@ namespace spacecal {
         void EnterStandby() override;
         void LeaveStandby() override;
 
-        void BlendTransform(const DeviceTransformation_t device) const;
         bool HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, vr::DriverPose_t& newPose);
         void ResetCalibration();
         void RequestVirtualDesktopProps();
