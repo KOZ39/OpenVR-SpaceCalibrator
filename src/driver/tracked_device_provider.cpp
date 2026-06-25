@@ -88,6 +88,15 @@ namespace spacecal {
         return Eigen::Vector3d(pos[0], pos[1], pos[2]);
     }
 
+    // lerps between two calibrations by factor %
+    // @NOTE: factor is unclamped, input should be 0-1
+    inline DeviceCalibration_t lerpCalibration(const DeviceCalibration_t& from, const DeviceCalibration_t& to, double factor) {
+        return {
+            .calibrationRotation = from.calibrationRotation.slerp(factor, to.calibrationRotation),
+            .calibrationPosition = from.calibrationPosition + factor * (to.calibrationPosition - from.calibrationPosition)
+        };
+    }
+
     inline Eigen::Affine3d getWorldFromDriverPose(const vr::DriverPose_t& pose, float fPredictedSecondsToPhotonsFromNow = 0.0f) {
         Eigen::Quaterniond baseRot = eigenFromHmdQuat(pose.qRotation);
         Eigen::Vector3d    basePos = eigenVecFromHmdVec(pose.vecPosition);
@@ -150,11 +159,15 @@ namespace spacecal {
                     worldCalibRot.normalize();
 
                     // keep track of calibrations so that we can keep using them even when either the ref or target device lose tracking
-                    m_cachedCalibrations[unWhichDevice].calibrationRotation = worldCalibRot;
-                    m_cachedCalibrations[unWhichDevice].calibrationPosition = worldCalib.translation();
+                    // we write directly to blend target for free smoothing
+                    DeviceCalibration_t newCalib = { worldCalibRot, worldCalib.translation() };
+                    if (!m_cachedCalibrations[unWhichDevice].hasCalibration) {
+                        m_cachedCalibrations[unWhichDevice] = { worldCalibRot, worldCalib.translation(), true };
+                    } else {
+                        m_cachedCalibrations[unWhichDevice] = lerpCalibration(m_cachedCalibrations[unWhichDevice], newCalib, 0.05); // @TODO: adjust fudge factor
+                    }
                 } 
 
-                // @TODO: Lerping for continuous calibration?
                 applyCalibrationToPose(
                     modifiedPose,
                     hmdQuatFromEigen(m_cachedCalibrations[unWhichDevice].calibrationRotation),
