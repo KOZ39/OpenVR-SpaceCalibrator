@@ -2,6 +2,7 @@
 
 #include <openvr_driver.h>
 #include "ipc_server.h"
+#include <Eigen/Geometry>
 #include <chrono>
 
 namespace spacecal {
@@ -12,8 +13,8 @@ namespace spacecal {
     };
 
     struct DeviceCalibration_t {
-        vr::HmdQuaternion_t calibrationRotation;
-        vr::HmdVector3d_t calibrationPosition;
+        Eigen::Quaterniond calibrationRotation;
+        Eigen::Vector3d calibrationPosition;
     };
 
     class ServerTrackedDeviceProvider : public vr::IServerTrackedDeviceProvider {

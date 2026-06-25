@@ -1,12 +1,12 @@
 #include "tracked_device_provider.h"
 
-#include "Eigen/Geometry"
 #include "util.h"
 #include "log.h"
 #include "interface_hook_injector.h"
 #include "vrmath.h"
 #include "virtual_desktop.h"
 #include <math.h>
+#include <Eigen/Geometry>
 #include <Eigen/Dense>
 #include <openvr_driver.h>
 
@@ -82,6 +82,16 @@ namespace spacecal {
         dest[2] = src.v[2];
     }
 
+    inline vr::HmdQuaternion_t hmdQuatFromEigen(const Eigen::Quaterniond& quat) {
+        return vr::HmdQuaternion_t{ quat.w(), quat.x(), quat.y(), quat.z() };
+    }
+    inline vr::HmdVector3d_t hmdVecFromEigenVec(const Eigen::Vector3d& pos) {
+        return vr::HmdVector3d_t{ .v = { pos.x(), pos.y(), pos.z() } };
+    }
+    inline vr::HmdVector3d_t hmdVecFromEigenVec(const Eigen::Translation3d& pos) {
+        return vr::HmdVector3d_t{ .v = { pos.x(), pos.y(), pos.z() } };
+    }
+
     inline Eigen::Quaterniond eigenFromHmdQuat(const vr::HmdQuaternion_t& quat) {
         return Eigen::Quaterniond(quat.w, quat.x, quat.y, quat.z);
     }
@@ -154,12 +164,18 @@ namespace spacecal {
                     worldCalibRot.normalize();
 
                     // keep track of calibrations so that we can keep using them even when either the ref or target device lose tracking
-                    m_cachedCalibrations[unWhichDevice].calibrationRotation = { worldCalibRot.w(), worldCalibRot.x(), worldCalibRot.y(), worldCalibRot.z() };
-                    m_cachedCalibrations[unWhichDevice].calibrationPosition = { .v = { worldCalib.translation().x(), worldCalib.translation().y(), worldCalib.translation().z() } };
+                    m_cachedCalibrations[unWhichDevice].calibrationRotation = worldCalibRot;
+                    m_cachedCalibrations[unWhichDevice].calibrationPosition = worldCalib.translation();
                 } 
 
                 // @TODO: Lerping for continuous calibration?
-                applyCalibrationToPose(modifiedPose, m_cachedCalibrations[unWhichDevice].calibrationRotation, m_cachedCalibrations[unWhichDevice].calibrationPosition, transform.scale, transform.calibrateMotionVecs());
+                applyCalibrationToPose(
+                    modifiedPose,
+                    hmdQuatFromEigen(m_cachedCalibrations[unWhichDevice].calibrationRotation),
+                    hmdVecFromEigenVec(m_cachedCalibrations[unWhichDevice].calibrationPosition),
+                    transform.scale,
+                    transform.calibrateMotionVecs()
+                );
             } else {
                 // classic world-space application
                 applyCalibrationToPose(modifiedPose, transform.rotation, transform.translation, transform.scale, transform.calibrateMotionVecs());
