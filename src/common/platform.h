@@ -70,6 +70,9 @@ namespace platform {
     // message -> text in the dialog box
     void showMessageDialog(const std::string& title, const std::string& message);
 
+    // opens the directory in the OS' file brower
+    void launchDirInFileBrowser(const std::string& szDirectory);
+
     void setThreadName(const std::string& threadName);
 
     // utf8 stuff for imgui -> overlay -> os interop

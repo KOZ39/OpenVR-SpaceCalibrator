@@ -367,8 +367,10 @@ namespace spacecal {
                 ImGui::TextUnformatted(LOCALE_FORMAT("vr_troubleshooting_generic", dwVrErr, eVrErr).c_str());
                 break;
             }
-        } else if (CalibrationManager::getInstance()->getIpcClient().IsConnected()) {
+        } else if (!CalibrationManager::getInstance()->getIpcClient().IsConnected()) {
             ImGui::TextUnformatted(LOCALE_GET("ipc_unavailable").c_str());
+        } else {
+            ImGui::TextUnformatted("Something went catastrophically wrong! Please report this to the developer either on GitHub or Steam Discussions so that this can be addressed.");
         }
     }
 

@@ -180,6 +180,10 @@ namespace platform {
         }
     }
 
+    void launchDirInFileBrowser(const std::string& szDirectory) {
+        // @TODO: impl
+    }
+
     void setThreadName(const std::string& threadName) {
         // thread name has max 16 chars
         // https://man7.org/linux/man-pages/man3/pthread_setname_np.3.html

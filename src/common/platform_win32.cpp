@@ -86,6 +86,10 @@ namespace platform {
         MessageBoxA(nullptr, message.c_str(), title.c_str(), 0);
     }
 
+    void launchDirInFileBrowser(const std::string& szDirectory) {
+        // @TODO: impl
+    }
+
     void setThreadName(const std::string& threadName) {
         std::wstring szWinThreadName(threadName.size(), L' ');
         szWinThreadName.resize(std::mbstowcs(&szWinThreadName[0], threadName.c_str(), threadName.size()));
