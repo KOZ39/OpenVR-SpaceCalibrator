@@ -660,7 +660,7 @@ namespace spacecal {
                 auto targetPose = CalibrationManager::getInstance()->m_poses[targetDevice.deviceId].vecPosition;
                 if ((targetPose[0] == 0.0 && targetPose[1] == 0.0 && targetPose[2] == 0.0) ||
                     (m_xTargetPrev == targetPose[0] && m_yTargetPrev == targetPose[1] && m_zTargetPrev == targetPose[2])) {
-                    // LOG_CALIB_WARN("Target device tracking didn't update, skipping update");
+                    LOG_CALIB_WARN("Target device tracking didn't update, skipping update");
                     return;
                 }
             }
@@ -668,7 +668,7 @@ namespace spacecal {
                 auto refPose = CalibrationManager::getInstance()->m_poses[referenceDevice.deviceId].vecPosition;
                 if ((refPose[0] == 0.0 && refPose[1] == 0.0 && refPose[2] == 0.0) ||
                     (m_xRefPrev == refPose[0] && m_yRefPrev == refPose[1] && m_zRefPrev == refPose[2])) {
-                    // LOG_CALIB_WARN("Reference device tracking didn't update, skipping update");
+                    LOG_CALIB_WARN("Reference device tracking didn't update, skipping update");
                     return;
                 }
             }
@@ -810,6 +810,7 @@ namespace spacecal {
     
     void TrackingSystemCalibration::assignTarget(CalibrationDevice& device) {
         if (device.deviceId == vr::k_unTrackedDeviceIndexInvalid) {
+            LOG_CALIB_INFO("Assigning device from tracking system {}; model: {} SN: ({})...", device.trackingSystem, device.deviceModel, device.deviceSerialNumber);
             auto theDevice = VRState::getInstance()->findVrDevice(device.trackingSystem, device.deviceModel, device.deviceSerialNumber);
             if (theDevice.bIsConnected && theDevice.dwDeviceIndex < vr::k_unMaxTrackedDeviceCount) {
                 device.deviceId = theDevice.dwDeviceIndex;
@@ -866,8 +867,8 @@ namespace spacecal {
                     LOG_CALIB_INFO("  applying device [{}]: class: {} connected: {} role: {} tracking: {} model: {} serial: {} idx: {}", i, device.eDeviceClass, device.bIsConnected, device.eControllerRole, device.szTrackingSystemId, device.szModel, device.szSerial, device.dwDeviceIndex);
                     args.quirks = ipc::protocol::DeviceQuirks_t::QUIRK_NONE;
 
-                    args.translation = eigenAsVrVec3d((calibratedTranslation));
-                    args.rotation = eigenAsVrQuat((calibratedRotation));
+                    args.translation = eigenAsVrVec3d(calibratedTranslation);
+                    args.rotation = eigenAsVrQuat(calibratedRotation);
                     args.scale = calibratedScale;
 
                     // for relative calibrations
