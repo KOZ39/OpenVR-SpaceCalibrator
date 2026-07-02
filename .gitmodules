@@ -19,3 +19,9 @@
 [submodule "vendor/glaze"]
 	path = vendor/glaze
 	url = https://github.com/stephenberry/glaze.git
+[submodule "vendor/volk"]
+	path = vendor/volk
+	url = https://github.com/zeux/volk.git
+[submodule "vendor/Vulkan-Headers"]
+	path = vendor/Vulkan-Headers
+	url = https://github.com/KhronosGroup/Vulkan-Headers.git

@@ -54,6 +54,14 @@ add_subdirectory(quill)
 message ("Adding glaze...")
 add_subdirectory(glaze)
 
+# vulkan headers
+message ("Adding Vulkan-Headers...")
+add_subdirectory(Vulkan-Headers)
+
+# volk (Vulkan loader)
+message ("Adding volk...")
+add_subdirectory(volk)
+
 # Assign solution dirs
 if (WIN32)
 	set_property(TARGET glfw PROPERTY FOLDER "vendor/glfw")
@@ -64,4 +72,5 @@ if (WIN32)
 	set_property(TARGET fmt PROPERTY FOLDER "vendor")
 	set_property(TARGET quill PROPERTY FOLDER "vendor")
 	set_property(TARGET glad PROPERTY FOLDER "vendor")
+	set_property(TARGET volk PROPERTY FOLDER "vendor")
 endif()
