@@ -1,16 +1,18 @@
 #include "window.h"
+#include "renderer/renderer.h"
 #include "user_interface.h"
 #include "stb_image.h"
 #include "platform.h"
 #include "vr_core.h"
 #include "log.h"
+#include "util.h"
 
 #include <filesystem>
+#include <fmt/format.h>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <imgui/backends/imgui_impl_glfw.h>
-#include <imgui/backends/imgui_impl_opengl3.h>
 
 #if OS_WINDOWS
 #include <dwmapi.h>
@@ -35,67 +37,63 @@ namespace spacecal {
         LOG_ERROR("GLFW Error ({}): {}", error, description);
     }
 
-    void OpenGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
-        std::string_view szGlMessage(message, length);
-        switch (severity) {
-        case GL_DEBUG_SEVERITY_LOW:
-            LOG_INFO("OpenGL (type: {} id: {}): {}", type, id, szGlMessage);
-            break;
-        case GL_DEBUG_SEVERITY_MEDIUM:
-            LOG_WARN("OpenGL (type: {} id: {}): {}", type, id, szGlMessage);
-            break;
-        case GL_DEBUG_SEVERITY_HIGH:
-            LOG_ERROR("OpenGL (type: {} id: {}): {}", type, id, szGlMessage);
-            break;
-        case GL_DEBUG_SEVERITY_NOTIFICATION:
-            LOG_DEBUG("OpenGL (type: {} id: {}): {}", type, id, szGlMessage);
-            break;
-        }
-    }
-
-    bool Window::CreateNativeWindow() {
-        if (!glfwInit())
-        {
+    bool Window::CreateNativeWindow(renderer::GraphicsBackend gfxApi) {
+        if (!glfwInit()) {
             const char* szGlfwError = nullptr;
             glfwGetError(&szGlfwError);
             LOG_FATAL("Failed to initialise GLFW, got {}.", szGlfwError);
             platform::showMessageDialog("An error occured initialising Space Calibrator Nova", "Failed to initialize GLFW");
             return false;
         }
+        
+        m_desiredGraphicsBackend = gfxApi;
+        if (!renderer::isGraphicsApiSupported(gfxApi)) {
+            LOG_FATAL("Unsupported graphics API is selected! Falling back to OpenGL...");
+        }
+        m_isYFlipped = renderer::isYFlipped(gfxApi);
+        m_graphicsContext = renderer::getRenderContext(m_desiredGraphicsBackend);
+        ASSERT(m_graphicsContext != nullptr, "Render context must be valid!");
 
         glfwSetErrorCallback(GLFWErrorCallback);
 
-        // @TODO: multiple render backends; prefer dx11 on windows, vk on linux
-
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        // multiple render backends require different hinting params
+        m_graphicsContext->enableRendererGlfwHints();
         glfwWindowHint(GLFW_RESIZABLE, false);
 
-#ifdef _DEBUG
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-#endif
-
-        m_glfwWindow = glfwCreateWindow(m_fboTextureWidth, m_fboTextureHeight, "Space Calibrator", nullptr, nullptr);
+        m_glfwWindow = glfwCreateWindow(m_windowWidth, m_windowHeight, "Space Calibrator", nullptr, nullptr);
         if (!m_glfwWindow) {
             LOG_FATAL("Failed to create GLFW window");
             platform::showMessageDialog("An error occured initialising Space Calibrator Nova", "Failed to create GLFW window");
             return false;
         }
 
-        glfwMakeContextCurrent(m_glfwWindow);
-        glfwSwapInterval(1);
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-            LOG_FATAL("Failed to load OpenGL");
-            platform::showMessageDialog("An error occured initialising Space Calibrator Nova", "Failed to load OpenGL");
+        constexpr const char* k_GRAPHICS_API_STRINGS[] = {
+            "DirectX11",
+            "Vulkan",
+            "OpenGL",
+        };
+
+        if (!m_graphicsContext->initialiseGraphicsApi(m_glfwWindow)) {
+            std::string szApiInitFail = fmt::format("Failed to load {}", k_GRAPHICS_API_STRINGS[(uint32_t)gfxApi]);
+            LOG_FATAL("{}", szApiInitFail);
+            platform::showMessageDialog("An error occured initialising Space Calibrator Nova", szApiInitFail);
             return false;
         }
 
+        std::string szApiInitFail = fmt::format("Initialised {} renderer!", k_GRAPHICS_API_STRINGS[(uint32_t)gfxApi]);
+        
+        // set debug string if necessary
+#if _DEBUG
+        std::string szDebugTitle = fmt::format("Space Calibrator - {}", k_GRAPHICS_API_STRINGS[(uint32_t)gfxApi]);
+        glfwSetWindowTitle(m_glfwWindow, szDebugTitle.c_str());
+#endif
+
         // Minimise the window
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_VISIBLE, false);
+
 #if OS_WINDOWS
-        HWND windowHwmd = glfwGetWin32Window(m_glfwWindow);
-        EnableDarkModeTopBar(windowHwmd);
+        HWND windowHwnd = glfwGetWin32Window(m_glfwWindow);
+        EnableDarkModeTopBar(windowHwnd);
 #endif
 
         // Load icon and set it in the window
@@ -104,11 +102,6 @@ namespace spacecal {
         images[0].pixels = stbi_load(iconPath.c_str(), &images[0].width, &images[0].height, 0, 4);
         glfwSetWindowIcon(m_glfwWindow, 1, images);
         stbi_image_free(images[0].pixels);
-
-#ifdef _DEBUG
-        glDebugMessageCallback(OpenGLDebugCallback, nullptr);
-        glEnable(GL_DEBUG_OUTPUT);
-#endif
 
         ImGui::CreateContext();
         // ImPlot::CreateContext();
@@ -120,7 +113,7 @@ namespace spacecal {
         // load resources
         ImFontConfig cfg;
         // io.Fonts->AddFontFromMemoryCompressedTTF(DroidSans_compressed_data, DroidSans_compressed_size, 24.0f, &cfg);
-        // @TEMP: embed fonts later
+        // @FIXME: embed fonts later
         std::string fontPath = (platform::getExeDir() / "assets" / "fonts" / "Poppins-Regular.ttf").string();
         cfg.MergeMode = false;
         io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
@@ -131,32 +124,11 @@ namespace spacecal {
         cfg.MergeMode = true;
         io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
-        ImGui_ImplGlfw_InitForOpenGL(m_glfwWindow, true);
-        ImGui_ImplOpenGL3_Init("#version 330");
+        ImGui_ImplGlfw_InitForOther(m_glfwWindow, true);
+        m_graphicsContext->initialiseWindow(m_glfwWindow, m_windowWidth, m_windowHeight);
 
         ImGui::StyleColorsDark();
-
         SetupImGuiStyle();
-
-        glGenTextures(1, &m_fboTextureHandle);
-        glBindTexture(GL_TEXTURE_2D, m_fboTextureHandle);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_fboTextureWidth, m_fboTextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-        glGenFramebuffers(1, &m_fboHandle);
-        glBindFramebuffer(GL_FRAMEBUFFER, m_fboHandle);
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_fboTextureHandle, 0);
-
-        GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-        glDrawBuffers(1, drawBuffers);
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-            LOG_FATAL("OpenGL framebuffer incomplete.");
-            platform::showMessageDialog("An error occured initialising Space Calibrator Nova", "OpenGL framebuffer incomplete");
-            return false;
-        }
 
         return true;
     }
@@ -175,11 +147,9 @@ namespace spacecal {
     }
 
     void Window::Shutdown() {
-        if (m_fboHandle)
-            glDeleteFramebuffers(1, &m_fboHandle);
-
-        ImGui_ImplOpenGL3_Shutdown();
+        m_graphicsContext->shutdown();
         ImGui_ImplGlfw_Shutdown();
+
         // ImPlot::DestroyContext();
         ImGui::DestroyContext();
 
@@ -261,7 +231,7 @@ namespace spacecal {
                 {
                     switch (vrEvent.eventType) {
                     case vr::VREvent_MouseMove:
-                        io.AddMousePosEvent(vrEvent.data.mouse.x, vrEvent.data.mouse.y);
+                        io.AddMousePosEvent(vrEvent.data.mouse.x, m_isYFlipped ? m_windowHeight - vrEvent.data.mouse.y : vrEvent.data.mouse.y);
                         break;
                     case vr::VREvent_MouseButtonDown:
                         io.AddMouseButtonEvent((vrEvent.data.mouse.button & vr::VRMouseButton_Left) == vr::VRMouseButton_Left ? 0 : 1, true);
@@ -273,7 +243,7 @@ namespace spacecal {
                     {
                         float x = vrEvent.data.scroll.xdelta * 360.0f * 8.0f;
                         float y = vrEvent.data.scroll.ydelta * 360.0f * 8.0f;
-                        io.AddMouseWheelEvent(x, y);
+                        io.AddMouseWheelEvent(x, m_isYFlipped ? y : y);
                         break;
                     }
                     case vr::VREvent_KeyboardDone: {
@@ -309,10 +279,10 @@ namespace spacecal {
                 auto& io = ImGui::GetIO();
 
                 // These change state now, so we must execute these before doing our own modifications to the io state for VR
-                ImGui_ImplOpenGL3_NewFrame();
+                m_graphicsContext->newFrame();
                 ImGui_ImplGlfw_NewFrame();
 
-                io.DisplaySize = ImVec2((float)m_fboTextureWidth, (float)m_fboTextureHeight);
+                io.DisplaySize = ImVec2((float)m_windowWidth, (float)m_windowHeight);
                 io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
                 io.ConfigFlags = io.ConfigFlags & ~ImGuiConfigFlags_NoMouseCursorChange;
@@ -331,31 +301,18 @@ namespace spacecal {
                 ImGui::EndFrame();
                 ImGui::Render();
 
-                glBindFramebuffer(GL_FRAMEBUFFER, m_fboHandle);
-                glViewport(0, 0, m_fboTextureWidth, m_fboTextureHeight);
-                glClearColor(0, 0, 0, 1);
-                glClear(GL_COLOR_BUFFER_BIT);
-
-                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                m_graphicsContext->renderDrawData(ImGui::GetDrawData(), ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
 
                 // if window is not minimised
                 if (width && height) {
-                    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fboHandle);
-                    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-                    glfwSwapBuffers(m_glfwWindow);
+                    m_graphicsContext->present(width, height);
                 }
 
                 // update vr dashboard if viisble
                 if (dashboardVisible) {
-                    vr::Texture_t vrTexture = {
-                        .handle = (void*) (uintptr_t) m_fboTextureHandle,
-                        .eType = vr::TextureType_OpenGL,
-                        .eColorSpace = vr::ColorSpace_Auto,
-                    };
+                    vr::Texture_t vrTexture = m_graphicsContext->getVRTexture();
 
-                    vr::HmdVector2_t mouseScale = { .v = { (float)m_fboTextureWidth, (float)m_fboTextureHeight } };
+                    vr::HmdVector2_t mouseScale = { .v = { (float)m_windowWidth, (float)m_windowHeight } };
 
                     vr::VROverlay()->SetOverlayTexture(VRState::getInstance()->getOverlayHandle(), &vrTexture);
                     vr::VROverlay()->SetOverlayMouseScale(VRState::getInstance()->getOverlayHandle(), &mouseScale);

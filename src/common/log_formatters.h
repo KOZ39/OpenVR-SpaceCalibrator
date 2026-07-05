@@ -10,6 +10,7 @@
 #include "protocol.h"
 #include <quill/bundled/fmt/format.h>
 #include <quill/bundled/fmt/chrono.h>
+#include <volk/volk.h>
 
 #if (__clang__)
 #pragma clang diagnostic push
@@ -33,6 +34,8 @@ namespace vr {
     std::string format_as(ETrackedControllerRole controllerRole);
     std::string format_as(EVREventType eventType);
 }
+
+std::string format_as(VkResult vkResult);
 
 #if (__clang__)
 #pragma clang diagnostic pop

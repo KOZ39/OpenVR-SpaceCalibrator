@@ -127,7 +127,8 @@ target_include_directories(SpaceCalibratorDriver
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/quill/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/fmt/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/glaze/include
-    PRIVATE ${CMAKE_SOURCE_DIR}/vendor/eigen)
+    PRIVATE ${CMAKE_SOURCE_DIR}/vendor/eigen
+    PRIVATE ${CMAKE_SOURCE_DIR}/vendor/Vulkan-Headers/include)
 
 target_link_libraries(SpaceCalibratorDriver
     PRIVATE SpaceCalibratorCommon

@@ -68,6 +68,7 @@ target_include_directories(SpaceCalibratorCommon
 target_link_libraries(SpaceCalibratorCommon
     PRIVATE fmt
     PRIVATE quill
+    PRIVATE Vulkan-Headers
 )
 
 target_compile_definitions(SpaceCalibratorCommon

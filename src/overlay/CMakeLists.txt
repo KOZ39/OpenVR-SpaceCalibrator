@@ -113,7 +113,12 @@ endforeach()
 
 set(IMGUI_FILES
     ${CMAKE_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_opengl3.cpp
+    ${CMAKE_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_vulkan.cpp
     ${CMAKE_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_glfw.cpp)
+
+if (WIN32)
+    list(APPEND IMGUI_FILES ${CMAKE_SOURCE_DIR}/vendor/imgui/backends/imgui_impl_dx11.cpp)
+endif()
 
 add_executable(SpaceCalibratorOverlay ${SOURCES_API} ${SOURCES_HEADERS} ${IMGUI_FILES} ${WIN32_RESOURCES})
 GroupSourcesByFolder(SpaceCalibratorOverlay)
@@ -146,6 +151,7 @@ target_link_libraries(SpaceCalibratorOverlay
     PRIVATE glfw
     PRIVATE fmt
     PRIVATE quill
+    PRIVATE volk
     PRIVATE ${OPENVR_LIBRARIES})
 
 target_compile_definitions(SpaceCalibratorOverlay
@@ -154,11 +160,15 @@ target_compile_definitions(SpaceCalibratorOverlay
     PRIVATE IMGUI_DEFINE_MATH_OPERATORS
     PRIVATE EIGEN_HAS_STD_RESULT_OF=0
     PRIVATE IS_OVERLAY
+    PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK
 )
 
 if (WIN32)
     target_link_libraries(SpaceCalibratorOverlay
         PRIVATE opengl32.lib
+        PRIVATE dxgi.lib
+        PRIVATE d3d11.lib
+        PRIVATE d3dcompiler.lib
         PRIVATE dwmapi.lib)
 
     target_compile_definitions(SpaceCalibratorOverlay
