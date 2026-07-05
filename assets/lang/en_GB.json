@@ -3,6 +3,7 @@
   "app_title_vr": "{0} {1} - close VR overlay to use mouse", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
   "tracking_system_no_systems": "No tracked devices present. Please turn on a device to continue.", /* Should never be hit but you never know */
 
+  "error_unknown_catastrophic": "Something went catastrophically wrong! Please report this to the developer either on GitHub or Steam Discussions so that this can be addressed.",
   "ipc_unavailable": "Failed to connect to Space Calibrator SteamVR driver. Please verify file integrity in Properties -> Installed Files, or re-install the app.",
   "steamvr_unavailable": "Failed to connect to SteamVR.",
   "vr_troubleshooting_hmd_not_found": "Please connect your VR headset and launch SteamVR first.",
@@ -35,7 +36,8 @@
 
   "calibration_progress": "Calibration Progress",
   "calibration_progress_placeholder": "Calibration in progress...",
-  "calibration_info_move_around_unsifficient_samples": "Move your selected devices together in your playspace, and walk around your room while doing so",
+  "calibration_info_move_around_unsifficient_samples": "Move your selected devices together in your playspace, and walk around your room while doing so. Rotate the devices as well!",
+  "calibration_info_continuous_progress": "Continuous calibration active. Progress represents how close to attempting a calibration we are. Calibrations tend to be rejected due to worse error.", /* this is worded like absolute shit holy fuck */
 
   "calibration_speed": "Calibration Speed",
   "calibration_speed_fast": "Fast",

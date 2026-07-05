@@ -49,7 +49,7 @@ namespace spacecal {
         float paneWidth = (ImGui::GetContentRegionAvail().x - style.FramePadding.x) / 2;
 
         ImGui::HeadingWithWidth(LOCALE_GET("reference_device").c_str(), paneWidth);
-        ImGui::SameLine(paneWidth + style.FramePadding.x * 3.5);
+        ImGui::SameLine(paneWidth + style.FramePadding.x * 3.5f);
         ImGui::HeadingWithWidth(LOCALE_GET("target_device").c_str(), paneWidth);
 
         ImGui::TextWrappedDisabledWithWidth(LOCALE_GET("reference_device_description").c_str(), paneWidth);
@@ -343,7 +343,12 @@ namespace spacecal {
         }
 
         if (calibration.isCalibrating()) {
-            ImGui::TextUnformatted(LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());
+            ImGui::TextWrapped("%s", LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());
+            ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2));
+            float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
+            ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
+        } else if (calibration.isContinuousCalibration()) {
+            ImGui::TextWrapped("%s", LOCALE_GET("calibration_info_continuous_progress").c_str());
             ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2));
             float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
             ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
@@ -352,14 +357,14 @@ namespace spacecal {
 
     inline void drawTroubleshootView() {
         if (!VRState::getInstance()->isSteamVrAvailable()) {
-            ImGui::TextUnformatted(LOCALE_GET("steamvr_unavailable").c_str());
+            ImGui::TextWrapped("%s", LOCALE_GET("steamvr_unavailable").c_str());
             vr::EVRInitError eVrErr = VRState::getInstance()->getVrInitError();
             switch (eVrErr) {
             case vr::EVRInitError::VRInitError_Driver_WirelessHmdNotConnected:
-                ImGui::TextUnformatted(LOCALE_GET("vr_troubleshooting_connect_steamlink").c_str());
+                ImGui::TextWrapped("%s", LOCALE_GET("vr_troubleshooting_connect_steamlink").c_str());
                 break;
             case vr::EVRInitError::VRInitError_Init_HmdNotFound:
-                ImGui::TextUnformatted(LOCALE_GET("vr_troubleshooting_hmd_not_found").c_str());
+                ImGui::TextWrapped("%s", LOCALE_GET("vr_troubleshooting_hmd_not_found").c_str());
                 break;
             default:
                 // need to pass by ref, cant pass as literal value
@@ -368,9 +373,9 @@ namespace spacecal {
                 break;
             }
         } else if (!CalibrationManager::getInstance()->getIpcClient().IsConnected()) {
-            ImGui::TextUnformatted(LOCALE_GET("ipc_unavailable").c_str());
+            ImGui::TextWrapped("%s", LOCALE_GET("ipc_unavailable").c_str());
         } else {
-            ImGui::TextUnformatted("Something went catastrophically wrong! Please report this to the developer either on GitHub or Steam Discussions so that this can be addressed.");
+            ImGui::TextWrapped("%s", LOCALE_GET("error_unknown_catastrophic").c_str());
         }
     }
 
