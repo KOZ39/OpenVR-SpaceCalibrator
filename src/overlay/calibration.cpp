@@ -872,7 +872,7 @@ namespace spacecal {
                     args.scale = calibratedScale;
 
                     // for relative calibrations
-                    args.relativeCoordSystem(isRelativeCalibration);
+                    args.relativeCoordSystem(isContinuousCalibration() && isRelativeCalibration);
                     args.calibrateMotionVecs(calibrateMotionVectors);
                     args.unRelativeReferenceOpenvrDeviceId = referenceDevice.deviceId;
                     args.unRelativeTargetOpenvrDeviceId = targetDevice.deviceId;
@@ -1073,8 +1073,11 @@ namespace spacecal {
             pConfig->calibrations[i].reference_device.serial            = this->m_calibrations[i].referenceDevice.deviceSerialNumber;
             pConfig->calibrations[i].reference_device.tracking_system   = this->m_calibrations[i].referenceDevice.trackingSystem;
 
-            pConfig->calibrations[i].anchor_mode                        = this->m_calibrations[i].isRelativeCalibration ? Configuration_Latest::AnchorMode::HmdRelative : Configuration_Latest::AnchorMode::FixedWorld;
             pConfig->calibrations[i].calibration_speed                  = (uint64_t)this->m_calibrations[i].calibrationSpeed;
+            // relative RELIES on continuous, so enforce it here
+            pConfig->calibrations[i].anchor_mode                        = (this->m_calibrations[i].isRelativeCalibration && this->m_calibrations[i].isContinuousCalibration()) ?
+                                                                                Configuration_Latest::AnchorMode::HmdRelative :
+                                                                                Configuration_Latest::AnchorMode::FixedWorld;
 
             // calibrated transform mapping
             // @TODO: should we make a helper func?
