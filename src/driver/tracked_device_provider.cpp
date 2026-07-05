@@ -225,7 +225,7 @@ namespace spacecal {
     }
 
     void ServerTrackedDeviceProvider::HandleQuirks(ipc::protocol::DeviceQuirks_t quirks, vr::DriverPose_t& pose) {
-        // @TOOD: implement quirks handling
+        // @TODO: implement quirks handling
 
         if (ENUM_HAS_FLAGS(quirks, ipc::protocol::DeviceQuirks_t::QUIRK_SCALE)) {
             // m_poses->vecAngularVelocity
