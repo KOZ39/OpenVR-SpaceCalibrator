@@ -264,6 +264,7 @@ namespace spacecal {
         while (vr::VRSystem()->PollNextEvent(&vrEvent, sizeof(vrEvent))) {
             switch (vrEvent.eventType) {
                 // @TODO: Handle these??
+            case vr::EVREventType::VREvent_Input_TrackerActivated:
             case vr::EVREventType::VREvent_TrackedDeviceActivated:
                 LOG_OPENVR_INFO("New device connected at index {}", vrEvent.trackedDeviceIndex);
                 updateSteamVRDevice(vrEvent.trackedDeviceIndex);
@@ -280,8 +281,9 @@ namespace spacecal {
                 m_bStateDirty = true;
                 break;
             case vr::EVREventType::VREvent_TrackedDeviceRoleChanged:
-                LOG_OPENVR_INFO("Device role change at index {}", vrEvent.trackedDeviceIndex);
-                updateSteamVRDevice(vrEvent.trackedDeviceIndex);
+                LOG_OPENVR_INFO("Device role change at index");
+                // trackedDeviceIndex is invalid so fuck if i know what changed
+                // why its not populated is beyond me but oh well
                 m_bStateDirty = true;
                 break;
             case vr::EVREventType::VREvent_TrackedDeviceUserInteractionStarted: // something may have happened
@@ -333,6 +335,9 @@ namespace spacecal {
             case vr::EVREventType::VREvent_EnterStandbyMode:
                 break;
             case vr::EVREventType::VREvent_LeaveStandbyMode:
+            break;
+            // @HACK: catch a bunch of dont cares here
+            case vr::EVREventType::VREvent_Input_HapticVibration:
                 break;
 
             default:
