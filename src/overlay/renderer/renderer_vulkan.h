@@ -5,6 +5,8 @@
 #include "renderer.h"
 
 #include <imgui/backends/imgui_impl_vulkan.h>
+#include <vector>
+#include <string>
 
 namespace spacecal {
     namespace renderer {

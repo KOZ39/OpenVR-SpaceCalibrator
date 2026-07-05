@@ -1,10 +1,12 @@
+#include "platform.h"
+
+#if OS_WINDOWS
+
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
 #include "renderer_dx11.h"
-
-#if OS_WINDOWS
 
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_dx11.h>
