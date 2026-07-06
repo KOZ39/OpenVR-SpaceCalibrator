@@ -865,6 +865,11 @@ namespace spacecal {
             return;
         }
 
+        // if we update state the driver will reset calibration nullifying any existing calibrations!
+        if (!this->isActive) {
+            return;
+        }
+
         LOG_CALIB_INFO("Applying calibration....");
         for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
             auto device = VRState::getInstance()->getVrDevice(i);
@@ -877,26 +882,24 @@ namespace spacecal {
                 ipc::protocol::Command_SetDeviceTransform_t args = {};
 
                 args.unTargetOpenVrDeviceId = i;
-                args.enabled(device.bIsConnected && this->isActive);
+                args.enabled(true);
 
-                if (args.enabled()) {
-                    LOG_CALIB_INFO("  applying device [{}]: class: {} connected: {} role: {} tracking: {} model: {} serial: {} idx: {}", i, device.eDeviceClass, device.bIsConnected, device.eControllerRole, device.szTrackingSystemId, device.szModel, device.szSerial, device.dwDeviceIndex);
-                    args.quirks = ipc::protocol::DeviceQuirks_t::QUIRK_NONE;
+                LOG_CALIB_INFO("  applying device [{}]: class: {} connected: {} role: {} tracking: {} model: {} serial: {} idx: {}", i, device.eDeviceClass, device.bIsConnected, device.eControllerRole, device.szTrackingSystemId, device.szModel, device.szSerial, device.dwDeviceIndex);
+                args.quirks = ipc::protocol::DeviceQuirks_t::QUIRK_NONE;
 
-                    args.translation = eigenAsVrVec3d(calibratedTranslation);
-                    args.rotation = eigenAsVrQuat(calibratedRotation);
-                    args.scale = calibratedScale;
+                args.translation = eigenAsVrVec3d(calibratedTranslation);
+                args.rotation = eigenAsVrQuat(calibratedRotation);
+                args.scale = calibratedScale;
 
-                    // for relative calibrations
-                    args.relativeCoordSystem(isContinuousCalibration() && isRelativeCalibration);
-                    args.calibrateMotionVecs(calibrateMotionVectors);
-                    args.unRelativeReferenceOpenvrDeviceId = referenceDevice.deviceId;
-                    args.unRelativeTargetOpenvrDeviceId = targetDevice.deviceId;
+                // for relative calibrations
+                args.relativeCoordSystem(isContinuousCalibration() && isRelativeCalibration);
+                args.calibrateMotionVecs(calibrateMotionVectors);
+                args.unRelativeReferenceOpenvrDeviceId = referenceDevice.deviceId;
+                args.unRelativeTargetOpenvrDeviceId = targetDevice.deviceId;
 
-                    // should only apply to hmd tracker (eg head tracker)
-                    args.hideContinuousTracker(isContinuousCalibration() && hideContinuousTracker && i == targetDevice.deviceId);
-                    args.lerpCalibrations(isContinuousCalibration());
-                }
+                // should only apply to hmd tracker (eg head tracker)
+                args.hideContinuousTracker(isContinuousCalibration() && hideContinuousTracker && i == targetDevice.deviceId);
+                args.lerpCalibrations(isContinuousCalibration());
 
                 CalibrationManager::getInstance()->m_ipcClient.SetDeviceTransform(args);
             }
