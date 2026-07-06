@@ -72,5 +72,14 @@ if(MSVC)
     add_compile_options($<$<CONFIG:Release>:/Ot> $<$<CONFIG:Release>:/Oi> $<$<CONFIG:Release>:/Gy>)
 endif()
 
+# force relative RPATH for linux so that shared objects may be found relative to the binary (fixes Steam launch)
+if (UNIX AND NOT APPLE)
+	SET(CMAKE_SKIP_BUILD_RPATH FALSE)
+	SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+	SET(CMAKE_INSTALL_RPATH "")
+	SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+    SET(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
+endif()
+
 # Include project
 add_subdirectory ("src")

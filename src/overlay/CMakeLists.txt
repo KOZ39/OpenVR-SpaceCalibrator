@@ -183,6 +183,16 @@ if (MSVC)
     target_compile_options(SpaceCalibratorOverlay PRIVATE /bigobj)
 endif ()
 
+# linux doesn't search for shared libs in the same dir as the overlay, so set this to force it to do so
+if (UNIX AND NOT APPLE)
+    set_target_properties(SpaceCalibratorOverlay PROPERTIES
+        BUILD_WITH_INSTALL_RPATH FALSE
+        INSTALL_RPATH "$ORIGIN"
+        BUILD_RPATH "$ORIGIN"
+        INSTALL_RPATH_USE_LINK_PATH FALSE
+    )
+endif()
+
 set(OVERLAY_BIN_DIR "$<TARGET_FILE_DIR:SpaceCalibratorOverlay>")
 
 # Copy vrmanifest
