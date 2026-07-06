@@ -839,7 +839,23 @@ namespace spacecal {
     
     // applies calibration to all devices under this tracking system
     void TrackingSystemCalibration::apply() {
-        this->isActive = calibrationError == CalibrationError::None;
+
+        // check if the hmd and tracker are both valid before applying a calibration. if one of them is invalid we shouldnt trust the calibration as its most likely stale anyway
+        bool calibrationDevicesAreValid = true;
+        if (referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
+            auto refPose = CalibrationManager::getInstance()->m_poses[referenceDevice.deviceId];
+            if (!refPose.deviceIsConnected || !refPose.poseIsValid) {
+                calibrationDevicesAreValid = false;
+            }
+        }
+        if (targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
+            auto targetPose = CalibrationManager::getInstance()->m_poses[targetDevice.deviceId];
+            if (!targetPose.deviceIsConnected || !targetPose.poseIsValid) {
+                calibrationDevicesAreValid = false;
+            }
+        }
+
+        this->isActive = ((calibrationError != CalibrationError::None) && !calibrationDevicesAreValid);
 
         auto hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
         if (this->hmdIsInReferenceTrackingSystem && hmdDevice.szTrackingSystemId != referenceDevice.trackingSystem) {
