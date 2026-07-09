@@ -5,6 +5,11 @@
 
 namespace ImGui
 {
+	namespace fonts {
+		extern ImFont* pDefault; // default font used everywhere implicitly
+		extern ImFont* pHeading;
+	}
+
 	#define IM_COL32_SET_ALPHA(col, alpha) \
 		(((col) & ~(0xFF << IM_COL32_A_SHIFT)) | (((ImU32)(alpha) & 0xFF) << IM_COL32_A_SHIFT))
 
@@ -15,13 +20,12 @@ namespace ImGui
 	void EndGroupPanel();
 
 	inline void TextHeading(const char* fmt, ...) {
-		// @TODO: push pop font
-		// PushStyleColor(ImGuiCol_Text, col);
+		PushFont(fonts::pHeading);
 		va_list args;
 		va_start(args, fmt);
 		TextV(fmt, args);
 		va_end(args);
-		// PopStyleColor();
+		PopFont();
 	}
 
 	// @TODO: remove begin child crap? it seems more problematic here

@@ -2,6 +2,11 @@
 
 #include "imgui_internal.h"
 
+namespace ImGui::fonts {
+    ImFont* pDefault = nullptr;
+    ImFont* pHeading = nullptr;
+}
+
 static ImVector<ImRect> s_GroupPanelLabelStack;
 
 void ImGui::BeginGroupPanel(const char* name, const ImVec2& size)

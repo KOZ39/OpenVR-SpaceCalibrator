@@ -13,6 +13,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <imgui/backends/imgui_impl_glfw.h>
+#include "imgui_extensions.h"
 
 #if OS_WINDOWS
 #include <dwmapi.h>
@@ -114,12 +115,26 @@ namespace spacecal {
         ImFontConfig cfg;
         // io.Fonts->AddFontFromMemoryCompressedTTF(DroidSans_compressed_data, DroidSans_compressed_size, 24.0f, &cfg);
         // @FIXME: embed fonts later
+
+        static const ImWchar k_RANGE_CORE_LATIN[] = { 0x0020, 0x00FF, 0, };
+
+        // default font
         std::string fontPath = (platform::getExeDir() / "assets" / "fonts" / "Poppins-Regular.ttf").string();
         cfg.MergeMode = false;
-        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+        ImGui::fonts::pDefault = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
         fontPath = (platform::getExeDir() / "assets" / "fonts" / "MPLUS1p-Regular.ttf").string();
-        static const ImWchar k_RANGE_CORE_LATIN[] = { 0x0020, 0x00FF, 0, };
+        cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.MergeMode = true;
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+
+        // bold font
+        fontPath = (platform::getExeDir() / "assets" / "fonts" / "Poppins-Bold.ttf").string();
+        cfg.GlyphExcludeRanges = NULL;
+        cfg.MergeMode = false;
+        ImGui::fonts::pHeading = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+
+        fontPath = (platform::getExeDir() / "assets" / "fonts" / "MPLUS1p-Bold.ttf").string();
         cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
         cfg.MergeMode = true;
         io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
