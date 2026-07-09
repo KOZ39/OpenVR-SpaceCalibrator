@@ -183,6 +183,10 @@ namespace platform {
     void launchDirInFileBrowser(const std::string& szDirectory) {
         // @TODO: impl
     }
+    
+    void launchWebpage(const std::string& szUrl) {
+        // @TODO: impl
+    }
 
     void setThreadName(const std::string& threadName) {
         // thread name has max 16 chars

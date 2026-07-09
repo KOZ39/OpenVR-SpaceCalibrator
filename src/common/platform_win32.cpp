@@ -90,6 +90,10 @@ namespace platform {
         // @TODO: impl
     }
 
+    void launchWebpage(const std::string& szUrl) {
+        // @TODO: impl
+    }
+
     void setThreadName(const std::string& threadName) {
         std::wstring szWinThreadName(threadName.size(), L' ');
         szWinThreadName.resize(std::mbstowcs(&szWinThreadName[0], threadName.c_str(), threadName.size()));

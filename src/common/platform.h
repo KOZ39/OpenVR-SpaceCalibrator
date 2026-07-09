@@ -72,6 +72,8 @@ namespace platform {
 
     // opens the directory in the OS' file brower
     void launchDirInFileBrowser(const std::string& szDirectory);
+    // launches a url in the default web browser
+    void launchWebpage(const std::string& szUrl);
 
     void setThreadName(const std::string& threadName);
 

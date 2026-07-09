@@ -220,7 +220,7 @@ namespace spacecal {
             ImGui::PopID();
         }
 
-        if (selected != device.deviceId) {
+        if (selected != device.deviceId && selected < vr::k_unMaxTrackedDeviceCount) {
             auto vrDevice = VRState::getInstance()->getVrDevice(selected);
             device.deviceId = selected;
             device.trackingSystem = vrDevice.szTrackingSystemId;
@@ -570,7 +570,16 @@ namespace spacecal {
 
     void page_about() {
         ImGui::TextHeading("%s", "About");
-        ImGui::TextDisabled("COMING LATER");
+
+        ImGui::Text("Space Calibrator is a free and open source tool to allow you to use multiple vendors' devices together with SteamVR.");
+
+        if (ImGui::Button("GitHub Link")) {
+            platform::launchWebpage("https://github.com/hyblocker/OpenVR-SpaceCalibrator");
+        }
+
+        // ImGui::InputTextMultiline();
+
+        ImGui::TextDisabled("LICENSES HERE");
     }
 
     // UI CORE LAYOUT
@@ -578,7 +587,9 @@ namespace spacecal {
     SpaceCalibratorVerticalTab_t g_spaceCalUiTabs[] = {
         { .szLocaleKey = "tab_page_calibration", .fnDrawTab = page_calibration, },
         { .szLocaleKey = "tab_page_graphs", .fnDrawTab = page_graphs, },
+#if 0 // @TEMP: will re-introduce in v2.1 as this is a nice to have and not strictly necessary right now
         { .szLocaleKey = "tab_page_base_station_management", .fnDrawTab = page_base_station_management, },
+#endif
         { .szLocaleKey = "tab_page_settings", .fnDrawTab = page_settings, },
 #if _DEBUG || 1 // @TODO: reserved exclusively for debug mode, may make sense to enable with a flag?
         { .szLocaleKey = "tab_page_debug", .fnDrawTab = page_debug, },
