@@ -848,6 +848,7 @@ namespace spacecal {
                 calibrationDevicesAreValid = false;
             }
         }
+
         if (targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
             auto targetPose = CalibrationManager::getInstance()->m_poses[targetDevice.deviceId];
             if (!targetPose.deviceIsConnected || !targetPose.poseIsValid) {
@@ -855,7 +856,7 @@ namespace spacecal {
             }
         }
 
-        this->isActive = ((calibrationError != CalibrationError::None) && !calibrationDevicesAreValid);
+        this->isActive = ((calibrationError == CalibrationError::None) && calibrationDevicesAreValid);
 
         auto hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
         if (this->hmdIsInReferenceTrackingSystem && hmdDevice.szTrackingSystemId != referenceDevice.trackingSystem) {
