@@ -10,6 +10,7 @@ namespace spacecal {
 
     constexpr double k_TICK_RATE_HZ = 20.0; // tick rate spacecal's internal logic runs at
     constexpr double k_MAX_INVALID_CALIBRATION_TIME_SEC = 60.0; // 60s between invalid calibrations
+    constexpr double k_IPC_CONNECTION_RETRY_INTERVAL_SEC = 0.25; // 250ms between IPC connection attempts
 
     // thresholds and bounds to ensure the underlying mathematical algorithms maintain a high enough accuracy to be useful for real-world use.
     constexpr double k_MAX_RETARGETING_RMS_ERROR_THRESHOLD = 0.1;
@@ -243,6 +244,7 @@ namespace spacecal {
     private:
 
         double m_wantedUpdateInterval = 1.0;
+        double m_lastIpcConnectionAttemptTime = 0.0;
         bool m_needToApplyTransformsAfterInit = false;
 
     public: // @HACK: i just want something in the ui for now
