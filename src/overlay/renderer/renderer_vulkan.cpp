@@ -7,6 +7,8 @@
 
 namespace spacecal {
     namespace renderer {
+        constexpr uint32_t k_VULKAN_API_VERSION = VK_API_VERSION_1_3;
+
         Renderer_Vulkan::~Renderer_Vulkan() {}
 
         [[nodiscard]] inline bool check_vk_result(VkResult err) {
@@ -198,7 +200,7 @@ namespace spacecal {
             ImGui_ImplVulkanH_CreateOrResizeWindow(m_instance, m_physicalDevice, m_device, &m_mainWindowData, m_queueFamily, m_allocator, width, height, m_minImageCount, 0);
 
             ImGui_ImplVulkan_InitInfo init_info = {};
-            //init_info.ApiVersion = VK_API_VERSION_1_3;              // Pass in your value of VkApplicationInfo::apiVersion, otherwise will default to header version.
+            init_info.ApiVersion = k_VULKAN_API_VERSION;
             init_info.Instance = m_instance;
             init_info.PhysicalDevice = m_physicalDevice;
             init_info.Device = m_device;
@@ -380,8 +382,18 @@ namespace spacecal {
 
             // Create Vulkan Instance
             {
+                VkApplicationInfo app_info = {
+                    .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+                    .pApplicationName = "Space Calibrator",
+                    .applicationVersion = 1,
+                    .pEngineName = "Space Calibrator Nova CORE",
+                    .engineVersion = 2,
+                    .apiVersion = k_VULKAN_API_VERSION,
+                };
+
                 VkInstanceCreateInfo create_info = {
                     .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+                    .pApplicationInfo = &app_info,
                 };
 
                 // Enumerate available extensions
