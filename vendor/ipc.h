@@ -134,6 +134,7 @@ bool ipc_client_read_shared_memory(IpcHandle_t hIpcClient, IpcOperation_t ipcOpe
 #include <windows.h>
 #elif IPC_OS_LINUX
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <semaphore.h>
 #include <sys/stat.h>
