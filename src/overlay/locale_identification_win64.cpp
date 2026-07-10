@@ -34,7 +34,7 @@ namespace spacecal {
 
     // This is a clusterfuck which maps EVERY SINGLE WINDOWS DIALECT to a locale
     // supported by this overlay. See
-    // https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-LCID/[MS-LCID].pdf
+    // https://winprotocoldoc.z19.web.core.windows.net/MS-LCID/%5bMS-LCID%5d.pdf
     // for more info. We map Windows provided language codes to Locales. Actually
     // its not every dialect supported by windows, just the ones which map to a
     // language the overlay supports. This is to remove a lot of strings from the
