@@ -199,28 +199,14 @@ namespace spacecal {
 
         if (calibrateMotionVecs) {
             // velocity
-            // SRT order
             pose.vecVelocity[0] *= scale;
             pose.vecVelocity[1] *= scale;
             pose.vecVelocity[2] *= scale;
-            vr::HmdVector3d_t rotatedVelocityRel = quaternionRotateVector(rotation, pose.vecVelocity);
-            copyVec3(pose.vecVelocity, rotatedVelocityRel);
 
             // acceleration
-            // SRT order
             pose.vecAcceleration[0] *= scale;
             pose.vecAcceleration[1] *= scale;
             pose.vecAcceleration[2] *= scale;
-            vr::HmdVector3d_t rotatedAccelerationRel = quaternionRotateVector(rotation, pose.vecAcceleration);
-            copyVec3(pose.vecAcceleration, rotatedAccelerationRel);
-
-            // angular velocity
-            vr::HmdVector3d_t rotatedAngularVelRel = quaternionRotateVector(rotation, pose.vecAngularVelocity);
-            copyVec3(pose.vecAngularVelocity, rotatedAngularVelRel);
-
-            // angular accel
-            vr::HmdVector3d_t rotatedAngularAccel = quaternionRotateVector(rotation, pose.vecAngularAcceleration);
-            copyVec3(pose.vecAngularAcceleration, rotatedAngularAccel);
         }
     }
 
