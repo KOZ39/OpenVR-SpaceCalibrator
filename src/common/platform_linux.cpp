@@ -180,7 +180,7 @@ namespace platform {
         }
     }
 
-    void launchDirInFileBrowser(const std::string& szDirectory) {
+    void launchDirInFileBrowser(const std::filesystem::path& szDirectory) {
         // @TODO: impl
     }
     

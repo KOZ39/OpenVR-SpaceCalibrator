@@ -86,8 +86,8 @@ namespace platform {
         MessageBoxA(nullptr, message.c_str(), title.c_str(), 0);
     }
 
-    void launchDirInFileBrowser(const std::string& szDirectory) {
         // @TODO: impl
+    void launchDirInFileBrowser(const std::filesystem::path& szDirectory) {
     }
 
     void launchWebpage(const std::string& szUrl) {

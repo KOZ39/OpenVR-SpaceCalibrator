@@ -71,7 +71,7 @@ namespace platform {
     void showMessageDialog(const std::string& title, const std::string& message);
 
     // opens the directory in the OS' file brower
-    void launchDirInFileBrowser(const std::string& szDirectory);
+    void launchDirInFileBrowser(const std::filesystem::path& szDirectory);
     // launches a url in the default web browser
     void launchWebpage(const std::string& szUrl);
 
