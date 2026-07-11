@@ -47,6 +47,7 @@ namespace spacecal {
 
         void Renderer_DX11::shutdown() {
             ImGui_ImplDX11_Shutdown();
+            cleanup_d3d_device();
         }
 
         void Renderer_DX11::newFrame() {
