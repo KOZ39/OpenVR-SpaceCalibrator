@@ -25,3 +25,6 @@
 [submodule "vendor/Vulkan-Headers"]
 	path = vendor/Vulkan-Headers
 	url = https://github.com/KhronosGroup/Vulkan-Headers.git
+[submodule "vendor/implot"]
+	path = vendor/implot
+	url = https://github.com/epezent/implot
