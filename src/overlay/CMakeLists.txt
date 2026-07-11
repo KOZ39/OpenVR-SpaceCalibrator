@@ -147,6 +147,7 @@ target_include_directories(SpaceCalibratorOverlay
 target_link_libraries(SpaceCalibratorOverlay
     PRIVATE SpaceCalibratorCommon
     PRIVATE imgui
+    PRIVATE implot
     PRIVATE glad
     PRIVATE glfw
     PRIVATE fmt

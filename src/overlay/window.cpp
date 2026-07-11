@@ -105,7 +105,7 @@ namespace spacecal {
         stbi_image_free(images[0].pixels);
 
         ImGui::CreateContext();
-        // ImPlot::CreateContext();
+        ImPlot::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
@@ -165,7 +165,7 @@ namespace spacecal {
         m_graphicsContext->shutdown();
         ImGui_ImplGlfw_Shutdown();
 
-        // ImPlot::DestroyContext();
+        ImPlot::DestroyContext();
         ImGui::DestroyContext();
 
         if (m_glfwWindow)

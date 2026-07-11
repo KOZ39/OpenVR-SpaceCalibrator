@@ -38,6 +38,18 @@ add_library(imgui STATIC
 target_include_directories(imgui PUBLIC ${CMAKE_SOURCE_DIR}/vendor/imgui)
 target_compile_definitions(imgui PRIVATE IMGUI_DEFINE_MATH_OPERATORS)
 
+# ImPlot
+message("Adding ImPlot...")
+add_library(implot STATIC
+	${CMAKE_SOURCE_DIR}/vendor/implot/implot.cpp
+	${CMAKE_SOURCE_DIR}/vendor/implot/implot_demo.cpp
+	${CMAKE_SOURCE_DIR}/vendor/implot/implot_items.cpp)
+target_include_directories(implot
+	PUBLIC ${CMAKE_SOURCE_DIR}/vendor/imgui
+	PUBLIC ${CMAKE_SOURCE_DIR}/vendor/implot)
+target_compile_definitions(implot PRIVATE IMGUI_DEFINE_MATH_OPERATORS)
+target_link_libraries(implot PRIVATE imgui)
+
 # fmt
 message("Adding fmt...")
 set(BUILD_SHARED_LIBS FALSE)
@@ -69,6 +81,7 @@ if (WIN32)
 
 	set_property(TARGET minhook PROPERTY FOLDER "vendor") 
 	set_property(TARGET imgui PROPERTY FOLDER "vendor")
+	set_property(TARGET implot PROPERTY FOLDER "vendor")
 	set_property(TARGET fmt PROPERTY FOLDER "vendor")
 	set_property(TARGET quill PROPERTY FOLDER "vendor")
 	set_property(TARGET glad PROPERTY FOLDER "vendor")
