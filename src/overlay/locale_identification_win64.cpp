@@ -52,7 +52,6 @@ namespace spacecal {
             {L"zh-HK", Locale::Chinese_Traditional},
             {L"zh-MO", Locale::Chinese_Traditional},
             {L"zh-TW", Locale::Chinese_Traditional},
-            {L"cu-RU", Locale::Chinese_Traditional},
 
             {L"cs", Locale::Czech},
             {L"cs-CZ", Locale::Czech},
@@ -294,6 +293,7 @@ namespace spacecal {
             {L"ru-MD", Locale::Russian},
             {L"ru-RU", Locale::Russian},
             {L"ru-UA", Locale::Russian},
+            {L"cu-RU", Locale::Russian},
 
             {L"es", Locale::Spanish_Spain},
             {L"es-AR", Locale::Spanish_LatinAmerica},
