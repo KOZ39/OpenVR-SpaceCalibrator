@@ -46,6 +46,8 @@ int entry_point(int argc, char* argv[]) {
 
     // default to dx11 on windows and vk on linux
 #if OS_WINDOWS
+    // init COM
+    (void) CoInitializeEx(NULL, COINIT_MULTITHREADED);
     spacecal::renderer::GraphicsBackend eGraphicsApi = spacecal::renderer::GraphicsBackend::DirectX11;
 #else
     spacecal::renderer::GraphicsBackend eGraphicsApi = spacecal::renderer::GraphicsBackend::Vulkan;
@@ -107,6 +109,10 @@ int entry_point(int argc, char* argv[]) {
 
     // releases global mutex, ie allows other instances to run
     platform::shutdownCurrentInstance();
+
+#if OS_WINDOWS
+    CoUninitialize();
+#endif
 
     return 0;
 }

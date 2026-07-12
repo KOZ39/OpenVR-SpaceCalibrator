@@ -10,6 +10,7 @@
 #include <shlobj.h>
 #include <knownfolders.h>
 #include <combaseapi.h>
+#include <shellapi.h>
 
 namespace platform {
     std::filesystem::path getUserConfigDir() {
@@ -86,12 +87,25 @@ namespace platform {
         MessageBoxA(nullptr, message.c_str(), title.c_str(), 0);
     }
 
-        // @TODO: impl
     void launchDirInFileBrowser(const std::filesystem::path& szDirectory) {
+        PIDLIST_ABSOLUTE nativeFolder = ILCreateFromPathW(szDirectory.c_str());
+        if (!nativeFolder) {
+            return;
+        }
+
+        PCUITEMID_CHILD_ARRAY fileArray = (PCUITEMID_CHILD_ARRAY)&nativeFolder;
+        HRESULT hr = SHOpenFolderAndSelectItems(nativeFolder, 1, fileArray, 0);
+
+        if (FAILED(hr)) {
+            ShellExecuteW(NULL, L"open", L"explorer.exe", szDirectory.c_str(), NULL, SW_SHOWNORMAL);
+        }
+
+        CoTaskMemFree(nativeFolder);
     }
 
     void launchWebpage(const std::string& szUrl) {
-        // @TODO: impl
+        // https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/224816#How_ShellExecute_Interprets_the_URL_Passed
+        ShellExecuteA(NULL, "open", szUrl.c_str(), NULL, NULL, SW_SHOWNORMAL);
     }
 
     void setThreadName(const std::string& threadName) {
