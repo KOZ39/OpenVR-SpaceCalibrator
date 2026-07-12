@@ -46,7 +46,7 @@ namespace spacecal {
             VkDescriptorPool         m_descriptorPool = VK_NULL_HANDLE;
 
             ImGui_ImplVulkanH_Window m_mainWindowData = {};
-            uint32_t                 m_minImageCount = 2;
+            uint32_t                 m_minImageCount = 3;
             bool                     m_swapChainRebuild = false;
 
             vr::VRVulkanTextureData_t m_vrTextureData = {};

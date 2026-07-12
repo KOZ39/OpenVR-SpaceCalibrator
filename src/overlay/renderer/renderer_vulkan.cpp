@@ -418,12 +418,12 @@ namespace spacecal {
 #endif
 
                 // Enabling validation layers
-#if defined(_DEBUG) || defined(APP_USE_VULKAN_DEBUG_REPORT)
+#if defined(_DEBUG) || defined(RENDER_USE_VULKAN_DEBUG_REPORT)
                 const char* layers[] = { "VK_LAYER_KHRONOS_validation" };
                 create_info.enabledLayerCount = 1;
                 create_info.ppEnabledLayerNames = layers;
                 instance_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-#endif
+#endif // RENDER_USE_VULKAN_DEBUG_REPORT
 
                 // Create Vulkan Instance
                 create_info.enabledExtensionCount = (uint32_t)instance_extensions.Size;
@@ -435,7 +435,7 @@ namespace spacecal {
                 volkLoadInstance(m_instance);
 
                 // Setup the debug report callback
-#if defined(_DEBUG) || defined(APP_USE_VULKAN_DEBUG_REPORT)
+#if defined(_DEBUG) || defined(RENDER_USE_VULKAN_DEBUG_REPORT)
                 auto f_vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(m_instance, "vkCreateDebugReportCallbackEXT");
                 IM_ASSERT(f_vkCreateDebugReportCallbackEXT != nullptr);
                 VkDebugReportCallbackCreateInfoEXT debug_report_ci = {
@@ -448,7 +448,7 @@ namespace spacecal {
                 if (!check_vk_result(err)) {
                     return false;
                 }
-#endif
+#endif // RENDER_USE_VULKAN_DEBUG_REPORT
             }
 
             // Select Physical Device (GPU)
