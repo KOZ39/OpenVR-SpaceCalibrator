@@ -28,3 +28,6 @@
 [submodule "vendor/implot"]
 	path = vendor/implot
 	url = https://github.com/epezent/implot
+[submodule "vendor/simpleble"]
+	path = vendor/simpleble
+	url = https://github.com/simpleble/simpleble
