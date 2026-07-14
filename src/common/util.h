@@ -19,3 +19,5 @@ namespace util {
 #include <assert.h>
 #define ASSERT(cond, msg) assert(cond)
 #endif
+
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))

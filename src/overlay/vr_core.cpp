@@ -286,12 +286,6 @@ namespace spacecal {
                 // why its not populated is beyond me but oh well
                 m_bStateDirty = true;
                 break;
-            case vr::EVREventType::VREvent_TrackedDeviceUserInteractionStarted: // something may have happened
-            case vr::EVREventType::VREvent_TrackedDeviceUserInteractionEnded: // something may have happened
-            case vr::EVREventType::VREvent_TrackersSectionSettingChanged: // tracker role
-                LOG_OPENVR_INFO("Unknown tracker event at index {}", vrEvent.trackedDeviceIndex);
-                m_bStateDirty = true;
-                break;
 
             // suspect: lighthouse "universe" jumps are actually chaperone being weird
             case vr::EVREventType::VREvent_ChaperoneDataHasChanged:
@@ -331,13 +325,95 @@ namespace spacecal {
                 LOG_OPENVR_INFO("Chaperone unk 811 event at index {}", vrEvent.trackedDeviceIndex);
                 break;
 
-                // @TODO: inform the calibration algorithm about this state? need to test
+                // @TODO: inform the calibration algorithm about these states? need to test
             case vr::EVREventType::VREvent_EnterStandbyMode:
                 break;
             case vr::EVREventType::VREvent_LeaveStandbyMode:
-            break;
+                break;
+
             // @HACK: catch a bunch of dont cares here
             case vr::EVREventType::VREvent_Input_HapticVibration:
+            case vr::EVREventType::VREvent_PropertyChanged:
+            case vr::EVREventType::VREvent_Reserved_0114: // no fucking clue what it is but steamvr spams it
+
+            case vr::EVREventType::VREvent_BackgroundSettingHasChanged:
+            case vr::EVREventType::VREvent_CameraSettingsHaveChanged:
+            case vr::EVREventType::VREvent_ReprojectionSettingHasChanged:
+            case vr::EVREventType::VREvent_ModelSkinSettingsHaveChanged:
+            case vr::EVREventType::VREvent_EnvironmentSettingsHaveChanged:
+            case vr::EVREventType::VREvent_PowerSettingsHaveChanged:
+            case vr::EVREventType::VREvent_EnableHomeAppSettingsHaveChanged:
+            case vr::EVREventType::VREvent_SteamVRSectionSettingChanged:
+            case vr::EVREventType::VREvent_LighthouseSectionSettingChanged:
+            case vr::EVREventType::VREvent_NullSectionSettingChanged:
+            case vr::EVREventType::VREvent_UserInterfaceSectionSettingChanged:
+            case vr::EVREventType::VREvent_NotificationsSectionSettingChanged:
+            case vr::EVREventType::VREvent_KeyboardSectionSettingChanged:
+            case vr::EVREventType::VREvent_PerfSectionSettingChanged:
+            case vr::EVREventType::VREvent_DashboardSectionSettingChanged:
+            case vr::EVREventType::VREvent_WebInterfaceSectionSettingChanged:
+            case vr::EVREventType::VREvent_TrackersSectionSettingChanged:
+            case vr::EVREventType::VREvent_LastKnownSectionSettingChanged:
+            case vr::EVREventType::VREvent_DismissedWarningsSectionSettingChanged:
+            case vr::EVREventType::VREvent_GpuSpeedSectionSettingChanged:
+            case vr::EVREventType::VREvent_WindowsMRSectionSettingChanged:
+            case vr::EVREventType::VREvent_OtherSectionSettingChanged:
+            case vr::EVREventType::VREvent_AnyDriverSettingsChanged:
+
+            case vr::EVREventType::VREvent_ButtonPress:
+            case vr::EVREventType::VREvent_ButtonUnpress:
+            case vr::EVREventType::VREvent_ButtonTouch:
+            case vr::EVREventType::VREvent_ButtonUntouch:
+            case vr::EVREventType::VREvent_Modal_Cancel:
+            case vr::EVREventType::VREvent_MouseMove:
+            case vr::EVREventType::VREvent_MouseButtonDown:
+            case vr::EVREventType::VREvent_MouseButtonUp:
+            case vr::EVREventType::VREvent_FocusEnter:
+            case vr::EVREventType::VREvent_FocusLeave:
+            case vr::EVREventType::VREvent_ScrollDiscrete:
+            case vr::EVREventType::VREvent_TouchPadMove:
+            case vr::EVREventType::VREvent_OverlayFocusChanged:
+            case vr::EVREventType::VREvent_ReloadOverlays:
+            case vr::EVREventType::VREvent_ScrollSmooth:
+            case vr::EVREventType::VREvent_LockMousePosition:
+            case vr::EVREventType::VREvent_UnlockMousePosition:
+            case vr::EVREventType::VREvent_InputFocusCaptured:
+            case vr::EVREventType::VREvent_InputFocusReleased:
+            case vr::EVREventType::VREvent_SceneApplicationChanged:
+            case vr::EVREventType::VREvent_InputFocusChanged:
+            case vr::EVREventType::VREvent_SceneApplicationUsingWrongGraphicsAdapter:
+            case vr::EVREventType::VREvent_ActionBindingReloaded:
+            case vr::EVREventType::VREvent_HideRenderModels:
+            case vr::EVREventType::VREvent_ShowRenderModels:
+            case vr::EVREventType::VREvent_SceneApplicationStateChanged:
+            case vr::EVREventType::VREvent_SceneAppPipeDisconnected:
+                
+            case vr::EVREventType::VREvent_RequestScreenshot:
+            case vr::EVREventType::VREvent_ScreenshotTaken:
+            case vr::EVREventType::VREvent_ScreenshotFailed:
+            case vr::EVREventType::VREvent_SubmitScreenshotToDashboard:
+            case vr::EVREventType::VREvent_ScreenshotProgressToDashboard:
+
+            case vr::EVREventType::VREvent_PrimaryDashboardDeviceChanged:
+            case vr::EVREventType::VREvent_RoomViewShown:
+            case vr::EVREventType::VREvent_RoomViewHidden:
+            case vr::EVREventType::VREvent_ShowUI:
+            case vr::EVREventType::VREvent_ShowDevTools:
+            case vr::EVREventType::VREvent_DesktopViewUpdating:
+            case vr::EVREventType::VREvent_DesktopViewReady:
+
+            case vr::EVREventType::VREvent_StartDashboard:
+            case vr::EVREventType::VREvent_ElevatePrism:
+            case vr::EVREventType::VREvent_OverlayClosed:
+            case vr::EVREventType::VREvent_DashboardThumbChanged:
+            case vr::EVREventType::VREvent_DesktopMightBeVisible:
+            case vr::EVREventType::VREvent_DesktopMightBeHidden:
+            case vr::EVREventType::VREvent_MutualSteamCapabilitiesChanged:
+            case vr::EVREventType::VREvent_OverlayCreated:
+            case vr::EVREventType::VREvent_OverlayDestroyed:
+
+            case vr::EVREventType::VREvent_TrackedDeviceUserInteractionStarted:
+            case vr::EVREventType::VREvent_TrackedDeviceUserInteractionEnded:
                 break;
 
             default:
