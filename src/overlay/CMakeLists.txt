@@ -142,6 +142,8 @@ target_include_directories(SpaceCalibratorOverlay
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/fmt/include
     PUBLIC ${CMAKE_SOURCE_DIR}/vendor/glaze/include
     PRIVATE ${CMAKE_SOURCE_DIR}/vendor/eigen
+    PRIVATE ${CMAKE_SOURCE_DIR}/vendor/simpleble/simpleble/include
+    PRIVATE ${CMAKE_SOURCE_DIR}/vendor/simpleble/simplecble/include
 )
 
 target_link_libraries(SpaceCalibratorOverlay
@@ -153,6 +155,8 @@ target_link_libraries(SpaceCalibratorOverlay
     PRIVATE fmt
     PRIVATE quill
     PRIVATE volk
+    PRIVATE simpleble
+    PRIVATE simplecble
     PRIVATE ${OPENVR_LIBRARIES})
 
 target_compile_definitions(SpaceCalibratorOverlay
@@ -170,7 +174,8 @@ if (WIN32)
         PRIVATE dxgi.lib
         PRIVATE d3d11.lib
         PRIVATE d3dcompiler.lib
-        PRIVATE dwmapi.lib)
+        PRIVATE dwmapi.lib
+        PRIVATE Bthprops.lib)
 
     target_compile_definitions(SpaceCalibratorOverlay
         PRIVATE NOMINMAX

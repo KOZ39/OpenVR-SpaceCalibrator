@@ -74,10 +74,25 @@ add_subdirectory(Vulkan-Headers)
 message ("Adding volk...")
 add_subdirectory(volk)
 
+# simpleble (for base station management)
+add_subdirectory(simpleble/simplecble)
+target_compile_definitions(simpleble PRIVATE _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
+target_compile_definitions(simplecble PRIVATE _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
+# make simpleble use static fmt
+get_target_property(SIMPLEBLE_DEFS simpleble COMPILE_DEFINITIONS)
+if(SIMPLEBLE_DEFS)
+    list(REMOVE_ITEM SIMPLEBLE_DEFS "FMT_HEADER_ONLY")
+    set_target_properties(simpleble PROPERTIES  COMPILE_DEFINITIONS "${SIMPLEBLE_DEFS}")
+endif()
+target_link_libraries(simpleble PRIVATE fmt)
+
 # Assign solution dirs
 if (WIN32)
 	set_property(TARGET glfw PROPERTY FOLDER "vendor/glfw")
 	set_property(TARGET update_mappings PROPERTY FOLDER "vendor/glfw")
+
+	set_property(TARGET simpleble PROPERTY FOLDER "vendor/simpleble")
+	set_property(TARGET simplecble PROPERTY FOLDER "vendor/simpleble")
 
 	set_property(TARGET minhook PROPERTY FOLDER "vendor") 
 	set_property(TARGET imgui PROPERTY FOLDER "vendor")
