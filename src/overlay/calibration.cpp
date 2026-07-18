@@ -181,6 +181,10 @@ namespace spacecal {
 
         auto crossCV = refPoints.transpose() * targetPoints;
         auto svd = crossCV.bdcSvd<Eigen::ComputeThinU | Eigen::ComputeThinV>();
+        if (svd.info() != Eigen::Success) {
+            LOG_CALIB_WARN("Failed to compute rotational SVD! Aborting calibration...");
+            return Eigen::Quaterniond(0, 0, 0, 0);
+        }
 
         Eigen::Matrix3d i = Eigen::Matrix3d::Identity();
         if ((svd.matrixU() * svd.matrixV().transpose()).determinant() < 0) {
@@ -810,9 +814,9 @@ namespace spacecal {
     
     void TrackingSystemCalibration::assignTarget(CalibrationDevice& device) {
         if (device.deviceId == vr::k_unTrackedDeviceIndexInvalid) {
-            LOG_CALIB_INFO("Assigning device from tracking system {}; model: {} SN: ({})...", device.trackingSystem, device.deviceModel, device.deviceSerialNumber);
             auto theDevice = VRState::getInstance()->findVrDevice(device.trackingSystem, device.deviceModel, device.deviceSerialNumber);
             if (theDevice.bIsConnected && theDevice.dwDeviceIndex < vr::k_unMaxTrackedDeviceCount) {
+                LOG_CALIB_INFO("Assigning device from tracking system {}; model: {} SN: ({})...", device.trackingSystem, device.deviceModel, device.deviceSerialNumber);
                 device.deviceId = theDevice.dwDeviceIndex;
             }
         }
@@ -841,7 +845,7 @@ namespace spacecal {
     void TrackingSystemCalibration::apply() {
 
         // check if the hmd and tracker are both valid before applying a calibration. if one of them is invalid we shouldnt trust the calibration as its most likely stale anyway
-        bool calibrationDevicesAreValid = true;
+        bool calibrationDevicesAreValid = targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount && referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount;
         if (referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
             auto refPose = CalibrationManager::getInstance()->m_poses[referenceDevice.deviceId];
             if (!refPose.deviceIsConnected || !refPose.poseIsValid) {
@@ -871,7 +875,7 @@ namespace spacecal {
             return;
         }
 
-        LOG_CALIB_INFO("Applying calibration....");
+        LOG_CALIB_INFO("Applying calibration...");
         for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
             auto device = VRState::getInstance()->getVrDevice(i);
             if (device.eDeviceClass != vr::TrackedDeviceClass_Invalid) {
@@ -910,6 +914,7 @@ namespace spacecal {
     CalibrationManager::CalibrationManager() {
         if (s_instance != nullptr) {
             LOG_FATAL("Tried creating CalibrationManager more than once! Breaking singleton. Aborting...");
+            return;
         }
         s_instance = this;
 

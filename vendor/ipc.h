@@ -310,6 +310,9 @@ IpcHandle_t ipc_server_init(IpcCreateArguments_t args) {
         handleInternal->registed_functions.push_back(func);
     }
 
+    // init shared memory to zeros
+    memset(handleInternal->pSharedMemory, 0, totalSharedMemSize);
+
     handleInternal->is_running = true;
     handleInternal->poll_thread = std::thread(__internal_ipc_server_poll_requests, (IpcHandle_t)handleInternal);
 
