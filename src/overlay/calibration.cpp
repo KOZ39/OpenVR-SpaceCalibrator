@@ -244,6 +244,12 @@ namespace spacecal {
         }
 
         auto svd = coefficients.bdcSvd<Eigen::ComputeThinU | Eigen::ComputeThinV>();
+
+        if (svd.info() != Eigen::Success) {
+            LOG_CALIB_WARN("Failed to compute numerically stable translation SVD! Aborting calibration...");
+            return Eigen::Vector3d(NAN, NAN, NAN);
+        }
+
         Eigen::Vector3d singularValues = svd.singularValues();
 
         // min singular value represents how varied the motion is
