@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <errno.h>
+#include <vector>
+#include <string>
 
 namespace platform {
     constexpr int INVALID_FD = -1;
@@ -126,66 +128,65 @@ namespace platform {
         }
     }
 
-    void showMessageDialog(const std::string& title, const std::string& message) {
-        LOG_INFO("displaying dialog [{}]: {}", title, message);
-
+    bool spawnProcess(const std::string& executable, const std::vector<std::string>& arguments, bool bWaitForExit = false, bool bSuppressStderr = true) {
         pid_t pid = fork();
 
         if (pid == 0) {
-            // child process
+            // child proc
+            if (bSuppressStderr) {
+                int nullFd = open("/dev/null", O_WRONLY);
+                if (nullFd != -1) {
+                    dup2(nullFd, STDERR_FILENO);
+                    close(nullFd);
+                }
+            }
 
-            // redirect stderr to /dev/null to keep the console clean if tools are missing
-            int nullFd = open("/dev/null", O_WRONLY);
-            dup2(nullFd, STDERR_FILENO);
-            close(nullFd);
+            std::vector<char*> argv;
+            argv.push_back(const_cast<char*>(executable.c_str()));
+            for (const auto& arg : arguments) {
+                argv.push_back(const_cast<char*>(arg.c_str()));
+            }
+            argv.push_back(nullptr);
 
-            // try invoking cli tools which provide a gui
-            // order of choice -> KDE -> GNOME -> notification
-            char* kdialogArgs[] = {
-                (char*)"kdialog",
-                (char*)"--title", (char*)title.c_str(),
-                (char*)"--error", (char*)message.c_str(),
-                nullptr
-            };
-            execvp(kdialogArgs[0], kdialogArgs);
-
-            char* zenityArgs[] = {
-                (char*)"zenity",
-                (char*)"--error",
-                (char*)"--title", (char*)title.c_str(),
-                (char*)"--text", (char*)message.c_str(),
-                (char*)"--width=300",
-                nullptr
-            };
-            execvp(zenityArgs[0], zenityArgs);
-
-            char* notifySendArgs[] = {
-                (char*)"notify-send",
-                (char*)title.c_str(),
-                (char*)message.c_str(),
-                nullptr
-            };
-            execvp(notifySendArgs[0], notifySendArgs);
-
-            // terminate if we failed to switch to any of the above tools
-            _exit(1);
-        }
+            execvp(argv[0], argv.data());
+            _exit(1); 
+        } 
         else if (pid > 0) {
-            // parent process - wait for the user to dismiss the dialog
-            int status = 0;
-            waitpid(pid, &status, 0);
-        } else {
-            // fork failed
-            LOG_CRITICAL("Failed to fork process for message dialog.");
+            // parent proc
+            if (bWaitForExit) {
+                int status = 0;
+                waitpid(pid, &status, 0);
+                return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+            }
+            
+            return true;
+        } 
+
+        return false;
+    }
+
+    void showMessageDialog(const std::string& title, const std::string& message) {
+        LOG_INFO("displaying dialog [{}]: {}", title, message);
+
+        if (spawnProcess("kdialog", {"--title", title, "--error", message}, true, true)) {
+            return;
         }
+        if (spawnProcess("zenity", {"--error", "--title", title, "--text", message, "--width=300"}, true, true)) {
+            return;
+        }
+        if (spawnProcess("notify-send", {title, message}, true, true)) {
+            return;
+        }
+
+        LOG_CRITICAL("Failed to display message dialog. Message was: {}", message);
     }
 
     void launchDirInFileBrowser(const std::filesystem::path& szDirectory) {
-        // @TODO: impl
+        spawnProcess("xdg-open", {szDirectory.string()}, false, true);
     }
     
     void launchWebpage(const std::string& szUrl) {
-        // @TODO: impl
+        spawnProcess("xdg-open", {szUrl}, false, true);
     }
 
     void setThreadName(const std::string& threadName) {
