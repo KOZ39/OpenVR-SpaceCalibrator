@@ -340,6 +340,17 @@ namespace spacecal {
         }
 
         // @TODO: calibration metrics
+        auto endTime = std::chrono::high_resolution_clock::now();
+        double elapsedMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();
+        bool bApplied = (eCalibrationError == CalibrationError::None || bForceCalibration);
+
+        errorMetrics.rmsError.push(currentTime, k_METRIC_HISTORY_TIMESPAN, rmsError);
+        errorMetrics.axisIndependence.push(currentTime, k_METRIC_HISTORY_TIMESPAN, axisVariance);
+        errorMetrics.calibrationApplied.push(currentTime, k_METRIC_HISTORY_TIMESPAN, bApplied);
+        errorMetrics.computationTime.push(currentTime, k_METRIC_HISTORY_TIMESPAN, elapsedMs);
+        errorMetrics.posOffset_rmsError.push(currentTime, k_METRIC_HISTORY_TIMESPAN, posOffset);
+        errorMetrics.posOffset_rawComputed.push(currentTime, k_METRIC_HISTORY_TIMESPAN, computedTranslation);
+        errorMetrics.posOffset_currentCal.push(currentTime, k_METRIC_HISTORY_TIMESPAN, bApplied ? computedTranslation : calibratedTranslation);
 
         if (eCalibrationError == CalibrationError::None || bForceCalibration) {
             calibrationError = eCalibrationError;
@@ -575,7 +586,7 @@ namespace spacecal {
         return ok;
     }
 
-    Sample_t TrackingSystemCalibration::collectSample() const {
+    Sample_t TrackingSystemCalibration::collectSample(double currentTime) const {
         vr::DriverPose_t reference, target;
         reference.poseIsValid = false;
         target.poseIsValid = false;
@@ -610,7 +621,7 @@ namespace spacecal {
         return Sample_t {
             .reference = Pose_t(reference),
             .target = Pose_t(target),
-            .timestamp = glfwGetTime(),
+            .timestamp = currentTime,
             .isPoseValid = bIsTrackingOk
         };
     }
@@ -670,7 +681,10 @@ namespace spacecal {
                 auto targetPose = CalibrationManager::getInstance()->m_poses[targetDevice.deviceId].vecPosition;
                 if ((targetPose[0] == 0.0 && targetPose[1] == 0.0 && targetPose[2] == 0.0) ||
                     (m_xTargetPrev == targetPose[0] && m_yTargetPrev == targetPose[1] && m_zTargetPrev == targetPose[2])) {
-                    LOG_CALIB_WARN("Target device tracking didn't update, skipping update");
+                    if (currentTime - m_lastNotTrackingTargetWarnTime >= k_WARN_DEVICE_NOT_TRACKING_INTERVAL_SEC) {
+                        LOG_CALIB_WARN("Target device tracking didn't update, skipping update");
+                        m_lastNotTrackingTargetWarnTime = currentTime;
+                    }
                     return;
                 }
             }
@@ -678,7 +692,10 @@ namespace spacecal {
                 auto refPose = CalibrationManager::getInstance()->m_poses[referenceDevice.deviceId].vecPosition;
                 if ((refPose[0] == 0.0 && refPose[1] == 0.0 && refPose[2] == 0.0) ||
                     (m_xRefPrev == refPose[0] && m_yRefPrev == refPose[1] && m_zRefPrev == refPose[2])) {
-                    LOG_CALIB_WARN("Reference device tracking didn't update, skipping update");
+                    if (currentTime - m_lastNotTrackingRefWarnTime >= k_WARN_DEVICE_NOT_TRACKING_INTERVAL_SEC) {
+                        LOG_CALIB_WARN("Reference device tracking didn't update, skipping update");
+                        m_lastNotTrackingRefWarnTime = currentTime;
+                    }
                     return;
                 }
             }
@@ -752,7 +769,7 @@ namespace spacecal {
                 ok = false;
             }
             
-            Sample_t sample = collectSample();
+            Sample_t sample = collectSample(currentTime);
             if (!sample.isPoseValid) {
                 ok = false;
             }
@@ -780,10 +797,29 @@ namespace spacecal {
 
         // prevent overfitting with possibly poor data
         if (m_samples.size() < getSampleCount()) {
-            auto sample = collectSample();
+            auto sample = collectSample(currentTime);
             if (sample.isPoseValid) {
                 // we want to completely ignore poor samples during calibration
                 m_samples.push_back(sample);
+
+                // metrics: velocity
+                // magnitude of velocity of ref and tgt
+                if (m_samples.size() >= 2) {
+                    const Sample_t& currentFrame = m_samples.back();
+                    size_t stride = std::min(static_cast<size_t>(10), m_samples.size() - 1);
+                    const Sample_t& previousFrame = m_samples[m_samples.size() - 1 - stride];
+                    double dt = currentFrame.timestamp - previousFrame.timestamp;
+
+                    // epsilon
+                    if (dt > 1e-5) {
+                        Eigen::Vector3d refDeltaTrans = currentFrame.reference.trans - previousFrame.reference.trans;
+                        double refVelocityMag = refDeltaTrans.norm() / dt;
+                        Eigen::Vector3d tgtDeltaTrans = currentFrame.target.trans - previousFrame.target.trans;
+                        double tgtVelocityMag = tgtDeltaTrans.norm() / dt;
+                        errorMetrics.pose_ref_velocity_mag.push(currentTime, k_METRIC_HISTORY_TIMESPAN, refVelocityMag);
+                        errorMetrics.pose_tgt_velocity_mag.push(currentTime, k_METRIC_HISTORY_TIMESPAN, tgtVelocityMag);
+                    }
+                }
             }
         }
 

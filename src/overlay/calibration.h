@@ -3,6 +3,7 @@
 #include "protocol.h"
 #include "vr_core.h"
 #include "ipc_client.h"
+#include "time_series.h"
 #include <Eigen/Dense>
 #include <deque>
 
@@ -20,6 +21,9 @@ namespace spacecal {
     constexpr double k_TRANSLATION_MIN_MOTION_THRESHOLD = 0.01; // @TODO: fine tune
     constexpr double k_TRANSLATION_MAX_AMPLIFIED_NOISE_FACTOR = 50.0; // @TODO: fine tune
     constexpr size_t k_MIN_DELTA_SAMPLE_COUNT = 200;
+
+    constexpr double k_METRIC_HISTORY_TIMESPAN = 60.0; // how much time in seconds we keep track of for the graphs
+    constexpr double k_WARN_DEVICE_NOT_TRACKING_INTERVAL_SEC = 5.0; // time in seconds between "Device isnt tracking" log msgs
 
     enum class CalibrationState {
         // calibration is inactive
@@ -92,6 +96,22 @@ namespace spacecal {
         std::string deviceSerialNumber;
     };
 
+    struct CalibrationErrorMetrics {
+        TimeSeries<double> rmsError;
+        TimeSeries<double> axisIndependence;
+
+        TimeSeries<Eigen::Vector3d> posOffset_rawComputed;
+        TimeSeries<Eigen::Vector3d> posOffset_currentCal;
+        TimeSeries<Eigen::Vector3d> posOffset_rmsError;
+        
+        TimeSeries<double> pose_ref_velocity_mag;
+        TimeSeries<double> pose_tgt_velocity_mag;
+
+        TimeSeries<double> computationTime;
+
+        TimeSeries<bool> calibrationApplied;
+    };
+
     class CalibrationManager;
 
     // An instance of the calibration algorithm, that handles collecting samples, and
@@ -157,8 +177,10 @@ namespace spacecal {
 
         double wantedUpdateInterval = 1.0;
 
+        CalibrationErrorMetrics errorMetrics = {};
+
     private:
-        Sample_t collectSample() const;
+        Sample_t collectSample(double currentTime) const;
         inline size_t getSampleCount() const { return (size_t) calibrationSpeed; }
         [[nodiscard]] inline size_t getMaxSampleHistorySize() const { return (size_t) calibrationSpeed * 5; }
 
@@ -209,6 +231,9 @@ namespace spacecal {
         double m_lastRmsError = INFINITY;
         double m_lastAxisVariance = 0.0;
         double m_lastSuccessfulCalibTime = 0.0;
+
+        double m_lastNotTrackingTargetWarnTime = 0.0;
+        double m_lastNotTrackingRefWarnTime = 0.0;
 
         std::vector<Sample_t> m_samples;
         std::deque<Sample_t> m_sampleHistory; // used ONLY for RMS validation
