@@ -114,7 +114,7 @@ namespace logging {
     bool ParseLogFilename(std::string_view filename, int& year, int& month, int& day, int& hour, int& minute, int& second)
     {
         // needs to match _YYYY_MM_DD_HH_MM_SS.log suffix + log_ prefix
-        if (filename.size() < 28 || !filename.starts_with("log_") || !filename.ends_with(".log")) {
+        if (filename.size() < 30 || !filename.starts_with("log_") || !filename.ends_with(".log")) {
             return false;
         }
         
@@ -132,14 +132,16 @@ namespace logging {
         return true;
     }
 
-    void DeleteOldLogFiles(const std::filesystem::path& directoryPath)
+    void DeleteOldLogFiles(const std::filesystem::path& directoryPath, bool isOverlay)
     {
+        std::string szLatestFilename = isOverlay ? "log_overlay_latest.log" : "log_driver_latest.log";
+        std::string szLogStart = isOverlay ? "log_overlay_" : "log_driver_";
         for (const auto& entry : std::filesystem::directory_iterator(directoryPath)) {
-            if (entry.is_regular_file() && entry.path().filename() != "log_latest.log") {
+            if (entry.is_regular_file() && entry.path().filename() != szLatestFilename) {
                 std::string fileName = entry.path().filename().string();
                 int year, month, day, hour, minute, second;
 
-                if (fileName.substr(0, 4) == "log_" && ParseLogFilename(fileName, year, month, day, hour, minute, second) && IsFileOlderThan30Days(year, month, day, hour, minute, second)) {
+                if (fileName.substr(0, szLogStart.size()) == szLogStart && ParseLogFilename(fileName, year, month, day, hour, minute, second) && IsFileOlderThan30Days(year, month, day, hour, minute, second)) {
                     std::filesystem::remove(entry.path());
                 }
             }
@@ -185,7 +187,7 @@ namespace logging {
 
         std::string logFilePath = (util::getSpaceCalibratorLogsDir() / fmt::format("log_{}_{:%Y_%m_%d_%H_%M_%S}.log", logType, tm)).string();
         std::string logFilePath2 = (util::getSpaceCalibratorLogsDir() /  fmt::format("log_{}_latest.log", logType)).string();
-        DeleteOldLogFiles(util::getSpaceCalibratorLogsDir());
+        DeleteOldLogFiles(util::getSpaceCalibratorLogsDir(), isOverlay);
 
         if (isOverlay) {
             s_logger = MAKE_LOGGER_OVERLAY("overlay");
