@@ -39,6 +39,8 @@ namespace spacecal {
     }
 
     void ServerTrackedDeviceProvider::Cleanup() {
+        LOG_OPENVR_INFO("Shutting down SpaceCalibrator-Nova...");
+
         hooking::DisableHooks();
         m_ipcServer.Shutdown();
         VR_CLEANUP_SERVER_DRIVER_CONTEXT();
@@ -47,7 +49,11 @@ namespace spacecal {
     const char* const* ServerTrackedDeviceProvider::GetInterfaceVersions() {
         return vr::k_InterfaceVersions;
     }
-    void ServerTrackedDeviceProvider::RunFrame() {}
+    void ServerTrackedDeviceProvider::RunFrame() {
+        // we query hmd refresh rate for prediction
+        vr::PropertyContainerHandle_t hHmdContainer = vr::VRProperties()->TrackedDeviceToPropertyContainer(vr::k_unTrackedDeviceIndex_Hmd);
+        m_fVsyncPredictionTime = 1.0 / vr::VRProperties()->GetFloatProperty(hHmdContainer, vr::Prop_DisplayFrequency_Float);
+    }
     bool ServerTrackedDeviceProvider::ShouldBlockStandbyMode() {
         return false;
     }
@@ -93,11 +99,13 @@ namespace spacecal {
     inline DeviceCalibration_t lerpCalibration(const DeviceCalibration_t& from, const DeviceCalibration_t& to, double factor) {
         return {
             .calibrationRotation = from.calibrationRotation.slerp(factor, to.calibrationRotation),
-            .calibrationPosition = from.calibrationPosition + factor * (to.calibrationPosition - from.calibrationPosition)
+            .calibrationPosition = from.calibrationPosition + factor * (to.calibrationPosition - from.calibrationPosition),
+            .hasCalibration = to.hasCalibration,
+            .lastUpdateTime = to.lastUpdateTime,
         };
     }
 
-    inline Eigen::Affine3d getWorldFromDriverPose(const vr::DriverPose_t& pose, float fPredictedSecondsToPhotonsFromNow = 0.0f) {
+    inline Eigen::Affine3d getWorldFromDriverPose(const vr::DriverPose_t& pose, double fPredictedSecondsToPhotonsFromNow = 0.0) {
         Eigen::Quaterniond baseRot = eigenFromHmdQuat(pose.qRotation);
         Eigen::Vector3d    basePos = eigenVecFromHmdVec(pose.vecPosition);
 
@@ -136,9 +144,9 @@ namespace spacecal {
                     const vr::DriverPose_t& targetPose = m_poses[transform.unRelativeTargetOpenvrDeviceId];
 
                     // world-space pose of ref device (H')
-                    Eigen::Affine3d refWorldNow = getWorldFromDriverPose(refPose);
+                    Eigen::Affine3d refWorldNow = getWorldFromDriverPose(refPose, m_fVsyncPredictionTime);
                     // world-space pose of target device (T')
-                    Eigen::Affine3d targetWorldNow = getWorldFromDriverPose(targetPose);
+                    Eigen::Affine3d targetWorldNow = getWorldFromDriverPose(targetPose, m_fVsyncPredictionTime);
 
                     // local-space calibration transform (C_L)
                     Eigen::Affine3d calibrationLocal =
@@ -197,6 +205,7 @@ namespace spacecal {
         pose.vecWorldFromDriverTranslation[1] = rotatedTranslation.v[1] + pos.v[1];
         pose.vecWorldFromDriverTranslation[2] = rotatedTranslation.v[2] + pos.v[2];
 
+        // @NOTE: remove branch in future update once i determine this works well
         if (calibrateMotionVecs) {
             // velocity
             pose.vecVelocity[0] *= scale;

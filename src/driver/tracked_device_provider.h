@@ -11,6 +11,7 @@ namespace spacecal {
         Eigen::Quaterniond calibrationRotation = Eigen::Quaterniond::Identity();
         Eigen::Vector3d    calibrationPosition = Eigen::Vector3d::Zero();
         bool               hasCalibration = false;
+        std::chrono::steady_clock::time_point lastUpdateTime{};
     };
 
     class ServerTrackedDeviceProvider : public vr::IServerTrackedDeviceProvider {
@@ -45,11 +46,12 @@ namespace spacecal {
 
     private:
         ipc::Server m_ipcServer;
-        ipc::protocol::Command_SetDeviceTransform_t m_transforms[vr::k_unMaxTrackedDeviceCount] = {};
         ipc::protocol::Command_SetAlignmentSpeedParams_t m_alignmentParams = {};
 
+        double m_fVsyncPredictionTime = 0.0;
         ipc::protocol::SharedData_HmdMetadata m_hmdMetaData = {};
         
+        ipc::protocol::Command_SetDeviceTransform_t m_transforms[vr::k_unMaxTrackedDeviceCount] = {};
         DeviceCalibration_t m_cachedCalibrations[vr::k_unMaxTrackedDeviceCount] = {}; // cache of calibrations for relative calibration
         vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {}; // raw poses
         friend class ipc::Server;
