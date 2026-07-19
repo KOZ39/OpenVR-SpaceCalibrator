@@ -419,7 +419,286 @@ namespace spacecal {
         }
     }
 
-    void page_calibration() {
+    struct PlotUiState {
+        double referenceTime = 0.0;
+        double lastMouseX = -HUGE_VAL;
+        bool wasHoveredThisFrame = false;
+        
+        std::vector<double> calAppliedTimeBuffer;
+        std::vector<double> calByRelPoseTimeBuffer;
+        std::vector<int> currentGraphIndexes;
+        ImPlotColormap axisVarianceColormap = 0;
+        bool colormapInitialized = false;
+    };
+
+    PlotUiState g_PlotUiState;
+
+    constexpr size_t k_INVALID_OFFSET = (size_t)(-1);
+
+    enum class SeriesType {
+        Scalar,
+        Vector3d,
+        CustomFunc
+    };
+
+    struct GraphConfig {
+        const char* menuName = nullptr;
+        const char* menuId = nullptr;
+        const char* szAxisUnits = nullptr;
+        SeriesType type = SeriesType::Scalar;
+        size_t offset = k_INVALID_OFFSET;
+        /**
+         * weird graph rendering (eg fills or a constant line). this renders inside an active implot context so dont call implot::begin or end
+         *
+         * @param render_sample_count   the amount of samples we are rendering for this graph
+         * @param baseSpec              implot rendering params
+         */
+        void (*customRenderFunc)(const CalibrationErrorMetrics& metrics, int render_sample_count, const ImPlotSpec& baseSpec) = nullptr;
+        double yLimit = 0.0;
+        ImPlotAxisFlags yFlags = ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit;
+
+        // ptr to next graph config to draw in the ui
+        const GraphConfig* pNext = nullptr;
+    };
+
+    void addApplyTicks() {
+        ImPlotSpec defaultSpec;
+
+        if (g_PlotUiState.calAppliedTimeBuffer.empty()) {
+            double x = -HUGE_VAL;
+            ImPlot::PlotInfLines("##CalibrationAppliedTime", &x, 1, defaultSpec);
+        } else {
+            ImPlot::PlotInfLines("##CalibrationAppliedTime", g_PlotUiState.calAppliedTimeBuffer.data(), static_cast<int>(g_PlotUiState.calAppliedTimeBuffer.size()), defaultSpec);
+        }
+
+        if (g_PlotUiState.calByRelPoseTimeBuffer.empty()) {
+            double x = -HUGE_VAL;
+            ImPlot::PlotInfLines("##CalibrationAppliedTimeByRelPose", &x, 1, defaultSpec);
+        } else {
+            ImPlot::PlotInfLines("##CalibrationAppliedTimeByRelPose", g_PlotUiState.calByRelPoseTimeBuffer.data(), static_cast<int>(g_PlotUiState.calByRelPoseTimeBuffer.size()), defaultSpec);
+        }
+
+        ImPlotSpec tagSpec;
+        tagSpec.LineColor = ImVec4(0.5f, 0.5f, 1.0f, 1.0f);
+        ImPlot::PlotInfLines("##TagLine", &g_PlotUiState.lastMouseX, 1, tagSpec);
+
+        if (ImPlot::IsPlotHovered()) {
+            g_PlotUiState.lastMouseX = ImPlot::GetPlotMousePos().x;
+            g_PlotUiState.wasHoveredThisFrame = true;
+        }
+    }
+
+    void drawGraphSeriesChain(const GraphConfig* cfg, const char* pMetricsAddress, const CalibrationErrorMetrics& metrics, int count) {
+        ImPlotSpec spec;
+
+        static thread_local std::vector<TimeSeries<double>::TimeSeriesSample> scalarScratch;
+        static thread_local std::vector<TimeSeries<Eigen::Vector3d>::TimeSeriesSample> vec3Scratch;
+
+        while (cfg != nullptr) {
+            if (cfg->type == SeriesType::CustomFunc && cfg->customRenderFunc != nullptr) {
+                cfg->customRenderFunc(metrics, count, spec);
+            }
+            else if (cfg->type == SeriesType::Scalar) {
+                const auto& ts = *reinterpret_cast<const TimeSeries<double>*>(pMetricsAddress + cfg->offset);
+                if (ts.size() > 0) {
+                    scalarScratch.clear();
+                    scalarScratch.reserve(ts.size());
+                    for (int i = 0; i < ts.size(); i++) {
+                        scalarScratch.push_back({ ts[i].time - g_PlotUiState.referenceTime, ts[i].value });
+                    }
+                    spec.Stride = static_cast<int>(sizeof(scalarScratch[0]));
+                    ImPlot::PlotLine(cfg->menuName, &scalarScratch[0].time, &scalarScratch[0].value, static_cast<int>(scalarScratch.size()), spec);
+                }
+            }
+            else if (cfg->type == SeriesType::Vector3d) {
+                const auto& ts = *reinterpret_cast<const TimeSeries<Eigen::Vector3d>*>(pMetricsAddress + cfg->offset);
+                if (ts.size() > 0) {
+                    vec3Scratch.clear();
+                    vec3Scratch.reserve(ts.size());
+                    for (int i = 0; i < ts.size(); i++) {
+                        vec3Scratch.push_back({ ts[i].time - g_PlotUiState.referenceTime, ts[i].value });
+                    }
+                    spec.Stride = static_cast<int>(sizeof(vec3Scratch[0]));
+                    std::string labelX = fmt::format("{}.X", cfg->menuName);
+                    std::string labelY = fmt::format("{}.Y", cfg->menuName);
+                    std::string labelZ = fmt::format("{}.Z", cfg->menuName);
+
+                    ImPlot::PlotLine(labelX.c_str(), &vec3Scratch[0].time, &vec3Scratch[0].value.x(), static_cast<int>(vec3Scratch.size()), spec);
+                    ImPlot::PlotLine(labelY.c_str(), &vec3Scratch[0].time, &vec3Scratch[0].value.y(), static_cast<int>(vec3Scratch.size()), spec);
+                    ImPlot::PlotLine(labelZ.c_str(), &vec3Scratch[0].time, &vec3Scratch[0].value.z(), static_cast<int>(vec3Scratch.size()), spec);
+
+                }
+            }
+            cfg = cfg->pNext;
+        }
+    }
+
+    void drawComposedPlot(double timeSpan, const GraphConfig* rootCfg, const CalibrationErrorMetrics& metrics) {
+        if (ImPlot::BeginPlot(rootCfg->menuId, ImVec2(-1, 0), ImPlotFlags_None)) {
+            ImPlot::SetupAxes(nullptr, rootCfg->szAxisUnits, 0, rootCfg->yFlags);
+            ImPlot::SetupAxisLimits(ImAxis_X1, -timeSpan, 0, ImGuiCond_Always);
+            ImPlot::SetupAxisLimits(ImAxis_Y1, 0, rootCfg->yLimit, ImGuiCond_Appearing);
+
+            addApplyTicks();
+
+            const char* pMetricsAddress = reinterpret_cast<const char*>(&metrics);
+            int maxCount = metrics.axisIndependence.size();
+
+            drawGraphSeriesChain(rootCfg, pMetricsAddress, metrics, maxCount);
+
+            ImPlot::EndPlot();
+        }
+    }
+
+    void drawAxisVariancePlot(const CalibrationErrorMetrics& metrics, int render_sample_count, const ImPlotSpec& baseSpec) {
+        if (!g_PlotUiState.colormapInitialized) {
+            g_PlotUiState.colormapInitialized = true;
+            ImVec4 colors[] = { ImPlot::GetColormapColor(0), ImPlot::GetColormapColor(1), {1,0,0,1}, {0,1,0,1}, {0.5,0.5,0.5,1} };
+            g_PlotUiState.axisVarianceColormap = ImPlot::AddColormap("AxisVarianceColormap", colors, std::size(colors));
+        }
+
+        const auto& ts = metrics.axisIndependence;
+        if (ts.size() <= 0) return;
+
+        static thread_local std::vector<TimeSeries<double>::TimeSeriesSample> scratch;
+        scratch.clear();
+        scratch.reserve(ts.size());
+        for (int i = 0; i < ts.size(); i++) {
+            scratch.push_back({ ts[i].time - g_PlotUiState.referenceTime, ts[i].value });
+        }
+
+        ImPlot::PushColormap(g_PlotUiState.axisVarianceColormap);
+        const auto& rawData = ts.data();
+        int stride = (int) (sizeof(scratch[0]));
+
+        std::vector<double> threshLine(render_sample_count, k_MAX_AXIS_VARIANCE_THRESHOLD);
+        std::vector<double> zeroLine(render_sample_count, 0.0);
+
+        ImPlotSpec lowSpec = baseSpec;
+        lowSpec.LineColor = ImVec4(1, 0, 0, 1); 
+        lowSpec.FillAlpha = 0.5f;
+        lowSpec.Stride = stride;
+        
+        ImPlotSpec highSpec = baseSpec;
+        highSpec.LineColor = ImVec4(0, 1, 0, 1);
+        highSpec.FillAlpha = 0.5f;
+        highSpec.Stride = stride;
+
+        ImPlot::PlotShaded("##VarianceLow", &scratch[0].time, &scratch[0].value, zeroLine.data(), (int) zeroLine.size(), lowSpec);
+        ImPlot::PlotShaded("##VarianceHigh", &scratch[0].time, &scratch[0].value, threshLine.data(), (int) threshLine.size(), highSpec);
+        ImPlot::PopColormap(1);
+    }
+
+    // these are defomed outside the array for the linked list to work
+
+    // axis variance needs custom func for the draw line
+    static const GraphConfig g_varLineNode    { "Datapoint",      "##Axis variance", nullptr, SeriesType::Scalar,     offsetof(CalibrationErrorMetrics, axisIndependence),    nullptr,              0.003,  ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ nullptr           };
+    static const GraphConfig g_varianceRoot   { "Axis Variance",  "##Axis variance", nullptr, SeriesType::CustomFunc, 0,                                                      drawAxisVariancePlot, 0.003,  ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ &g_varLineNode    };
+
+    // temp for seeing how bad latency really is
+    static const GraphConfig g_referencePoseVelocity    { "Reference Velocity", "##hmdVelocity", nullptr, SeriesType::Scalar,       offsetof(CalibrationErrorMetrics, pose_ref_velocity_mag),   nullptr,    0.003,  ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ nullptr };
+    static const GraphConfig g_targetPoseVelocity       { "Target Velocity",    "##targetVelocity", nullptr, SeriesType::Scalar,    offsetof(CalibrationErrorMetrics, pose_tgt_velocity_mag),   nullptr,    0.003,  ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ &g_referencePoseVelocity };
+
+    const GraphConfig g_graph_data[] = {
+        g_varianceRoot,
+        g_targetPoseVelocity,
+        { "Offset: Raw Computed",           "##posOffsetRawComputed",   "mm",   SeriesType::Vector3d,   offsetof(CalibrationErrorMetrics, posOffset_rawComputed),   nullptr,    200.0 },
+        { "Offset: Current Calibration",    "##posOffsetCurrentCal",    "mm",   SeriesType::Vector3d,   offsetof(CalibrationErrorMetrics, posOffset_currentCal),    nullptr,    200.0 },
+        { "Offset: RMS error",              "##posOffsetRMSError",      "mm",   SeriesType::Vector3d,   offsetof(CalibrationErrorMetrics, posOffset_rmsError),      nullptr,    200.0 },
+        { "Retargeting RMS Error",          "##rmsError",               "ms",   SeriesType::Scalar,     offsetof(CalibrationErrorMetrics, rmsError),                nullptr,    200.0 },
+        { "Processing time",                "##Computation Time",       "ms",   SeriesType::Scalar,     offsetof(CalibrationErrorMetrics, computationTime),         nullptr,    200.0 },
+    };
+
+    constexpr size_t k_NUM_GRAPHS = ARRAY_SIZE(g_graph_data);
+
+    void draw_error_graphs(const std::string& targetDeviceName, double timeSpan, double currentTimestamp, const CalibrationErrorMetrics& metrics) {
+        constexpr int k_ROWS = 2;
+        constexpr int k_COLS = (k_NUM_GRAPHS + k_ROWS - 1) / k_ROWS;
+        constexpr int k_TOTAL_PLOTS = k_ROWS * k_COLS;
+
+        if (g_PlotUiState.currentGraphIndexes.size() < k_TOTAL_PLOTS) {
+            while (g_PlotUiState.currentGraphIndexes.size() < k_TOTAL_PLOTS) {
+                g_PlotUiState.currentGraphIndexes.push_back(static_cast<int>(g_PlotUiState.currentGraphIndexes.size()) % (int)k_NUM_GRAPHS);
+            }
+        }
+
+        g_PlotUiState.wasHoveredThisFrame = false;
+        auto avail = ImGui::GetContentRegionAvail();
+        auto bgCol = ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
+
+        ImGui::PushStyleColor(ImGuiCol_TableRowBg, bgCol);
+        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, bgCol);
+        ImPlot::PushStyleColor(ImPlotCol_FrameBg, ImVec4(0, 0, 0, 0));
+
+        std::string childId = fmt::format("##MetricsPanel_{}", targetDeviceName);
+        if (!ImGui::BeginChild(childId.c_str(), avail, false, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoFocusOnAppearing)) {
+            ImGui::EndChild();
+            ImPlot::PopStyleColor(1);
+            ImGui::PopStyleColor(2);
+            return;
+        }
+
+        std::string tableId = fmt::format("##MetricsTable_{}", targetDeviceName);
+        if (!ImGui::BeginTable(tableId.c_str(), k_COLS, ImGuiTableFlags_RowBg)) {
+            ImGui::EndChild();
+            ImPlot::PopStyleColor(1);
+            ImGui::PopStyleColor(2);
+            return;
+        }
+
+        g_PlotUiState.referenceTime = currentTimestamp;
+        
+        g_PlotUiState.calAppliedTimeBuffer.clear();
+        g_PlotUiState.calByRelPoseTimeBuffer.clear();
+        for (const auto& sample : metrics.calibrationApplied.data()) {
+            if (sample.value) g_PlotUiState.calAppliedTimeBuffer.push_back(sample.time - g_PlotUiState.referenceTime);
+            else              g_PlotUiState.calByRelPoseTimeBuffer.push_back(sample.time - g_PlotUiState.referenceTime);
+        }
+
+        const char* pMetricsAddress = reinterpret_cast<const char*>(&metrics);
+
+        for (int r = 0; r < k_ROWS; r++) {
+            ImGui::TableNextRow();
+            for (int c = 0; c < k_COLS; c++) {
+                int idx = r * k_COLS + c;
+                if (idx >= k_TOTAL_PLOTS) {
+                    continue;
+                }
+
+                ImGui::TableSetColumnIndex(c);
+                ImGui::PushID(idx);
+
+                ImGui::SetNextItemWidth(ImGui::GetColumnWidth());
+                if (ImGui::BeginCombo("", g_graph_data[g_PlotUiState.currentGraphIndexes[idx]].menuName, 0)) {
+                    for (int j = 0; j < k_NUM_GRAPHS; j++) {
+                        bool isSelected = (j == g_PlotUiState.currentGraphIndexes[idx]);
+                        if (ImGui::Selectable(g_graph_data[j].menuName, isSelected)) {
+                            g_PlotUiState.currentGraphIndexes[idx] = j;
+                        }
+                        if (isSelected) ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+
+                const auto& rootCfg = g_graph_data[g_PlotUiState.currentGraphIndexes[idx]];
+                drawComposedPlot(timeSpan, &rootCfg, metrics);
+
+                ImGui::PopID();
+            }
+        }
+        
+        ImGui::EndTable();
+        ImGui::EndChild();
+
+        ImPlot::PopStyleColor(1);
+        ImGui::PopStyleColor(2);
+
+        if (!g_PlotUiState.wasHoveredThisFrame) {
+            g_PlotUiState.lastMouseX = -HUGE_VAL;
+        }
+    }
+
+    void page_calibration(double currentTime) {
         ImGui::TextHeading("%s", LOCALE_GET("calibration_title").c_str());
         ImGui::Separator();
 
@@ -461,12 +740,15 @@ namespace spacecal {
         }
     }
     
-    void page_graphs() {
-        ImGui::TextHeading("%s", "Graphs");
-        ImGui::TextDisabled("COMING LATER");
+    void page_graphs(double currentTime) {
+        ImGui::TextHeading("%s", LOCALE_GET("graphs_title").c_str());
+
+        // @TODO: numbering or smth
+        spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(0);
+        draw_error_graphs(calibration.referenceDevice.trackingSystem, k_METRIC_HISTORY_TIMESPAN * 0.05, currentTime, calibration.errorMetrics);
     }
 
-    void page_settings() {
+    void page_settings(double currentTime) {
         ImGui::TextHeading("%s", LOCALE_GET("settings_title").c_str());
 
         // advanced settings
@@ -479,7 +761,7 @@ namespace spacecal {
         buildLocaleSelector();
     }
 
-    void page_base_station_management() {
+    void page_base_station_management(double currentTime) {
         ImGui::TextHeading("%s", LOCALE_GET("base_stations_title").c_str());
 
         if (!bluetooth::is_bluetooth_available()) {
@@ -673,8 +955,8 @@ namespace spacecal {
 #undef SHOW_BOOL_STATUS
     }
     
-    void page_debug() {
-        ImGui::TextHeading("%s", "Debug");
+    void page_debug(double currentTime) {
+        ImGui::TextHeading("%s", LOCALE_GET("tab_page_debug").c_str());
 
         // @TODO: driverpose_t view
         spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(g_state.dwSelectedCalibrationIndex);
@@ -689,17 +971,36 @@ namespace spacecal {
         ImGui::InputText("test textbox (keyboard shouldnt be corrupt)", g_state.fooText, sizeof(g_state.fooText));
     }
 
-    void page_about() {
-        ImGui::TextHeading("%s", "About");
+    void page_about(double currentTime) {
+        ImGui::TextHeading("%s", LOCALE_GET("about_title").c_str());
 
-        ImGui::Text("Space Calibrator is a free and open source tool to allow you to use multiple vendors' devices together with SteamVR.");
+        ImGui::Text(LOCALE_GET("about_description").c_str());
+        ImGui::Text(LOCALE_GET("about_view_source_info").c_str());
 
-        if (ImGui::Button("GitHub Link")) {
+        ImGui::TextHeading(LOCALE_GET("about_contributors_title").c_str());
+        ImGui::Text(LOCALE_GET("about_contributors_description").c_str());
+        ImGui::Text("pushrax");
+        ImGui::Text("bd_");
+        ImGui::Text("ArticFox");
+        ImGui::Text("hekky");
+        ImGui::Text("pimaker");
+
+        if (ImGui::Button(LOCALE_GET("about_link_github").c_str())) {
             platform::launchWebpage("https://github.com/hyblocker/OpenVR-SpaceCalibrator");
+        }
+        
+        if (ImGui::Button(LOCALE_GET("about_link_discord").c_str())) {
+            platform::launchWebpage("https://discord.gg/YWN7Z9T8DP");
+        }
+        
+        if (ImGui::Button(LOCALE_GET("about_link_logs_dir").c_str())) {
+            platform::launchDirInFileBrowser(util::getSpaceCalibratorLogsDir());
         }
 
         // ImGui::InputTextMultiline();
 
+        ImGui::TextHeading(LOCALE_GET("about_licenses_title").c_str());
+        ImGui::Text(LOCALE_GET("about_licenses_description").c_str());
         ImGui::TextDisabled("LICENSES HERE");
     }
 
@@ -769,7 +1070,7 @@ namespace spacecal {
         std::string textStr = LOCALE_GET(tabData.szLocaleKey);
         ImVec2 textSize = ImGui::CalcTextSize(textStr.c_str(), nullptr, true);
         float text_y_offset = (size.y - textSize.y) * 0.5f;
-        float final_text_padding_x = k_LeftTextMargin + (selected ? k_IndicatorWidth : 0.0f);
+        float final_text_padding_x = k_LeftTextMargin;
         ImVec2 text_pos = ImVec2(bb.Min.x + final_text_padding_x, bb.Min.y + text_y_offset);
 
         ImGui::RenderText(text_pos, textStr.c_str());
@@ -777,7 +1078,7 @@ namespace spacecal {
         return pressed;
     }
 
-    inline void drawMainView() {
+    inline void drawMainView(double currentTime) {
         // @TODO: temp hardcode, move to header or some ui_config.h idk
         const float k_SIDEBAR_WIDTH = 180.0f;
         const float k_SIDEBAR_TAB_HEIGHT = 40.0f;
@@ -806,13 +1107,13 @@ namespace spacecal {
         ImGui::SameLine();
 
         // content
-        ImGui::BeginChild("ContentArea", ImVec2(0, 0), ImGuiChildFlags_None);
+        ImGui::BeginChild("ContentArea", ImVec2(0, ImGui::GetFrameHeightWithSpacing() * -2.0f), ImGuiChildFlags_None);
 
         ImGui::Dummy(ImVec2(0, k_CONTENT_AREA_PADDING)); 
         ImGui::Indent(k_CONTENT_AREA_PADDING);
 
         if (g_state.dwSelectedUiPage < k_SIZE_SPACECAL_UI_TABS) {
-            g_spaceCalUiTabs[g_state.dwSelectedUiPage].fnDrawTab();
+            g_spaceCalUiTabs[g_state.dwSelectedUiPage].fnDrawTab(currentTime);
         }
 
         ImGui::Unindent(k_CONTENT_AREA_PADDING);
@@ -821,7 +1122,7 @@ namespace spacecal {
 
     // UI ENTRY POINT
 
-    void drawInterface(bool isOverlay) {
+    void drawInterface(bool isOverlay, double currentTime) {
         g_state.bIsRunningInOverlay = isOverlay;
         g_state.bIsSettingsAdvanced = ConfigurationManager::getInstance()->getConfiguration()->advanced_settings;
         auto& io = ImGui::GetIO();
@@ -843,7 +1144,7 @@ namespace spacecal {
 
         ImGui::Begin("Space Calibrator", nullptr, k_bareWindowFlags);
 
-        drawMainView();
+        drawMainView(currentTime);
 
         buildVersionInfo();
         ImGui::End();

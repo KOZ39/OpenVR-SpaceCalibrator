@@ -57,5 +57,7 @@ namespace ImGui
 		ImGui::PopStyleColor();
 	}
 
+	// @TODO: advanced settings helpers for setting colours etc
+
 	inline float GetWindowContentRegionWidth() { return ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x; }
 }

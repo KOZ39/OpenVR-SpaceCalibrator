@@ -1,6 +1,7 @@
 #pragma once
 
-#include "imgui.h"
+#include <imgui.h>
+#include <implot.h>
 
 namespace spacecal {
 
@@ -17,9 +18,9 @@ namespace spacecal {
     struct SpaceCalibratorVerticalTab_t {
         const char* szLocaleKey = nullptr;
         ; // @TODO: icon
-        void (*fnDrawTab)() = nullptr;
+        void (*fnDrawTab)(double currentTime) = nullptr;
     };
 
     // Draws the user interface with ImGUI
-    void drawInterface(bool isOverlay);
+    void drawInterface(bool isOverlay, double currentTime);
 }

@@ -307,7 +307,7 @@ namespace spacecal {
 
                 ImGui::NewFrame();
 
-                spacecal::drawInterface(dashboardVisible);
+                spacecal::drawInterface(dashboardVisible, time);
 
 #ifdef _DEBUG
                 // ImGui::ShowDemoWindow();

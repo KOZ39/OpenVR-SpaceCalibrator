@@ -69,6 +69,27 @@
   "tab_page_settings": "Settings",
   "tab_page_debug": "Debug",
   "tab_page_about": "About",
+  
+  /* graphs */
+  "graphs_title": "Graphs",
+
+  /* base stations */
+  "base_stations_title": "Base Station Management",
+  "base_stations_no_bluetooth": "Failed to find a valid Bluetooth adapter. Please connect a BLE capable Bluetooth device to be able to use Base Station Management.",
+  "base_stations_none_found": "No Base Stations detected. If you have any, make sure they are plugged in!",
+  "base_stations_header_info": "{0} [{1}]", // 0: type (1.0 / 2.0), 1: station ID (LHB XXXXXXXX) / nickname
+  "base_stations_action_wake_all": "Wake All",
+  "base_stations_action_sleep_all": "Sleep All",
+  "base_stations_action_fix_collisions": "Fix Channel Collisions",
+  "base_stations_warning_collision": "Warning: Channel collision detected!",
+  "base_stations_state_sleep": "[Asleep]",
+  "base_stations_state_standby": "[Standby]",
+  "base_stations_state_active": "[Active]",
+  "base_stations_state_unknown": "[Unknown]",
+  "base_stations_channel_select_label": "Channel Select:",
+  "base_stations_btn_wake": "Wake",
+  "base_stations_btn_standby": "Standby",
+  "base_stations_btn_sleep": "Power Off (Sleep)",
 
   /* settings */
   "settings_title": "Settings",
@@ -77,6 +98,18 @@
   "settings_calibrate_motion_vectors": "Calibrate motion vectors",
   "settings_calibrate_motion_vectors_description": "Improves movement prediction for more responsive tracking. May affect physics heavy games.",
   "settings_locale": "Language",
+
+  /* about */
+  "about_title": "About",
+  "about_description": "Space Calibrator is a free and open source tool to allow you to use multiple vendors' devices together with SteamVR.",
+  "about_view_source_info": "You may view the source code on the GitHub repository.",
+  "about_contributors_title": "Contributors",
+  "about_contributors_description": "Space Calibrator is made possible with the help of the following people:",
+  "about_licenses_title": "Licenses",
+  "about_licenses_description": "This program is licensed under the MIT license. Other dependencies are licensed under other licenses, please view the licenses below for more information.",
+  "about_link_github": "GitHub",
+  "about_link_discord": "Discord Server",
+  "about_link_logs_dir": "Logs folder",
 
   /* Names of the various languages one may select. Shown in settings */
   "languages_en_GB": "English (UK)",
