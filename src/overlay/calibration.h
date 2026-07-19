@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvr.h"
 #include "protocol.h"
 #include "vr_core.h"
 #include "ipc_client.h"
@@ -12,6 +13,10 @@ namespace spacecal {
     constexpr double k_TICK_RATE_HZ = 20.0; // tick rate spacecal's internal logic runs at
     constexpr double k_MAX_INVALID_CALIBRATION_TIME_SEC = 60.0; // 60s between invalid calibrations
     constexpr double k_IPC_CONNECTION_RETRY_INTERVAL_SEC = 0.25; // 250ms between IPC connection attempts
+    constexpr double k_AUTO_DETECT_DURATION = 2.0; // 2 seconds for auto-detection
+    constexpr int k_AUTO_DETECT_MINIMUM_SCORE = 40;
+    constexpr float k_AUTO_DETECT_MIN_VELOCITY_THRESHOLD = 0.2f; // devices need to be moving enough for us to consider them
+    constexpr float k_AUTO_DETECT_MAX_VELOCITY_DIFF = 0.15f;     // speed tolerance between devices, we only allow for up to this much variance in speed due to hardware differences and unit to unit variance
 
     // thresholds and bounds to ensure the underlying mathematical algorithms maintain a high enough accuracy to be useful for real-world use.
     constexpr double k_MAX_RETARGETING_RMS_ERROR_THRESHOLD = 0.1;
@@ -38,6 +43,10 @@ namespace spacecal {
         CONTINUOUS,
         // the calibration was set to continuous in a previous session, but the user hasn't selected it. we won't compute for now
         CONTINUOUS_IDLE,
+        // currently auto-detecting devices -> returns to standard calibration once done
+        AUTO_DETECT_DEVICES_STANDARD,
+        // currently auto-detecting devices -> returns to continuous calibration once done
+        AUTO_DETECT_DEVICES_CONTINUOUS,
     };
 
     // numeric value corresponds to the sample count for the given speed, the enum is just "naming" and avoids expensive lookup :3
@@ -131,6 +140,8 @@ namespace spacecal {
 
         // finds the device id given props, if and only if device id is invalid
         void assignTarget(CalibrationDevice& device);
+        // attempts to auto-detect devices
+        void autoDetectDevices();
         // marks a device as invalid; space calibrator will attempt reassigning an id next frame to it
         inline void unassignTarget(CalibrationDevice& device) {
             device.deviceId = vr::k_unTrackedDeviceIndexInvalid;
@@ -141,7 +152,7 @@ namespace spacecal {
         }
 
         [[nodiscard]] inline const bool isContinuousCalibration() const {
-            return state == CalibrationState::CONTINUOUS_IDLE || state == CalibrationState::CONTINUOUS;
+            return state == CalibrationState::CONTINUOUS_IDLE || state == CalibrationState::CONTINUOUS || state == CalibrationState::AUTO_DETECT_DEVICES_CONTINUOUS;
         }
 
         [[nodiscard]] inline const bool isCalibrating() const {
@@ -214,6 +225,7 @@ namespace spacecal {
 
         // we collect a series of **VALID** calibrations' worth of samples to improve RMS error accuracy
         void trackCollectedSamplesForErrorTracking();
+        bool detectCorrelatingDevices(double currentTime);
 
     private:
         double m_lastTick = 0.0;
@@ -234,6 +246,12 @@ namespace spacecal {
 
         double m_lastNotTrackingTargetWarnTime = 0.0;
         double m_lastNotTrackingRefWarnTime = 0.0;
+
+        // for auto device detection
+        int m_candidateScore = 0;
+        float m_autoDetectStartTime = NAN;
+        vr::TrackedDeviceIndex_t m_candidateRefId = vr::k_unTrackedDeviceIndexInvalid;
+        vr::TrackedDeviceIndex_t m_candidateTargetId = vr::k_unTrackedDeviceIndexInvalid;
 
         std::vector<Sample_t> m_samples;
         std::deque<Sample_t> m_sampleHistory; // used ONLY for RMS validation

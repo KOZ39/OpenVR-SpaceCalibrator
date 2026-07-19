@@ -10,6 +10,7 @@
 #include "configuration.h"
 #include "vr_core.h"
 #include <GLFW/glfw3.h>
+#include <cmath>
 #include <math.h>
 
 namespace spacecal {
@@ -284,6 +285,8 @@ namespace spacecal {
     }
 
     CalibrationError TrackingSystemCalibration::computeCalibrationOneshot(double currentTime, bool bForceCalibration) {
+        auto startTime = std::chrono::high_resolution_clock::now();
+
         // @TODO: do NOT apply until we are certain this is a better calibration.
         
         // we clear calibration history if the calibration was invalid for a long time. this is to prevent a deadlock.
@@ -749,6 +752,18 @@ namespace spacecal {
             return;
         }
 
+        if (state == CalibrationState::AUTO_DETECT_DEVICES_STANDARD || state == CalibrationState::AUTO_DETECT_DEVICES_CONTINUOUS) {
+
+            // @TODO: measure velocities, compare, determine devices
+            if (detectCorrelatingDevices(currentTime)) {   
+                if (state == CalibrationState::AUTO_DETECT_DEVICES_STANDARD) {
+                    state = CalibrationState::NONE;
+                } else if (state == CalibrationState::AUTO_DETECT_DEVICES_CONTINUOUS) {
+                    state = CalibrationState::CONTINUOUS_IDLE;
+                }
+            }
+        }
+
         if (state == CalibrationState::START || state == CalibrationState::CONTINUOUS_IDLE) {
             bool ok = true;
 
@@ -862,6 +877,93 @@ namespace spacecal {
                 device.deviceId = theDevice.dwDeviceIndex;
             }
         }
+    }
+
+    void TrackingSystemCalibration::autoDetectDevices() {
+        state = isContinuousCalibration() ? CalibrationState::AUTO_DETECT_DEVICES_CONTINUOUS : CalibrationState::AUTO_DETECT_DEVICES_STANDARD;
+        m_candidateScore = 0;
+        m_autoDetectStartTime = NAN;
+    }
+
+    bool TrackingSystemCalibration::detectCorrelatingDevices(double currentTime) {
+        // init time (NAN = new auto detect run)
+        if (isnan(m_autoDetectStartTime)) {
+            m_autoDetectStartTime = (float) currentTime;
+        }
+
+        vr::TrackedDeviceIndex_t frameRefId = vr::k_unTrackedDeviceIndexInvalid;
+        vr::TrackedDeviceIndex_t frameTargetId = vr::k_unTrackedDeviceIndexInvalid;
+        double frameClosestSpeedDelta = 999.0;
+
+        for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
+            const auto& poseI = CalibrationManager::getInstance()->m_poses[i];
+            if (!poseI.deviceIsConnected || !poseI.poseIsValid || poseI.result != vr::ETrackingResult::TrackingResult_Running_OK)
+                continue;
+
+            double speedI = Eigen::Vector3d(poseI.vecVelocity[0], poseI.vecVelocity[1], poseI.vecVelocity[2]).norm();
+            if (speedI < k_AUTO_DETECT_MIN_VELOCITY_THRESHOLD) continue;
+
+            for (vr::TrackedDeviceIndex_t j = i + 1; j < vr::k_unMaxTrackedDeviceCount; j++) {
+                const auto& poseJ = CalibrationManager::getInstance()->m_poses[j];
+                if (!poseJ.deviceIsConnected || !poseJ.poseIsValid || poseJ.result != vr::ETrackingResult::TrackingResult_Running_OK)
+                    continue;
+
+                double speedJ = Eigen::Vector3d(poseJ.vecVelocity[0], poseJ.vecVelocity[1], poseJ.vecVelocity[2]).norm();
+                if (speedJ < k_AUTO_DETECT_MIN_VELOCITY_THRESHOLD) continue;
+
+                double speedDelta = std::abs(speedI - speedJ);
+                if (speedDelta < k_AUTO_DETECT_MAX_VELOCITY_DIFF && speedDelta < frameClosestSpeedDelta) {
+                    frameClosestSpeedDelta = speedDelta;
+                    frameRefId = i;
+                    frameTargetId = j;
+                }
+            }
+        }
+
+        // figure out wtf moved
+        if (frameRefId != vr::k_unTrackedDeviceIndexInvalid) {
+            if (m_candidateRefId == vr::k_unTrackedDeviceIndexInvalid) {
+                // found match, start tracking the pair
+                m_candidateRefId = frameRefId;
+                m_candidateTargetId = frameTargetId;
+                m_candidateScore = 1;
+            } else if (m_candidateRefId == frameRefId && m_candidateTargetId == frameTargetId) {
+                // the same pair we found earlier are moving together
+                m_candidateScore++;
+            } else {
+                // a different pair was found, this may be a false positive so decrease score for now
+                m_candidateScore--;
+                if (m_candidateScore <= 0) {
+                    // the new pair is more prominent than the last one so replace it
+                    m_candidateRefId = frameRefId;
+                    m_candidateTargetId = frameTargetId;
+                    m_candidateScore = 1;
+                }
+            }
+        } else {
+            // no devices generated a valid pair, did the user stop moving?
+            if (m_candidateScore > 0) m_candidateScore--;
+        }
+        
+        if (currentTime - m_autoDetectStartTime >= k_AUTO_DETECT_DURATION) {
+            if (m_candidateRefId != vr::k_unTrackedDeviceIndexInvalid && m_candidateTargetId != vr::k_unTrackedDeviceIndexInvalid && m_candidateScore > k_AUTO_DETECT_MINIMUM_SCORE) {
+                const auto& refDevInfo = VRState::getInstance()->getVrDevice(m_candidateRefId);
+                const auto& targetDevInfo = VRState::getInstance()->getVrDevice(m_candidateTargetId);
+
+                referenceDevice.deviceId = m_candidateRefId;
+                referenceDevice.trackingSystem = refDevInfo.szTrackingSystemId;
+
+                targetDevice.deviceId = m_candidateTargetId;
+                targetDevice.trackingSystem = targetDevInfo.szTrackingSystemId;
+
+                LOG_CALIB_INFO("Automatically detected devices; ref: ID {}, target: ID {}", m_candidateRefId, m_candidateTargetId);
+                return true;
+            } else {
+                LOG_CALIB_WARN("Failed to automatically detect devices. Did the user move them enough?");
+                return true;
+            }
+        }
+        return false;
     }
 
     void TrackingSystemCalibration::resetCalibrationForDevice(const CalibrationDevice& device) {
