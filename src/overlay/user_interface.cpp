@@ -6,6 +6,8 @@
 #include "localisation.h"
 #include "calibration.h"
 #include "configuration.h"
+#include "util.h"
+#include "base_station_management.h"
 
 namespace spacecal {
 
@@ -478,8 +480,127 @@ namespace spacecal {
     }
 
     void page_base_station_management() {
-        ImGui::TextHeading("%s", "Base Station Management");
-        ImGui::TextDisabled("COMING LATER");
+        ImGui::TextHeading("%s", LOCALE_GET("base_stations_title").c_str());
+
+        if (!bluetooth::is_bluetooth_available()) {
+            ImGui::TextDisabled(LOCALE_GET("base_stations_no_bluetooth").c_str());
+            return;
+        }
+
+        // bt avail
+        size_t dwBaseStationCount = bluetooth::get_base_station_count();
+
+        if (dwBaseStationCount > 0) {
+            if (ImGui::Button(LOCALE_GET("base_stations_action_wake_all").c_str())) {
+                bluetooth::set_all_base_station_power_state(bluetooth::PowerState_Awake_From_Standby);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button(LOCALE_GET("base_stations_action_sleep_all").c_str())) {
+                bluetooth::set_all_base_station_power_state(bluetooth::PowerState_Sleep);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button(LOCALE_GET("base_stations_action_fix_collisions").c_str())) {
+                bluetooth::auto_assign_base_station_channels();
+            }
+
+            if (bluetooth::do_base_station_channels_collide()) {
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "%s", LOCALE_GET("base_stations_warning_collision").c_str());
+            }
+            ImGui::Separator();
+        }
+
+        if (dwBaseStationCount < 1) {
+            ImGui::TextDisabled(LOCALE_GET("base_stations_none_found").c_str());
+        }
+        else {
+            for (size_t i = 0; i < dwBaseStationCount; i++) {
+                auto base_station = bluetooth::get_base_station(i);
+
+                ImGui::PushID(static_cast<int>(i));
+                ImGui::BeginGroup();
+
+                const char* typeStr = (base_station.eType == bluetooth::BaseStationType_10) ? "1.0" : "2.0";
+                std::string szBaseStationName = base_station.szSerialNumber;
+                std::string headerText = LOCALE_FORMAT("base_stations_header_info", typeStr, szBaseStationName);
+                ImGui::Text("%s", headerText.c_str());
+
+                ImGui::SameLine(ImGui::GetWindowWidth() - 150.0f);
+                switch (base_station.powerState) {
+                case bluetooth::PowerState_Sleep:
+                    ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "%s", LOCALE_GET("base_stations_state_sleep").c_str());
+                    break;
+                case bluetooth::PowerState_Standby:
+                    ImGui::TextColored(ImVec4(0.9f, 0.6f, 0.1f, 1.0f), "%s", LOCALE_GET("base_stations_state_standby").c_str());
+                    break;
+                case bluetooth::PowerState_Awake_From_Sleep:
+                case bluetooth::PowerState_Awake_From_Standby:
+                case bluetooth::PowerState_Awake_TooOldFirmware:
+                    ImGui::TextColored(ImVec4(0.2f, 0.9f, 0.2f, 1.0f), "%s", LOCALE_GET("base_stations_state_active").c_str());
+                    break;
+                default:
+                    ImGui::TextDisabled("%s", LOCALE_GET("base_stations_state_unknown").c_str());
+                    break;
+                }
+
+                ImGui::Spacing();
+
+                if (base_station.eType == bluetooth::BaseStationType_20) {
+                    ImGui::Text("%s", LOCALE_GET("base_stations_channel_select_label").c_str());
+
+                    for (int row = 0; row < 2; ++row) {
+                        for (int col = 0; col < 8; ++col) {
+                            uint8_t targetChannel = static_cast<uint8_t>((row * 8) + col + 1);
+
+                            std::string channelBtnLabel = fmt::format("{}", targetChannel);
+
+                            bool isCurrent = (base_station.channel == targetChannel);
+                            if (isCurrent) {
+                                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
+                                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.7f, 0.2f, 1.0f));
+                            }
+                            else {
+                                ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+                                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
+                            }
+
+                            if (ImGui::Button(channelBtnLabel.c_str(), ImVec2(25.0f, 25.0f))) {
+                                bluetooth::set_base_station_channel(i, targetChannel);
+                            }
+
+                            ImGui::PopStyleColor(2);
+
+                            if (col < 7) {
+                                ImGui::SameLine();
+                            }
+                        }
+                    }
+                    ImGui::Spacing();
+                }
+
+                if (ImGui::Button(LOCALE_GET("base_stations_btn_wake").c_str())) {
+                    bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Awake_From_Standby);
+                }
+                ImGui::SameLine();
+                if (ImGui::Button(LOCALE_GET("base_stations_btn_standby").c_str())) {
+                    bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Standby);
+                }
+                ImGui::SameLine();
+                if (ImGui::Button(LOCALE_GET("base_stations_btn_sleep").c_str())) {
+                    bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Sleep);
+                }
+
+                ImGui::EndGroup();
+
+                if (i < dwBaseStationCount - 1) {
+                    ImGui::Spacing();
+                    ImGui::Separator();
+                    ImGui::Spacing();
+                }
+
+                ImGui::PopID();
+            }
+        }
     }
 
     inline const char* get_tracking_result_name(vr::ETrackingResult result) {
@@ -587,9 +708,7 @@ namespace spacecal {
     SpaceCalibratorVerticalTab_t g_spaceCalUiTabs[] = {
         { .szLocaleKey = "tab_page_calibration", .fnDrawTab = page_calibration, },
         { .szLocaleKey = "tab_page_graphs", .fnDrawTab = page_graphs, },
-#if 0 // @TEMP: will re-introduce in v2.1 as this is a nice to have and not strictly necessary right now
         { .szLocaleKey = "tab_page_base_station_management", .fnDrawTab = page_base_station_management, },
-#endif
         { .szLocaleKey = "tab_page_settings", .fnDrawTab = page_settings, },
 #if _DEBUG || 1 // @TODO: reserved exclusively for debug mode, may make sense to enable with a flag?
         { .szLocaleKey = "tab_page_debug", .fnDrawTab = page_debug, },

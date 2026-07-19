@@ -2,6 +2,8 @@
 
 #include <string>
 #include <filesystem>
+#include <bit>
+#include <inttypes.h>
 
 namespace util {
     void init();
@@ -21,3 +23,12 @@ namespace util {
 #endif
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
+
+// for base station comms
+inline uint16_t make_be16(uint16_t value) {
+    if constexpr (std::endian::native == std::endian::big) {
+        return value;
+    } else {
+        return (uint16_t)((value >> 8) | (value << 8));
+    }
+}

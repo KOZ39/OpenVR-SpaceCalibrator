@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 namespace spacecal {
     namespace config {
@@ -111,10 +112,18 @@ namespace spacecal {
                     TrackingDevice target_device;
                 };
 
+                struct BaseStationManagementData {
+                    bool auto_turn_on_during_startup = false;
+                    bool auto_turn_off_during_shutdown = false;
+                    std::unordered_map<std::string, std::string> nicknames; // KV pair -> "LHB XXXXXXXX" to "my nick name"
+                };
+
                 std::string ui_locale = "system";
                 bool advanced_settings = false;
 
                 std::vector<Calibration_t> calibrations;
+
+                BaseStationManagementData base_stations;
             };
 
             typedef Configuration_0 Configuration_Latest;

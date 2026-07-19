@@ -8,6 +8,7 @@
 #include "localisation.h"
 #include "vr_core.h"
 #include "log.h"
+#include "base_station_management.h"
 #if OS_WINDOWS
 #include <windows.h>
 #endif
@@ -95,12 +96,16 @@ int entry_point(int argc, char* argv[]) {
     // init calibration manager or else instance will be nullptr
     spacecal::CalibrationManager* pCalibrationManager = new spacecal::CalibrationManager;
 
+    // Initialise base station management
+    spacecal::bluetooth::init_base_station_management();
+
     LOG_INFO("Started Space Calibrator Nova!");
 
     theWindow->RunLoop();
 
     // close window and save settings to disk
     theWindow->Shutdown();
+    spacecal::bluetooth::shutdown_base_station_management();
     spacecal::renderer::shutdownRenderer();
     spacecal::ConfigurationManager::getInstance()->saveConfiguration();
 

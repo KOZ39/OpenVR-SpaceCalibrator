@@ -21,6 +21,7 @@ namespace logging {
     ::quill::Logger* s_loggerIpc = nullptr;
     ::quill::Logger* s_loggerHooking = nullptr;
     ::quill::Logger* s_loggerCalibration = nullptr;
+    ::quill::Logger* s_loggerBluetooth = nullptr;
 
     class UiHaltOnErrorSink final : public quill::Sink {
     public:
@@ -192,12 +193,14 @@ namespace logging {
             s_loggerIpc = MAKE_LOGGER_OVERLAY("ipc");
             s_loggerHooking = MAKE_LOGGER_OVERLAY("hooking");
             s_loggerCalibration = MAKE_LOGGER_OVERLAY("calibration");
+            s_loggerBluetooth = MAKE_LOGGER_OVERLAY("bluetooth");
         } else {
             s_logger = MAKE_LOGGER_DRIVER("driver");
             s_loggerOpenVr = MAKE_LOGGER_DRIVER("openvr");
             s_loggerIpc = MAKE_LOGGER_DRIVER("ipc");
             s_loggerHooking = MAKE_LOGGER_DRIVER("hooking");
             s_loggerCalibration = MAKE_LOGGER_DRIVER("calibration");
+            s_loggerBluetooth = MAKE_LOGGER_DRIVER("bluetooth");
         }
     }
 }
