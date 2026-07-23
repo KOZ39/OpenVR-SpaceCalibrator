@@ -455,6 +455,7 @@ namespace spacecal {
          */
         void (*customRenderFunc)(const CalibrationErrorMetrics& metrics, int render_sample_count, const ImPlotSpec& baseSpec) = nullptr;
         double yLimit = 0.0;
+        double xScale = 1.0; // used for eg zooming in to specific graphs like velocity
         ImPlotAxisFlags yFlags = ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit;
 
         // ptr to next graph config to draw in the ui
@@ -536,7 +537,7 @@ namespace spacecal {
     void drawComposedPlot(double timeSpan, const GraphConfig* rootCfg, const CalibrationErrorMetrics& metrics) {
         if (ImPlot::BeginPlot(rootCfg->menuId, ImVec2(-1, 0), ImPlotFlags_None)) {
             ImPlot::SetupAxes(nullptr, rootCfg->szAxisUnits, 0, rootCfg->yFlags);
-            ImPlot::SetupAxisLimits(ImAxis_X1, -timeSpan, 0, ImGuiCond_Always);
+            ImPlot::SetupAxisLimits(ImAxis_X1, -timeSpan * rootCfg->xScale, 0, ImGuiCond_Always);
             ImPlot::SetupAxisLimits(ImAxis_Y1, 0, rootCfg->yLimit, ImGuiCond_Appearing);
 
             addApplyTicks();
@@ -592,12 +593,12 @@ namespace spacecal {
     // these are defomed outside the array for the linked list to work
 
     // axis variance needs custom func for the draw line
-    static const GraphConfig g_varLineNode    { "Datapoint",      "##Axis variance", nullptr, SeriesType::Scalar,     offsetof(CalibrationErrorMetrics, axisIndependence),    nullptr,              0.003,  ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ nullptr           };
-    static const GraphConfig g_varianceRoot   { "Axis Variance",  "##Axis variance", nullptr, SeriesType::CustomFunc, 0,                                                      drawAxisVariancePlot, 0.003,  ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ &g_varLineNode    };
+    static const GraphConfig g_varLineNode    { "Datapoint",      "##Axis variance", nullptr, SeriesType::Scalar,     offsetof(CalibrationErrorMetrics, axisIndependence),    nullptr,              0.003, 1.0, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ nullptr           };
+    static const GraphConfig g_varianceRoot   { "Axis Variance",  "##Axis variance", nullptr, SeriesType::CustomFunc, 0,                                                      drawAxisVariancePlot, 0.003, 1.0, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ &g_varLineNode    };
 
     // temp for seeing how bad latency really is
-    static const GraphConfig g_referencePoseVelocity    { "Reference Velocity", "##hmdVelocity", nullptr, SeriesType::Scalar,       offsetof(CalibrationErrorMetrics, pose_ref_velocity_mag),   nullptr,    0.003,  ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ nullptr };
-    static const GraphConfig g_targetPoseVelocity       { "Target Velocity",    "##targetVelocity", nullptr, SeriesType::Scalar,    offsetof(CalibrationErrorMetrics, pose_tgt_velocity_mag),   nullptr,    0.003,  ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ &g_referencePoseVelocity };
+    static const GraphConfig g_referencePoseVelocity    { "Reference Velocity", "##hmdVelocity", "m/s", SeriesType::Scalar,       offsetof(CalibrationErrorMetrics, pose_ref_velocity_mag),   nullptr,    0.003, 0.05, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ nullptr };
+    static const GraphConfig g_targetPoseVelocity       { "Target Velocity",    "##targetVelocity", "m/s", SeriesType::Scalar,    offsetof(CalibrationErrorMetrics, pose_tgt_velocity_mag),   nullptr,    0.003, 0.05, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit,   /* .pNext = */ &g_referencePoseVelocity };
 
     const GraphConfig g_graph_data[] = {
         g_varianceRoot,
@@ -661,7 +662,7 @@ namespace spacecal {
             ImGui::TableNextRow();
             for (int c = 0; c < k_COLS; c++) {
                 int idx = r * k_COLS + c;
-                if (idx >= k_TOTAL_PLOTS) {
+                if (idx >= k_NUM_GRAPHS) {
                     continue;
                 }
 
@@ -737,7 +738,7 @@ namespace spacecal {
 
         // @TODO: numbering or smth
         spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(0);
-        draw_error_graphs(calibration.referenceDevice.trackingSystem, k_METRIC_HISTORY_TIMESPAN * 0.05, currentTime, calibration.errorMetrics);
+        draw_error_graphs(calibration.referenceDevice.trackingSystem, k_METRIC_HISTORY_TIMESPAN, currentTime, calibration.errorMetrics);
     }
 
     void page_settings(double currentTime) {
