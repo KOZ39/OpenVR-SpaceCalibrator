@@ -7,12 +7,16 @@
 #include <fmt/ranges.h>
 #include <string.h>
 #include <mutex>
+#include <queue>
+#include <condition_variable>
+#include <atomic>
 
 // use to dump hex data to log
 // @NOTE: makes log files significantly larger!
 // #define BLUETOOTH_LOGGING_VERBOSE
 
 #if OS_WINDOWS
+#include <objbase.h> // need COM for worker thread
 
 // increase BLE poll rate for speed on windows
 // https://stackoverflow.com/a/37328965
@@ -22,19 +26,62 @@
 
 const DWORD IOCTL_BLE_SCAN_FREQUENCY = 0x41118C;
 
-typedef struct ScanRequest_t {
+struct LE_SCAN_REQUEST_ORIG {
+    uint32_t scan_type; // 0 = passive, 1 = active
+    uint16_t scan_window;
+    uint16_t scan_interval;
+};
+
+struct LE_SCAN_REQUEST_WIN10 {
     uint32_t unknown1;
     uint32_t scan_type; // 0 = passive, 1 = active
     uint32_t unknown2;
-    uint16_t scan_interval;
     uint16_t scan_window;
+    uint16_t scan_interval;
     uint32_t unknown3[2];
-} ScanRequest_t;
+};
+
+// https://www.bluetooth.com/bluetooth-le-primer/#mcetoc_1iiprfme5g
+enum LE_SCAN_REQUEST_PHY_MODE {
+    LE_SCAN_PHY_1M = 1,     // LE 1M PHY (1 Mbps)
+    LE_SCAN_PHY_2M = 2,     // LE 2M PHY (2 Mbps)
+    LE_SCAN_PHY_CODED = 4   // LE Coded PHY (Long Range)
+};
+
+struct LE_SCAN_REQUEST_WIN11 {
+    uint32_t override_phy;  // 0 = use default, 1 = override, other values fail
+    uint32_t scan_type;     // 0 = passive, 1 = active
+    uint32_t mode_or_phy;   // LE_SCAN_REQUEST_PHY_MODE, if and only if use_phy == 1
+    uint16_t scan_window;   // LE scan window (units of 0.625ms); strictly <= scan_interval
+    uint16_t scan_interval; // LE scan interval (units of 0.625ms)
+};
 
 #endif // OS_WINDOWS
 
 namespace spacecal {
     namespace bluetooth {
+
+        enum EBleJobType_t : uint8_t {
+            BleJob_SetChannel,
+            BleJob_SetPower,
+        };
+
+        struct BleJob_t {
+            EBleJobType_t type;
+            size_t index;
+            uint8_t data; // channel id / power state enum
+        };
+
+        // ---- BLE worker thread: owns the WinRT/COM apartment, executes jobs serially ----
+        struct BleWorkerState_t {
+            std::thread thread;
+            std::mutex mutex;
+            std::condition_variable cv;
+            std::queue<BleJob_t> queue;
+            std::atomic<bool> running = false;
+        };
+
+        BleWorkerState_t g_ble_worker;
 
         struct BaseStationInternal_t {
             BaseStation_t base_station;
@@ -55,6 +102,7 @@ namespace spacecal {
             std::mutex mutexBaseStationList;
             size_t _itersElapsed = 0;
             bool bStationsChannelCollision = false;
+            std::thread scannerThread;
         };
 
         BaseStationManagementState_t g_base_station_state;
@@ -111,6 +159,87 @@ namespace spacecal {
             uint8_t _tail[12];
         };
 
+        void async_set_base_station_10_power_state(size_t index, EPowerState_t target_state);
+        void async_set_base_station_20_channel_state(size_t index, uint8_t target_channel);
+        void async_set_base_station_20_power_state(size_t index, EPowerState_t target_state);
+
+        void _ble_worker_run_job(const BleJob_t& job) {
+            switch (job.type) {
+            case BleJob_SetChannel:
+                async_set_base_station_20_channel_state(job.index, job.data);
+                break;
+            case BleJob_SetPower: {
+                EPowerState_t targetState = (EPowerState_t)job.data;
+                auto eType = g_base_station_state.aTrackedBaseStations[job.index].base_station.eType;
+                if (eType == BaseStationType_10) {
+                    async_set_base_station_10_power_state(job.index, targetState);
+                }
+                else if (eType == BaseStationType_20) {
+                    async_set_base_station_20_power_state(job.index, targetState);
+                }
+                break;
+            }
+            }
+        }
+
+        void _ble_worker_thread_main() {
+            platform::setThreadName("BluetoothWorkerThread");
+
+#if OS_WINDOWS
+            // need COM to be intialised or BLE invocations from this thread wont succeed
+            HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+            bool comInitialized = SUCCEEDED(hr);
+#endif
+
+            for (;;) {
+                BleJob_t job;
+                {
+                    std::unique_lock<std::mutex> lock(g_ble_worker.mutex);
+                    g_ble_worker.cv.wait(lock, [] { return !g_ble_worker.queue.empty() || !g_ble_worker.running; });
+
+                    if (!g_ble_worker.running && g_ble_worker.queue.empty()) {
+                        break;
+                    }
+
+                    job = g_ble_worker.queue.front();
+                    g_ble_worker.queue.pop();
+                }
+
+                _ble_worker_run_job(job);
+            }
+
+#if OS_WINDOWS
+            if (comInitialized) {
+                CoUninitialize();
+            }
+#endif
+        }
+
+        void ble_worker_start() {
+            g_ble_worker.running = true;
+            g_ble_worker.thread = std::thread(_ble_worker_thread_main);
+        }
+
+        void ble_worker_stop() {
+            {
+                std::lock_guard<std::mutex> lock(g_ble_worker.mutex);
+                g_ble_worker.running = false;
+            }
+            g_ble_worker.cv.notify_all();
+            if (g_ble_worker.thread.joinable()) {
+                g_ble_worker.thread.join();
+            }
+        }
+
+        void ble_worker_enqueue(BleJob_t job) {
+            {
+                std::lock_guard<std::mutex> lock(g_ble_worker.mutex);
+                g_ble_worker.queue.push(job);
+            }
+            g_ble_worker.cv.notify_one();
+        }
+
+
         bool is_base_station_10(char* identifier) {
             if (!identifier) { return false; }
             size_t len = strlen(identifier);
@@ -145,9 +274,6 @@ namespace spacecal {
             return false;
         }
 
-// range is 1, 2, 3, ..., 14, 15, 16
-#define IS_BASE_STATION_20_CHANNEL_VALID(x) ((x) != k_INVALID_BASE_STATION_CHANNEL && (x) > 0 && (x) < 17)
-
         // appends or updates an entry in g_base_station_state.aTrackedBaseStations
         void add_base_station_to_collection(const BaseStationInternal_t& baseStation) {
 
@@ -155,7 +281,8 @@ namespace spacecal {
             for (size_t i = 0; i < g_base_station_state.aTrackedBaseStations.size() && !foundStation; i++) {
                 if (g_base_station_state.aTrackedBaseStations[i].base_station.szSerialNumber == baseStation.base_station.szSerialNumber) {
                     // already present, update this and exit
-                    g_base_station_state.aTrackedBaseStations[i] = baseStation;
+                    g_base_station_state.aTrackedBaseStations[i].hBtDevice = baseStation.hBtDevice;
+                    g_base_station_state.aTrackedBaseStations[i].base_station = baseStation.base_station;
                     foundStation = true;
                 }
             }
@@ -272,157 +399,6 @@ namespace spacecal {
                     base_station_state->_itersElapsed++;
                     goto dev_find_cleanup;
                 }
-
-                // write cmds
-                if (pBaseStation) {
-                    if (pBaseStation->isChannelDirty) {
-                        if (!isConnected && canConnect) {
-                            err = simpleble_peripheral_connect(peripheral);
-                            err = simpleble_peripheral_is_connected(peripheral, &isConnected);
-                            if (err == SIMPLEBLE_SUCCESS && isConnected) {
-                                LOG_BLUETOOTH_INFO("Connected to base station {}", devDisplayName);
-                            }
-                        }
-
-                        if (isConnected) {
-                            size_t serviceCount = simpleble_peripheral_services_count(peripheral);
-                            std::vector<simpleble_service_t> bufServices(serviceCount);
-                            for (size_t i = 0; i < serviceCount; i++) {
-                                err = simpleble_peripheral_services_get(peripheral, i, &bufServices[i]);
-                            }
-
-                            uint8_t writeData[] = { pBaseStation->targetChannel };
-                            size_t writeDataSize = sizeof(writeData) / sizeof(writeData[0]);
-                            err = simpleble_peripheral_write_command(peripheral, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_MODE_CHARACTERISTIC_UUID, writeData, writeDataSize);
-                            if (err == SIMPLEBLE_SUCCESS) {
-                                pBaseStation->isChannelDirty = false;
-                            }
-
-                            err = simpleble_peripheral_disconnect(peripheral);
-                            if (err != SIMPLEBLE_SUCCESS) {
-                                LOG_BLUETOOTH_WARN("Failed to disconnect from base station {}...", devDisplayName);
-                            }
-                            else {
-                                LOG_BLUETOOTH_INFO("Disconnected from base station {}!", devDisplayName);
-                            }
-                        }
-                    }
-
-                    if (pBaseStation->isPowerDirty) {
-                        uint8_t writeData[] = { pBaseStation->targetPowerState };
-                        size_t writeDataSize = sizeof(writeData) / sizeof(writeData[0]);
-
-                        if (!isConnected && canConnect) {
-                            err = simpleble_peripheral_connect(peripheral);
-                            err = simpleble_peripheral_is_connected(peripheral, &isConnected);
-                            if (err == SIMPLEBLE_SUCCESS && isConnected) {
-                                LOG_BLUETOOTH_INFO("Connected to base station {}", devDisplayName);
-                            }
-                        }
-
-                        if (isConnected) {
-                            size_t serviceCount = simpleble_peripheral_services_count(peripheral);
-                            std::vector<simpleble_service_t> bufServices(serviceCount);
-                            for (size_t i = 0; i < serviceCount; i++) {
-                                err = simpleble_peripheral_services_get(peripheral, i, &bufServices[i]);
-                            }
-
-                            bool isOldFirmware = pBaseStation->isOldFirmware;
-                            bool foundPowerCharacteristic = false;
-                            for (size_t i = 0; i < serviceCount && !foundPowerCharacteristic; i++) {
-                                if (strcmp(bufServices[i].uuid.value, BASE_STATION_2_SERVICE_UUID.value) == 0) {
-                                    // found base station 2.0 service
-                                    for (size_t j = 0; j < bufServices[i].characteristic_count; j++) {
-                                        if (strcmp(bufServices[i].characteristics[j].uuid.value, BASE_STATION_2_POWER_CHARACTERISTIC_UUID.value) == 0) {
-                                            // found base station 2.0 power characteristic
-#if defined(BLUETOOTH_LOGGING_VERBOSE)
-                                            LOG_BLUETOOTH_INFO("PWR CHR: read: {}, writeReq {}, writeCmd: {}, notify: {}, indicate: {}",
-                                                bufServices[i].characteristics[j].can_read,
-                                                bufServices[i].characteristics[j].can_write_request,
-                                                bufServices[i].characteristics[j].can_write_command,
-                                                bufServices[i].characteristics[j].can_notify,
-                                                bufServices[i].characteristics[j].can_indicate
-                                            );
-#endif // BLUETOOTH_LOGGING_VERBOSE
-
-                                            isOldFirmware = !bufServices[i].characteristics[j].can_read;
-
-                                            foundPowerCharacteristic = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-
-                            bool isValidCommand = true;
-
-                            // 2.0s have 2 firmwares which are relavant, old and new firmware
-                            // 
-                            // new firmware commands and data:
-                            // Awake:
-                            //   0x01
-                            // Standby:
-                            //   0x02
-                            // Sleep:
-                            //   0x01 ; followed by a separate packet with 0x00
-                            // 
-                            // old firmware commands and data:
-                            // Awake:
-                            //   0x09
-                            // Standby:
-                            //   0x02
-                            // Sleep:
-                            //   0x00 ; followed by a separate packet with 0x00
-
-                            // @TODO: Somehow figure out if this is a new FW 2.0
-                            // We can query services and depending on the characteristics
-                            // props of BASE_STATION_2_POWER_CHARACTERISTIC_UUID
-                            // we can tell if we're on new or old FW
-                            // 
-                            if (!pBaseStation->isOldFirmware) {
-                                switch (pBaseStation->targetPowerState) {
-                                case PowerState_Awake_From_Sleep:
-                                    writeData[0] = 0x01;
-                                    break;
-                                case PowerState_Standby:
-                                    writeData[0] = 0x02;
-                                    break;
-                                case PowerState_Sleep:
-                                    writeData[0] = 0x01;
-                                    break;
-                                default:
-                                    isValidCommand = false;
-                                    LOG_BLUETOOTH_WARN("Got invalid command {:02X} for base station {}, ignoring...", (uint8_t)pBaseStation->targetPowerState, devDisplayName);
-                                    break;
-                                }
-                            }
-
-                            if (isValidCommand) {
-                                err = simpleble_peripheral_write_command(peripheral, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_POWER_CHARACTERISTIC_UUID, writeData, writeDataSize);
-                                if (err == SIMPLEBLE_SUCCESS) {
-                                    pBaseStation->isPowerDirty = false;
-                                }
-
-                                if (pBaseStation->targetPowerState == PowerState_Sleep) {
-                                    // Sleep cmd requires to send 0x01 followed by 0x00
-                                    writeData[0] = 0x00;
-                                    err = simpleble_peripheral_write_command(peripheral, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_POWER_CHARACTERISTIC_UUID, writeData, writeDataSize);
-                                    if (err == SIMPLEBLE_SUCCESS) {
-                                        pBaseStation->isPowerDirty = false;
-                                    }
-                                }
-                            }
-
-                            err = simpleble_peripheral_disconnect(peripheral);
-                            if (err != SIMPLEBLE_SUCCESS) {
-                                LOG_BLUETOOTH_WARN("Failed to disconnect from base station {}...", devDisplayName);
-                            }
-                            else {
-                                LOG_BLUETOOTH_INFO("Disconnected from base station {}!", devDisplayName);
-                            }
-                        }
-                    }
-                }
             }
             
             if (is_base_station_10(devDisplayName)) {
@@ -463,10 +439,14 @@ namespace spacecal {
 
             bool success = false;
             bool bConnectable = false;
+            bool bConnected = false;
             if (simpleble_peripheral_is_connectable(hBtDevice, &bConnectable) == SIMPLEBLE_FAILURE) {
                 return;
             }
-            if (simpleble_peripheral_connect(hBtDevice) == SIMPLEBLE_SUCCESS) {
+            if (simpleble_peripheral_is_connected(hBtDevice, &bConnected) == SIMPLEBLE_FAILURE) {
+                return;
+            }
+            if (bConnected || simpleble_peripheral_connect(hBtDevice) == SIMPLEBLE_SUCCESS) {
                 Lighthouse10Command_t lh10Cmd = LH10Cmd_PowerOn;
                 uint16_t dwTimeout = 0;
                 switch (target_state) {
@@ -506,13 +486,293 @@ namespace spacecal {
                 }
             }
             g_base_station_state.mutexBaseStationList.unlock();
+
+            // re-attempt
+            if (!success) {
+                std::thread(async_set_base_station_10_power_state, index, target_state).detach();
+            }
+        }
+
+        void async_set_base_station_20_channel_state(size_t index, uint8_t target_channel) {
+            g_base_station_state.mutexBaseStationList.lock();
+
+            if (index >= g_base_station_state.aTrackedBaseStations.size()) {
+                g_base_station_state.mutexBaseStationList.unlock();
+                return;
+            }
+
+            simpleble_peripheral_t hBtDevice = g_base_station_state.aTrackedBaseStations[index].hBtDevice;
+            std::string szSerialNumber = g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber;
+            g_base_station_state.mutexBaseStationList.unlock();
+
+            bool success = false;
+            bool bConnectable = false;
+            bool bConnected = false;
+            if (simpleble_peripheral_is_connectable(hBtDevice, &bConnectable) == SIMPLEBLE_FAILURE) {
+                return;
+            }
+            if (simpleble_peripheral_is_connected(hBtDevice, &bConnected) == SIMPLEBLE_FAILURE) {
+                return;
+            }
+            if (bConnected || simpleble_peripheral_connect(hBtDevice) == SIMPLEBLE_SUCCESS) {
+
+                simpleble_err_t err = SIMPLEBLE_SUCCESS;
+                size_t serviceCount = simpleble_peripheral_services_count(hBtDevice);
+                std::vector<simpleble_service_t> bufServices(serviceCount);
+                for (size_t i = 0; i < serviceCount; i++) {
+                    err = simpleble_peripheral_services_get(hBtDevice, i, &bufServices[i]);
+                }
+
+                uint8_t writeData[] = { target_channel };
+                size_t writeDataSize = sizeof(writeData) / sizeof(writeData[0]);
+                err = simpleble_peripheral_write_command(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_MODE_CHARACTERISTIC_UUID, writeData, writeDataSize);
+                if (err == SIMPLEBLE_SUCCESS) {
+                    success = true;
+                }
+
+                err = simpleble_peripheral_disconnect(hBtDevice);
+                if (err != SIMPLEBLE_SUCCESS) {
+                    LOG_BLUETOOTH_WARN("Failed to disconnect from base station {}...", szSerialNumber);
+                }
+                else {
+                    LOG_BLUETOOTH_INFO("Disconnected from base station {}!", szSerialNumber);
+                }
+            }
+
+            g_base_station_state.mutexBaseStationList.lock();
+            if (index < g_base_station_state.aTrackedBaseStations.size()) {
+                auto& final_station = g_base_station_state.aTrackedBaseStations[index];
+                if (success) {
+                    final_station.base_station.channel = target_channel;
+                }
+            }
+            g_base_station_state.mutexBaseStationList.unlock();
+
+            // re-attempt
+            if (!success) {
+                std::thread(async_set_base_station_20_channel_state, index, target_channel).detach();
+            }
+        }
+
+        void async_set_base_station_20_power_state(size_t index, EPowerState_t target_state) {
+            g_base_station_state.mutexBaseStationList.lock();
+
+            if (index >= g_base_station_state.aTrackedBaseStations.size()) {
+                g_base_station_state.mutexBaseStationList.unlock();
+                return;
+            }
+
+            simpleble_peripheral_t hBtDevice = g_base_station_state.aTrackedBaseStations[index].hBtDevice;
+            bool bIsOldFirmware = g_base_station_state.aTrackedBaseStations[index].isOldFirmware;
+            std::string szSerialNumber = g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber;
+            g_base_station_state.mutexBaseStationList.unlock();
+
+            bool success = false;
+            bool bConnectable = false;
+            bool bConnected = false;
+            if (simpleble_peripheral_is_connectable(hBtDevice, &bConnectable) == SIMPLEBLE_FAILURE) {
+                return;
+            }
+            if (simpleble_peripheral_is_connected(hBtDevice, &bConnected) == SIMPLEBLE_FAILURE) {
+                return;
+            }
+            if (bConnected || simpleble_peripheral_connect(hBtDevice) == SIMPLEBLE_SUCCESS) {
+
+                simpleble_err_t err = SIMPLEBLE_SUCCESS;
+
+                uint8_t writeData[] = { target_state };
+                size_t writeDataSize = sizeof(writeData) / sizeof(writeData[0]);
+
+                simpleble_characteristic_t powerChar;
+
+                    size_t serviceCount = simpleble_peripheral_services_count(hBtDevice);
+                    std::vector<simpleble_service_t> bufServices(serviceCount);
+                    for (size_t i = 0; i < serviceCount; i++) {
+                        err = simpleble_peripheral_services_get(hBtDevice, i, &bufServices[i]);
+                    }
+
+                    bool foundPowerCharacteristic = false;
+                    for (size_t i = 0; i < serviceCount && !foundPowerCharacteristic; i++) {
+                        if (strcmp(bufServices[i].uuid.value, BASE_STATION_2_SERVICE_UUID.value) == 0) {
+                            // found base station 2.0 service
+                            for (size_t j = 0; j < bufServices[i].characteristic_count; j++) {
+                                if (strcmp(bufServices[i].characteristics[j].uuid.value, BASE_STATION_2_POWER_CHARACTERISTIC_UUID.value) == 0) {
+                                    // found base station 2.0 power characteristic
+#if defined(BLUETOOTH_LOGGING_VERBOSE)
+                                    LOG_BLUETOOTH_INFO("PWR CHR: read: {}, writeReq {}, writeCmd: {}, notify: {}, indicate: {}",
+                                        bufServices[i].characteristics[j].can_read,
+                                        bufServices[i].characteristics[j].can_write_request,
+                                        bufServices[i].characteristics[j].can_write_command,
+                                        bufServices[i].characteristics[j].can_notify,
+                                        bufServices[i].characteristics[j].can_indicate
+                                    );
+#endif // BLUETOOTH_LOGGING_VERBOSE
+
+                                    bIsOldFirmware = !bufServices[i].characteristics[j].can_read;
+
+                                    powerChar = bufServices[i].characteristics[j];
+                                    foundPowerCharacteristic = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    bool isValidCommand = true;
+
+                    // 2.0s have 2 firmwares which are relavant, old and new firmware
+                    // 
+                    // new firmware commands and data:
+                    // Awake:
+                    //   0x01
+                    // Standby:
+                    //   0x02
+                    // Sleep:
+                    //   0x01 ; followed by a separate packet with 0x00
+                    // 
+                    // old firmware commands and data:
+                    // Awake:
+                    //   0x09
+                    // Standby:
+                    //   0x02
+                    // Sleep:
+                    //   0x00 ; followed by a separate packet with 0x00
+
+                    // We can query services and depending on the characteristics
+                    // props of BASE_STATION_2_POWER_CHARACTERISTIC_UUID
+                    // we can tell if we're on new or old FW
+                    if (!bIsOldFirmware) {
+                        switch (target_state) {
+                        case PowerState_Awake_From_Sleep:
+                            writeData[0] = 0x01;
+                            break;
+                        case PowerState_Standby: // @NOTE: unreliable on old fw; idk why exactly yet but fuck around and find ouut exists
+                            writeData[0] = 0x02;
+                            break;
+                        case PowerState_Sleep:
+                            writeData[0] = 0x01;
+                            break;
+                        default:
+                            isValidCommand = false;
+                            LOG_BLUETOOTH_WARN("Got invalid command {:02X} for base station {}, ignoring...", (uint8_t)target_state, szSerialNumber);
+                            break;
+                        }
+                    }
+
+                    if (isValidCommand) {
+                        err = simpleble_peripheral_write_command(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_POWER_CHARACTERISTIC_UUID, writeData, writeDataSize);
+                        if (err == SIMPLEBLE_SUCCESS) {
+                            success = true;
+                        }
+
+                        if (target_state == PowerState_Sleep) {
+                            // Sleep cmd requires to send 0x01 followed by 0x00
+                            writeData[0] = 0x00;
+                            err = simpleble_peripheral_write_command(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_POWER_CHARACTERISTIC_UUID, writeData, writeDataSize);
+                            if (err == SIMPLEBLE_SUCCESS) {
+                                success = true;
+                            } else {
+                                success = false;
+                            }
+                        }
+                    }
+
+                    err = simpleble_peripheral_disconnect(hBtDevice);
+                    if (err != SIMPLEBLE_SUCCESS) {
+                        LOG_BLUETOOTH_WARN("Failed to disconnect from base station {}...", szSerialNumber);
+                    }
+                    else {
+                        LOG_BLUETOOTH_INFO("Disconnected from base station {}!", szSerialNumber);
+                    }
+            }
+
+            g_base_station_state.mutexBaseStationList.lock();
+            if (index < g_base_station_state.aTrackedBaseStations.size()) {
+                auto& final_station = g_base_station_state.aTrackedBaseStations[index];
+                if (success) {
+                    final_station.base_station.powerState = target_state;
+                }
+            }
+            g_base_station_state.mutexBaseStationList.unlock();
+
+            // re-attempt
+            if (!success) {
+                std::thread(async_set_base_station_20_power_state, index, target_state).detach();
+            }
         }
 
         bool is_bluetooth_available() {
             return simpleble_adapter_is_bluetooth_enabled();
         }
 
-        bool init_base_station_management() {
+#if OS_WINDOWS
+        bool _try_scan_device_io_control(HANDLE hBtRadio, OVERLAPPED ov, void* pReq, DWORD reqSize) {
+            ResetEvent(ov.hEvent);
+            DWORD dwBytesWritten = 0;
+
+            BOOL bOk = DeviceIoControl(hBtRadio, IOCTL_BLE_SCAN_FREQUENCY, pReq, reqSize, NULL, 0, &dwBytesWritten, &ov);
+            if (bOk) {
+                return true;
+            }
+
+            DWORD dwErr = GetLastError();
+            if (dwErr == ERROR_IO_PENDING) {
+                // check if overlapped io is allowing async
+                DWORD dwWait = WaitForSingleObject(ov.hEvent, 2000);
+                if (dwWait != WAIT_OBJECT_0) {
+                    CancelIoEx(hBtRadio, &ov);
+                    return false;
+                }
+                DWORD dwTransferred = 0;
+                return GetOverlappedResult(hBtRadio, &ov, &dwTransferred, FALSE) != 0;
+            }
+
+            if (dwErr == ERROR_INVALID_PARAMETER) {
+                // fallback to blocking
+                return DeviceIoControl(hBtRadio, IOCTL_BLE_SCAN_FREQUENCY, pReq, reqSize, NULL, 0, &dwBytesWritten, NULL) != 0;
+            }
+
+            return false;
+            };
+
+        void _apply_ble_scan_frequency(HANDLE hBtRadio) {
+            platform::setThreadName("BluetoothScanFreqThread");
+
+            OVERLAPPED ov = { 0 };
+            ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+            if (!ov.hEvent) {
+                LOG_BLUETOOTH_WARN("Failed to create event for BLE scan frequency IOCTL, skipping");
+                CloseHandle(hBtRadio);
+                return;
+            }
+
+            // the LE_SCAN_REQUEST struct varies across windows version so fuck it try all of them lmao
+            LE_SCAN_REQUEST_WIN11 scanReqWin11 = { .scan_type = 0, .scan_window = 29, .scan_interval = 29 };
+            LE_SCAN_REQUEST_WIN10 scanReqWin10 = { .scan_type = 0, .scan_window = 29, .scan_interval = 29 };
+            LE_SCAN_REQUEST_ORIG scanReqLegacy = { .scan_type = 0, .scan_window = 29, .scan_interval = 29 };
+
+            if (!_try_scan_device_io_control(hBtRadio, ov, &scanReqWin11, sizeof(scanReqWin11))) {
+                if (!_try_scan_device_io_control(hBtRadio, ov, &scanReqWin10, sizeof(scanReqWin10))) {
+                    if (!_try_scan_device_io_control(hBtRadio, ov, &scanReqLegacy, sizeof(scanReqLegacy))) {
+                        LOG_BLUETOOTH_WARN("Failed to increase BLE scan frequency. Bluetooth management may be slower. Error: {}", GetLastError());
+                    }
+                }
+            }
+
+            CloseHandle(ov.hEvent);
+            CloseHandle(hBtRadio);
+        }
+#endif // OS_WINDOWS
+
+        void _scan_init_thread_main() {
+            platform::setThreadName("BluetoothScanInitThread");
+
+#if OS_WINDOWS
+            // need COM to be initialised or BLE invocations from this thread wont succeed
+            HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+            bool comInitialized = SUCCEEDED(hr);
+#endif
+
             bool bSuccess = true;
             if (g_base_station_state.aAdapters.empty()) {
                 g_base_station_state.aAdapters.resize(simpleble_adapter_get_count());
@@ -526,21 +786,16 @@ namespace spacecal {
 
 #if OS_WINDOWS
             // Tell the windows API to increase the scan frequency because I like speed
-            BLUETOOTH_FIND_RADIO_PARAMS btFindRadioParam = { 0 };
+            BLUETOOTH_FIND_RADIO_PARAMS btFindRadioParam = { .dwSize = sizeof(BLUETOOTH_FIND_RADIO_PARAMS) };
             HANDLE hBtRadio = INVALID_HANDLE_VALUE;
             HBLUETOOTH_RADIO_FIND findResult = BluetoothFindFirstRadio(&btFindRadioParam, &hBtRadio);
-            if (findResult != INVALID_HANDLE_VALUE) {
-                ScanRequest_t scanReq = {
-                    .scan_type = 0,
-                    .scan_interval = 29,
-                    .scan_window = 29,
-                };
-                DWORD dwBytesWritten = 0;
-                if (!DeviceIoControl(hBtRadio, IOCTL_BLE_SCAN_FREQUENCY, &scanReq, sizeof(scanReq), NULL, 0, &dwBytesWritten, NULL)) {
-                    LOG_BLUETOOTH_WARN("Failed to increase BLE scan frequency. Bluetooth management may be slower.");
-                }
+            if (findResult != NULL) {
+                BluetoothFindRadioClose(findResult);
+                // DeviceIoControl is blocking here so throw it in it's own thread to not block the main or bluetooth threads
+                std::thread(_apply_ble_scan_frequency, hBtRadio).detach();
             }
 #endif
+            ble_worker_start();
 
             // Scan for stuff
             for (size_t i = 0; i < g_base_station_state.aAdapters.size(); i++) {
@@ -553,15 +808,36 @@ namespace spacecal {
                 // Scan begin scanning
                 bSuccess = bSuccess && (simpleble_adapter_scan_start(adapter) == simpleble_err_t::SIMPLEBLE_SUCCESS);
             }
-            return bSuccess;
+            
+            if (!bSuccess) {
+                LOG_BLUETOOTH_WARN("Failed to fully initialise base station BLE scanning");
+            }
+
+#if OS_WINDOWS
+            if (comInitialized) {
+                CoUninitialize();
+            }
+#endif
+        }
+
+        bool init_base_station_management() {
+            g_base_station_state.scannerThread = std::thread(_scan_init_thread_main);
+            return true;
         }
 
         bool shutdown_base_station_management() {
             bool bSuccess = true;
+
             for (size_t i = 0; i < g_base_station_state.aAdapters.size(); i++) {
                 simpleble_adapter_t adapter = g_base_station_state.aAdapters[i];
                 bSuccess = bSuccess && (simpleble_adapter_scan_stop(adapter) == simpleble_err_t::SIMPLEBLE_SUCCESS);
             }
+
+            if (g_base_station_state.scannerThread.joinable()) {
+                g_base_station_state.scannerThread.join();
+            }
+
+            ble_worker_stop();
 
             if (g_base_station_state.aTrackedBaseStations.size() > 0) {
                 for (size_t i = 0; i < g_base_station_state.aTrackedBaseStations.size(); i++) {
@@ -596,8 +872,7 @@ namespace spacecal {
                     LOG_BLUETOOTH_WARN("Attempted to assign channel {0} on Base Station 1.0 {1}, but the operation is unsupported as it's a 1.0 Base Station! Ignoring...",
                         channel, g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber);
                 } else if (g_base_station_state.aTrackedBaseStations[index].base_station.eType == BaseStationType_20) {
-                    g_base_station_state.aTrackedBaseStations[index].targetChannel = channel;
-                    g_base_station_state.aTrackedBaseStations[index].isChannelDirty = true;
+                    ble_worker_enqueue({ BleJob_SetChannel, index, channel });
                 }
             }
             return true;
@@ -606,12 +881,7 @@ namespace spacecal {
         bool set_base_station_power_state(size_t index, EPowerState_t state) {
             std::lock_guard<std::mutex> lock(g_base_station_state.mutexBaseStationList);
             if (g_base_station_state.aTrackedBaseStations.size() > 0 && index < g_base_station_state.aTrackedBaseStations.size()) {
-                if (g_base_station_state.aTrackedBaseStations[index].base_station.eType == BaseStationType_10) {
-                    std::thread(async_set_base_station_10_power_state, index, state).detach();
-                } else if (g_base_station_state.aTrackedBaseStations[index].base_station.eType == BaseStationType_20) {
-                    g_base_station_state.aTrackedBaseStations[index].targetPowerState = state;
-                    g_base_station_state.aTrackedBaseStations[index].isPowerDirty = true;
-                }
+                ble_worker_enqueue({ BleJob_SetPower, index, (uint8_t)state });
             }
             return true;
         }
@@ -628,7 +898,6 @@ namespace spacecal {
 
         bool auto_assign_base_station_channels() {
             bool bResult = true;
-            std::lock_guard<std::mutex> lock(g_base_station_state.mutexBaseStationList);
 
             if (!do_base_station_channels_collide()) {
                 return true;
@@ -636,9 +905,12 @@ namespace spacecal {
 
             // we can only assign channels to 2.0s, so ignore all 1.0s
             int base_station_20_count = 0;
-            for (size_t i = 0; i < g_base_station_state.aTrackedBaseStations.size(); i++) {
-                if (g_base_station_state.aTrackedBaseStations[i].base_station.eType == BaseStationType_20) {
-                    base_station_20_count++;
+            {
+                std::lock_guard<std::mutex> lock(g_base_station_state.mutexBaseStationList);
+                for (size_t i = 0; i < g_base_station_state.aTrackedBaseStations.size(); i++) {
+                    if (g_base_station_state.aTrackedBaseStations[i].base_station.eType == BaseStationType_20) {
+                        base_station_20_count++;
+                    }
                 }
             }
 
@@ -651,9 +923,18 @@ namespace spacecal {
             double step = (base_station_20_count > 1) ? (15.0 / (base_station_20_count - 1)) : 0.0;
 
             // distribute channels across channels 1 through 16
+            size_t dwBaseStationCount = 0;
+            {
+                std::lock_guard<std::mutex> lock(g_base_station_state.mutexBaseStationList);
+                dwBaseStationCount = g_base_station_state.aTrackedBaseStations.size();
+            }
             for (size_t i = 0; i < g_base_station_state.aTrackedBaseStations.size(); i++) {
-                auto& station = g_base_station_state.aTrackedBaseStations[i];
-                if (station.base_station.eType != BaseStationType_20) {
+                BaseStationInternal_t* station = nullptr;
+                {
+                    std::lock_guard<std::mutex> lock(g_base_station_state.mutexBaseStationList);
+                    station = &g_base_station_state.aTrackedBaseStations[i];
+                }
+                if (station->base_station.eType != BaseStationType_20) {
                     continue;
                 }
 
@@ -665,9 +946,8 @@ namespace spacecal {
                 if (ideal_channel < 1) ideal_channel = 1;
                 if (ideal_channel > 16) ideal_channel = 16;
 
-                if (station.base_station.channel != ideal_channel) {
-                    station.isChannelDirty = true;
-                    station.targetChannel = ideal_channel;
+                if (station->base_station.channel != ideal_channel) {
+                    set_base_station_channel(i, ideal_channel);
                 }
 
                 v2_index++;

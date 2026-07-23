@@ -7,6 +7,9 @@ namespace spacecal {
     namespace bluetooth {
         constexpr uint8_t k_INVALID_BASE_STATION_CHANNEL = 0xFF;
 
+// range is 1, 2, 3, ..., 14, 15, 16
+#define IS_BASE_STATION_20_CHANNEL_VALID(x) ((x) != ::spacecal::bluetooth::k_INVALID_BASE_STATION_CHANNEL && (x) > 0 && (x) < 17)
+
         enum EPowerState_t : uint8_t {
             PowerState_Unknown = 0xFF,
             PowerState_Sleep = 0x00,

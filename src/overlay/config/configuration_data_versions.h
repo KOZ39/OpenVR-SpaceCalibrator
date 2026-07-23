@@ -113,8 +113,10 @@ namespace spacecal {
                 };
 
                 struct BaseStationManagementData {
+                    bool auto_power_management_enabled = false;
                     bool auto_turn_on_during_startup = false;
                     bool auto_turn_off_during_shutdown = false;
+                    bool off_should_use_standby = false;
                     std::unordered_map<std::string, std::string> nicknames; // KV pair -> "LHB XXXXXXXX" to "my nick name"
                 };
 
