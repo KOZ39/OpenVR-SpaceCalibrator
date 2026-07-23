@@ -75,14 +75,37 @@ message ("Adding volk...")
 add_subdirectory(volk)
 
 # simpleble (for base station management)
-add_subdirectory(simpleble/simplecble)
+
+# base stations have a quirk where the hardware *LIES* about what its capable of. SimpleBLE naiively trusts
+# them and doesn't let you actually talk to the base stations to turn them off!
+# we need to patch SimpleBLE to remove the characteristic check before doing GATT operations to actually
+# be able to do power management. this is a library design fault and hopefully will be addressed upstream.
+message ("Adding SimpleBLE...")
+set(SIMPLEBLE_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/simpleble")
+set(SIMPLEBLE_PATCHED_DIR "${CMAKE_CURRENT_BINARY_DIR}/patched_submodules/simpleble")
+set(SIMPLEBLE_PATCH_FILE "${CMAKE_SOURCE_DIR}/vendor/simpleble-base-station-fix.patch")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${SIMPLEBLE_PATCH_FILE}")
+file(COPY "${SIMPLEBLE_SRC_DIR}/" DESTINATION "${SIMPLEBLE_PATCHED_DIR}")
+file(REMOVE "${SIMPLEBLE_PATCHED_DIR}/.git")
+file(RELATIVE_PATH SIMPLEBLE_REL_DIR "${CMAKE_SOURCE_DIR}" "${SIMPLEBLE_PATCHED_DIR}")
+execute_process(
+    COMMAND git apply -p1 --directory=${SIMPLEBLE_REL_DIR} --verbose --no-index --ignore-space-change --ignore-whitespace --whitespace=fix "${SIMPLEBLE_PATCH_FILE}"
+    WORKING_DIRECTORY "${SIMPLEBLE_PATCHED_DIR}"
+    RESULT_VARIABLE PATCH_APPLY_RESULT
+    OUTPUT_VARIABLE PATCH_APPLY_OUT
+    ERROR_VARIABLE PATCH_APPLY_ERR
+)
+if(NOT PATCH_APPLY_RESULT EQUAL 0)
+    message(FATAL_ERROR "Failed to apply SimpleBLE patch:\n${PATCH_APPLY_OUT}\n${PATCH_APPLY_ERR}")
+endif()
+add_subdirectory("${SIMPLEBLE_PATCHED_DIR}/simplecble" "${CMAKE_CURRENT_BINARY_DIR}/simplecble_build")
 target_compile_definitions(simpleble PRIVATE _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 target_compile_definitions(simplecble PRIVATE _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 # make simpleble use static fmt
 get_target_property(SIMPLEBLE_DEFS simpleble COMPILE_DEFINITIONS)
 if(SIMPLEBLE_DEFS)
     list(REMOVE_ITEM SIMPLEBLE_DEFS "FMT_HEADER_ONLY")
-    set_target_properties(simpleble PROPERTIES  COMPILE_DEFINITIONS "${SIMPLEBLE_DEFS}")
+    set_target_properties(simpleble PROPERTIES COMPILE_DEFINITIONS "${SIMPLEBLE_DEFS}")
 endif()
 target_link_libraries(simpleble PRIVATE fmt)
 

@@ -1,0 +1,98 @@
+diff --git a/simpleble/src/backends/dongl/PeripheralDongl.cpp b/simpleble/src/backends/dongl/PeripheralDongl.cpp
+index 3dacd54..807d643 100644
+--- a/simpleble/src/backends/dongl/PeripheralDongl.cpp
++++ b/simpleble/src/backends/dongl/PeripheralDongl.cpp
+@@ -152,9 +152,9 @@ void PeripheralDongl::write_request(BluetoothUUID const& service_uuid, Bluetooth
+                                     ByteArray const& data) {
+     auto& characteristic = _find_characteristic_from_uuid(service_uuid, characteristic_uuid);
+ 
+-    if (!characteristic.can_write_request) {
+-        throw Exception::OperationFailed(fmt::format("Characteristic {} is not writable", characteristic_uuid));
+-    }
++    // if (!characteristic.can_write_request) {
++    //     throw Exception::OperationFailed(fmt::format("Characteristic {} is not writable", characteristic_uuid));
++    // }
+ 
+     simpleble_WriteRsp rsp = _serial_protocol->simpleble_write(_conn_handle, characteristic.handle_value,
+                                                                simpleble_WriteOperation_WRITE_REQ, data);
+@@ -168,9 +168,9 @@ void PeripheralDongl::write_command(BluetoothUUID const& service_uuid, Bluetooth
+                                     ByteArray const& data) {
+     auto& characteristic = _find_characteristic_from_uuid(service_uuid, characteristic_uuid);
+ 
+-    if (!characteristic.can_write_command) {
+-        throw Exception::OperationFailed(fmt::format("Characteristic {} is not writable", characteristic_uuid));
+-    }
++    // if (!characteristic.can_write_command) {
++    //     throw Exception::OperationFailed(fmt::format("Characteristic {} is not writable", characteristic_uuid));
++    // }
+ 
+     simpleble_WriteRsp rsp = _serial_protocol->simpleble_write(_conn_handle, characteristic.handle_value,
+                                                                simpleble_WriteOperation_WRITE_CMD, data);
+diff --git a/simpleble/src/backends/linux/PeripheralLinux.cpp b/simpleble/src/backends/linux/PeripheralLinux.cpp
+index 9345afe..3126001 100644
+--- a/simpleble/src/backends/linux/PeripheralLinux.cpp
++++ b/simpleble/src/backends/linux/PeripheralLinux.cpp
+@@ -241,10 +241,10 @@ void PeripheralLinux::write_request(BluetoothUUID const& service, BluetoothUUID
+     // TODO: SimpleBluez::Characteristic::write_request() should also take ByteArray by const reference (but that's
+     // another library)
+     auto char_obj = _get_characteristic(service, characteristic);
+-    std::vector<std::string> flags = char_obj->flags();
+-    if (std::find(flags.begin(), flags.end(), "write") == flags.end()) {
+-        throw Exception::OperationNotSupported("write_request", characteristic);
+-    }
++    // std::vector<std::string> flags = char_obj->flags();
++    // if (std::find(flags.begin(), flags.end(), "write") == flags.end()) {
++    //     throw Exception::OperationNotSupported("write_request", characteristic);
++    // }
+     char_obj->write_request(data);
+ }
+ 
+@@ -253,10 +253,10 @@ void PeripheralLinux::write_command(BluetoothUUID const& service, BluetoothUUID
+     // TODO: SimpleBluez::Characteristic::write_command() should also take ByteArray by const reference (but that's
+     // another library)
+     auto char_obj = _get_characteristic(service, characteristic);
+-    std::vector<std::string> flags = char_obj->flags();
+-    if (std::find(flags.begin(), flags.end(), "write-without-response") == flags.end()) {
+-        throw Exception::OperationNotSupported("write_command", characteristic);
+-    }
++    // std::vector<std::string> flags = char_obj->flags();
++    // if (std::find(flags.begin(), flags.end(), "write-without-response") == flags.end()) {
++    //     throw Exception::OperationNotSupported("write_command", characteristic);
++    // }
+     char_obj->write_command(data);
+ }
+ 
+diff --git a/simpleble/src/backends/windows/PeripheralWindows.cpp b/simpleble/src/backends/windows/PeripheralWindows.cpp
+index 2136ae3..909a48b 100644
+--- a/simpleble/src/backends/windows/PeripheralWindows.cpp
++++ b/simpleble/src/backends/windows/PeripheralWindows.cpp
+@@ -324,10 +324,10 @@ void PeripheralWindows::write_request(BluetoothUUID const& service, BluetoothUUI
+ 
+     MtaManager::get().execute_sync([this, &gatt_characteristic, &data]() {
+         // Validate that the operation can be performed.
+-        uint32_t gatt_characteristic_prop = (uint32_t)gatt_characteristic.CharacteristicProperties();
+-        if ((gatt_characteristic_prop & (uint32_t)GattCharacteristicProperties::Write) == 0) {
+-            throw SimpleBLE::Exception::OperationNotSupported("write_request", guid_to_uuid(gatt_characteristic.Uuid()));
+-        }
++        // uint32_t gatt_characteristic_prop = (uint32_t)gatt_characteristic.CharacteristicProperties();
++        // if ((gatt_characteristic_prop & (uint32_t)GattCharacteristicProperties::Write) == 0) {
++        //     throw SimpleBLE::Exception::OperationNotSupported("write_request", guid_to_uuid(gatt_characteristic.Uuid()));
++        // }
+ 
+         // Convert the request data to a buffer.
+         winrt::Windows::Storage::Streams::IBuffer buffer = bytearray_to_ibuffer(data);
+@@ -346,10 +346,10 @@ void PeripheralWindows::write_command(BluetoothUUID const& service, BluetoothUUI
+ 
+     MtaManager::get().execute_sync([this, &gatt_characteristic, &data]() {
+         // Validate that the operation can be performed.
+-        uint32_t gatt_characteristic_prop = (uint32_t)gatt_characteristic.CharacteristicProperties();
+-        if ((gatt_characteristic_prop & (uint32_t)GattCharacteristicProperties::WriteWithoutResponse) == 0) {
+-            throw SimpleBLE::Exception::OperationNotSupported("write_command", guid_to_uuid(gatt_characteristic.Uuid()));
+-        }
++        // uint32_t gatt_characteristic_prop = (uint32_t)gatt_characteristic.CharacteristicProperties();
++        // if ((gatt_characteristic_prop & (uint32_t)GattCharacteristicProperties::WriteWithoutResponse) == 0) {
++        //     throw SimpleBLE::Exception::OperationNotSupported("write_command", guid_to_uuid(gatt_characteristic.Uuid()));
++        // }
+ 
+         // Convert the request data to a buffer.
+         winrt::Windows::Storage::Streams::IBuffer buffer = bytearray_to_ibuffer(data);
