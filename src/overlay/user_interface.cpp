@@ -1128,7 +1128,9 @@ namespace spacecal {
         auto& io = ImGui::GetIO();
 
         // disable ctrl + tab, pointless in a VR overlay https://github.com/ocornut/imgui/issues/7987
+#if !defined(IMGUI_USE_DEBUG_WINDOW)
         ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Tab, ImGuiInputFlags_RouteGlobal);
+#endif // IMGUI_USE_DEBUG_WINDOW
 
         constexpr ImGuiWindowFlags k_bareWindowFlags =
             ImGuiWindowFlags_NoTitleBar |
@@ -1136,8 +1138,11 @@ namespace spacecal {
             ImGuiWindowFlags_NoMove |
             ImGuiWindowFlags_NoScrollbar |
             ImGuiWindowFlags_NoScrollWithMouse |
-            ImGuiWindowFlags_NoCollapse |
-            ImGuiWindowFlags_NoNavFocus;
+            ImGuiWindowFlags_NoCollapse
+#if !defined(IMGUI_USE_DEBUG_WINDOW)
+            | ImGuiWindowFlags_NoNavFocus
+#endif // IMGUI_USE_DEBUG_WINDOW
+            ;
 
         ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
         ImGui::SetNextWindowSize(io.DisplaySize, ImGuiCond_Always);
@@ -1148,5 +1153,9 @@ namespace spacecal {
 
         buildVersionInfo();
         ImGui::End();
+
+#if defined(IMGUI_USE_DEBUG_WINDOW)
+        ImGui::ShowDemoWindow();
+#endif // IMGUI_USE_DEBUG_WINDOW
     }
 }
