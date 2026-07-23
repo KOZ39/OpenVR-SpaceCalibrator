@@ -41,72 +41,6 @@ namespace spacecal {
         ImGui::EndChild();
     }
 
-    inline void buildTrackingSystemSelection(spacecal::TrackingSystemCalibration& calibration) {
-        if (VRState::getInstance()->getTrackingSystemCount() == 0) {
-            ImGui::TextUnformatted(LOCALE_GET("tracking_system_no_systems").c_str()); // No tracked devices present. Please turn on a device to continue.
-            return;
-        }
-
-        ImGuiStyle& style = ImGui::GetStyle();
-        float paneWidth = (ImGui::GetContentRegionAvail().x - style.FramePadding.x) / 2;
-
-        ImGui::HeadingWithWidth(LOCALE_GET("reference_device").c_str(), paneWidth);
-        ImGui::SameLine(paneWidth + style.FramePadding.x * 3.5f);
-        ImGui::HeadingWithWidth(LOCALE_GET("target_device").c_str(), paneWidth);
-
-        ImGui::TextWrappedDisabledWithWidth(LOCALE_GET("reference_device_description").c_str(), paneWidth);
-        ImGui::SameLine();
-        ImGui::TextWrappedDisabledWithWidth(LOCALE_GET("target_device_description").c_str(), paneWidth);
-
-        ImGui::PushItemWidth(paneWidth);
-
-        std::string refPreview = calibration.referenceDevice.trackingSystem.empty() ? LOCALE_GET("select_reference_device") : getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
-        if (ImGui::BeginCombo("##ReferenceTrackingSystem", refPreview.c_str())) {
-            for (size_t i = 0; i < VRState::getInstance()->getTrackingSystemCount(); i++) {
-                const std::string& szTrackingSystemName = VRState::getInstance()->getTrackingSystem(i);
-                const std::string szFriendlyName = getTrackingSystemFriendlyName(szTrackingSystemName);
-
-                bool isSelected = (calibration.referenceDevice.trackingSystem == szTrackingSystemName);
-                if (ImGui::Selectable(szFriendlyName.c_str(), isSelected)) {
-                    calibration.referenceDevice.trackingSystem = szTrackingSystemName;
-                    // if ref space is now the target space, target should be unset
-                    // @TODO: should we pick the first tracking system that makes sense instead?
-                    if (calibration.referenceDevice.trackingSystem == calibration.targetDevice.trackingSystem)
-                        calibration.targetDevice.trackingSystem = "";
-                }
-
-                if (isSelected) ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::SameLine();
-
-        // target tracking system list is tracking system list EXCLUDING reference tracking system. one may NOT calibrate two devices of the same tracking system!
-        std::string targetPreview = calibration.targetDevice.trackingSystem.empty() ? LOCALE_GET("select_target_device") : getTrackingSystemFriendlyName(calibration.targetDevice.trackingSystem);
-        if (ImGui::BeginCombo("##TargetTrackingSystem", targetPreview.c_str())) {
-            for (size_t i = 0; i < VRState::getInstance()->getTrackingSystemCount(); i++) {
-                const std::string& szTrackingSystemName = VRState::getInstance()->getTrackingSystem(i);
-
-                // target cannot be the reference space
-                if (szTrackingSystemName == calibration.referenceDevice.trackingSystem)
-                    continue;
-
-                const std::string szFriendlyName = getTrackingSystemFriendlyName(szTrackingSystemName);
-                bool isSelected = (calibration.targetDevice.trackingSystem == szTrackingSystemName);
-
-                if (ImGui::Selectable(szFriendlyName.c_str(), isSelected)) {
-                    calibration.targetDevice.trackingSystem = szTrackingSystemName;
-                }
-
-                if (isSelected) ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::PopItemWidth();
-    }
-
     inline void buildDeviceSelection(spacecal::TrackingSystemCalibration& calibration, spacecal::CalibrationDevice& device) {
         vr::TrackedDeviceIndex_t selected = device.deviceId;
 
@@ -232,20 +166,84 @@ namespace spacecal {
     }
 
     inline void buildDeviceSelection(spacecal::TrackingSystemCalibration& calibration) {
-        ImGuiStyle& style = ImGui::GetStyle();
-        ImVec2 paneSize(ImGui::GetWindowContentRegionWidth() / 2 - style.FramePadding.x, ImGui::GetTextLineHeightWithSpacing() * 5 + style.ItemSpacing.y * 4);
+        if (VRState::getInstance()->getTrackingSystemCount() == 0) {
+            ImGui::TextUnformatted(LOCALE_GET("tracking_system_no_systems").c_str()); // No tracked devices present. Please turn on a device to continue.
+            return;
+        }
 
-        ImGui::BeginChild("left device pane", paneSize, ImGuiChildFlags_Borders);
-        buildDeviceSelection(calibration, calibration.referenceDevice);
-        ImGui::EndChild();
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImVec2 paneSize(
+            (ImGui::GetContentRegionAvail().x - style.ItemSpacing.x - ImGui::k_BORDER_WIDTH * 4.0f) / 2.0f,
+            ImGui::GetTextLineHeightWithSpacing() * 5.0f + style.ItemSpacing.y * 8.0f + ImGui::GetTextLineHeight() * 3.0f + style.FramePadding.y * 2.0f
+        );
+
+        ImGui::BeginCard("left device pane", paneSize, ImGuiChildFlags_Borders);
+        {
+            ImGui::TextHeading(LOCALE_GET("reference_device").c_str());
+            ImGui::TextWrappedDisabled(LOCALE_GET("reference_device_description").c_str());
+
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            std::string refPreview = calibration.referenceDevice.trackingSystem.empty() ? LOCALE_GET("select_reference_device") : getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
+            if (ImGui::BeginCombo("##ReferenceTrackingSystem", refPreview.c_str())) {
+                for (size_t i = 0; i < VRState::getInstance()->getTrackingSystemCount(); i++) {
+                    const std::string& szTrackingSystemName = VRState::getInstance()->getTrackingSystem(i);
+                    const std::string szFriendlyName = getTrackingSystemFriendlyName(szTrackingSystemName);
+
+                    bool isSelected = (calibration.referenceDevice.trackingSystem == szTrackingSystemName);
+                    if (ImGui::Selectable(szFriendlyName.c_str(), isSelected)) {
+                        calibration.referenceDevice.trackingSystem = szTrackingSystemName;
+                        // if ref space is now the target space, target should be unset
+                        // @TODO: should we pick the first tracking system that makes sense instead?
+                        if (calibration.referenceDevice.trackingSystem == calibration.targetDevice.trackingSystem)
+                            calibration.targetDevice.trackingSystem = "";
+                    }
+
+                    if (isSelected) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+            buildDeviceSelection(calibration, calibration.referenceDevice);
+            ImGui::PopItemWidth();
+        }
+        ImGui::EndCard();
 
         ImGui::SameLine();
 
-        ImGui::BeginChild("right device pane", paneSize, ImGuiChildFlags_Borders);
-        buildDeviceSelection(calibration, calibration.targetDevice);
-        ImGui::EndChild();
+        ImGui::BeginCard("right device pane", paneSize, ImGuiChildFlags_Borders);
+        {
+            ImGui::TextHeading(LOCALE_GET("target_device").c_str());
+            ImGui::TextWrappedDisabled(LOCALE_GET("target_device_description").c_str());
 
-        if (ImGui::Button(LOCALE_GET("identify_selected_devices").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeightWithSpacing() + 4.0f))) {
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            // target tracking system list is tracking system list EXCLUDING reference tracking system. one may NOT calibrate two devices of the same tracking system!
+            std::string targetPreview = calibration.targetDevice.trackingSystem.empty() ? LOCALE_GET("select_target_device") : getTrackingSystemFriendlyName(calibration.targetDevice.trackingSystem);
+            if (ImGui::BeginCombo("##TargetTrackingSystem", targetPreview.c_str())) {
+                for (size_t i = 0; i < VRState::getInstance()->getTrackingSystemCount(); i++) {
+                    const std::string& szTrackingSystemName = VRState::getInstance()->getTrackingSystem(i);
+
+                    // target cannot be the reference space
+                    if (szTrackingSystemName == calibration.referenceDevice.trackingSystem)
+                        continue;
+
+                    const std::string szFriendlyName = getTrackingSystemFriendlyName(szTrackingSystemName);
+                    bool isSelected = (calibration.targetDevice.trackingSystem == szTrackingSystemName);
+
+                    if (ImGui::Selectable(szFriendlyName.c_str(), isSelected)) {
+                        calibration.targetDevice.trackingSystem = szTrackingSystemName;
+                    }
+
+                    if (isSelected) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+            buildDeviceSelection(calibration, calibration.targetDevice);
+            ImGui::PopItemWidth();
+        }
+        ImGui::EndCard();
+
+        if (ImGui::Button(LOCALE_GET("identify_selected_devices").c_str(), ImVec2(paneSize.x, ImGui::GetTextLineHeightWithSpacing() + 4.0f))) {
             // @TODO: non-blocking ; blocks for 500ms rn :(
             for (size_t i = 0; i < 100; ++i) {
                 VRState::getInstance()->identifyDevice(calibration.targetDevice.deviceId);
@@ -254,7 +252,9 @@ namespace spacecal {
             }
         }
 
-        if (ImGui::Button(LOCALE_GET("identify_auto_detect_devices").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeightWithSpacing() + 4.0f))) {
+        ImGui::SameLine();
+
+        if (ImGui::Button(LOCALE_GET("identify_auto_detect_devices").c_str(), ImVec2(paneSize.x, ImGui::GetTextLineHeightWithSpacing() + 4.0f))) {
             LOG_WARN("identify_auto_detect_devices:: Not implemented");
         }
     }
@@ -283,20 +283,20 @@ namespace spacecal {
             scale = 1.0f / 4.0f;
         }
 
-        if (ImGui::Button(LOCALE_GET("calibration_action_start").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
+        if (ImGui::IconButton(ICON_MS_PLAY_ARROW, LOCALE_GET("calibration_action_start").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
         {
             calibration.start();
         }
 
         ImGui::SameLine();
-        if (ImGui::Button(LOCALE_GET("calibration_action_continuous").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2))) {
+        if (ImGui::IconButton(ICON_MS_SYNC, LOCALE_GET("calibration_action_continuous").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2))) {
             calibration.startContinuous();
         }
 
         if (calibration.isValidCalibration())
         {
             ImGui::SameLine();
-            if (ImGui::Button(LOCALE_GET("calibration_action_clear").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
+            if (ImGui::IconButton(ICON_MS_CLOSE, LOCALE_GET("calibration_action_clear").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2)))
             {
                 calibration.reset();
             }
@@ -317,7 +317,7 @@ namespace spacecal {
         auto speed = calibration.calibrationSpeed;
 
         ImGui::Columns(4, nullptr, false);
-        ImGui::TextUnformatted(LOCALE_GET("calibration_speed").c_str());
+        ImGui::TextUnformatted(fmt::format("{}  {}", ICON_MS_SPEED, LOCALE_GET("calibration_speed").c_str()).c_str());
 
         ImGui::NextColumn();
         if (ImGui::RadioButton(LOCALE_GET("calibration_speed_fast").c_str(), speed == CalibrationSpeed::FAST)) {
@@ -346,12 +346,12 @@ namespace spacecal {
 
         if (calibration.isCalibrating()) {
             ImGui::TextWrapped("%s", LOCALE_GET("calibration_info_move_around_unsifficient_samples").c_str());
-            ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2));
+            ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeight() * 2));
             float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
             ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
         } else if (calibration.isContinuousCalibration()) {
             ImGui::TextWrapped("%s", LOCALE_GET("calibration_info_continuous_progress").c_str());
-            ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2));
+            ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeight() * 2));
             float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
             ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
         }
@@ -714,21 +714,13 @@ namespace spacecal {
 
             for (size_t i = 0; i < dwNumCalibrations; i++) {
                 spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(i);
-                if (calibration.hmdIsInReferenceTrackingSystem) {
-                    // @TODO: hmd identification
-                }
-                else {
-                    // @TODO: idfk
-                }
 
-                // @TODO: build ui
-                buildTrackingSystemSelection(calibration);
                 buildDeviceSelection(calibration);
                 if (!calibration.isContinuousCalibration()) {
                     if (calibration.state == CalibrationState::EDITING) {
                         // BuildProfileEditor();
                         // 
-                        // if (ImGui::Button("Save Profile", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetTextLineHeight() * 2)))
+                        // if (ImGui::Button("Save Profile", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeight() * 2)))
                         // {
                         //     SaveProfile(calibration);
                         //     calibration.state = CalibrationState::NONE;
