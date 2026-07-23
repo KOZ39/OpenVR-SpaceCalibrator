@@ -517,13 +517,14 @@ namespace spacecal {
             {
                 VkDescriptorPoolSize pool_sizes[] =
                 {
-                    { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE },
+                    { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, IMGUI_IMPL_VULKAN_MINIMUM_SAMPLED_IMAGE_POOL_SIZE },
+                    { VK_DESCRIPTOR_TYPE_SAMPLER, IMGUI_IMPL_VULKAN_MINIMUM_SAMPLER_POOL_SIZE },
                 };
                 VkDescriptorPoolCreateInfo pool_info = {
                     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
                     .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
                     .maxSets = 0,
-                    .poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes),
+                    .poolSizeCount = (uint32_t)IM_COUNTOF(pool_sizes),
                     .pPoolSizes = pool_sizes,
                 };
                 for (VkDescriptorPoolSize& pool_size : pool_sizes)
