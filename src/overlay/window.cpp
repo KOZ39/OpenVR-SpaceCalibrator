@@ -117,26 +117,50 @@ namespace spacecal {
         // @FIXME: embed fonts later
 
         static const ImWchar k_RANGE_CORE_LATIN[] = { 0x0020, 0x00FF, 0, };
+        static const ImWchar k_RANGE_ICONS[] = { ICON_MIN_MS, ICON_MAX_16_MS, 0, };
 
         // default font
         std::string fontPath = (platform::getExeDir() / "assets" / "fonts" / "Poppins-Regular.ttf").string();
+        cfg.GlyphExcludeRanges = NULL;
+        cfg.GlyphOffset.y = 0.0f;
         cfg.MergeMode = false;
+        cfg.PixelSnapH = false;
         ImGui::fonts::pDefault = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
         fontPath = (platform::getExeDir() / "assets" / "fonts" / "MPLUS1p-Regular.ttf").string();
         cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.GlyphOffset.y = 0.0f;
         cfg.MergeMode = true;
+        cfg.PixelSnapH = false;
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+
+        fontPath = (platform::getExeDir() / "assets" / "fonts" / "MaterialSymbolsSharp_FILL.ttf").string();
+        cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.GlyphOffset.y = 4.0f;
+        cfg.MergeMode = true;
+        cfg.PixelSnapH = true;
         io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
         // bold font
         fontPath = (platform::getExeDir() / "assets" / "fonts" / "Poppins-Bold.ttf").string();
         cfg.GlyphExcludeRanges = NULL;
+        cfg.GlyphOffset.y = 0.0f;
         cfg.MergeMode = false;
+        cfg.PixelSnapH = false;
         ImGui::fonts::pHeading = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
         fontPath = (platform::getExeDir() / "assets" / "fonts" / "MPLUS1p-Bold.ttf").string();
         cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.GlyphOffset.y = 0.0f;
         cfg.MergeMode = true;
+        cfg.PixelSnapH = false;
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+
+        fontPath = (platform::getExeDir() / "assets" / "fonts" / "MaterialSymbolsSharp_FILL.ttf").string();
+        cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.GlyphOffset.y = 4.0f;
+        cfg.MergeMode = true;
+        cfg.PixelSnapH = true;
         io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
         ImGui_ImplGlfw_InitForOther(m_glfwWindow, true);
