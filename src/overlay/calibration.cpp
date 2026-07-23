@@ -767,20 +767,31 @@ namespace spacecal {
         if (state == CalibrationState::START || state == CalibrationState::CONTINUOUS_IDLE) {
             bool ok = true;
 
-            if (state == CalibrationState::CONTINUOUS_IDLE) {
-                LOG_CALIB_INFO("Beginning continuous calibration...");
-            } else {
-                LOG_CALIB_INFO("Beginning calibration...");
+            bool bLogCalibrationState = false;
+
+            if (currentTime - m_lastNoDevicesWarnTime >= k_WARN_DEVICE_NOT_TRACKING_INTERVAL_SEC) {
+                if (state == CalibrationState::CONTINUOUS_IDLE) {
+                    LOG_CALIB_INFO("Beginning continuous calibration...");
+                }
+                else {
+                    LOG_CALIB_INFO("Beginning calibration...");
+                }
+                LOG_CALIB_INFO("  Reference device: ID: {}, tracking system: {}, model: {} serial: {}", referenceDevice.deviceId, referenceDevice.trackingSystem, referenceDevice.deviceModel, referenceDevice.deviceSerialNumber);
+                LOG_CALIB_INFO("  Target device: ID: {}, tracking system: {}, model: {} serial: {}", targetDevice.deviceId, targetDevice.trackingSystem, targetDevice.deviceModel, targetDevice.deviceSerialNumber);
+                m_lastNoDevicesWarnTime = currentTime;
+                bLogCalibrationState = true;
             }
-            LOG_CALIB_INFO("  Reference device: ID: {}, tracking system: {}, model: {} serial: {}", referenceDevice.deviceId, referenceDevice.trackingSystem, referenceDevice.deviceModel, referenceDevice.deviceSerialNumber);
-            LOG_CALIB_INFO("  Target device: ID: {}, tracking system: {}, model: {} serial: {}", targetDevice.deviceId, targetDevice.trackingSystem, targetDevice.deviceModel, targetDevice.deviceSerialNumber);
 
             if (referenceDevice.deviceId >= vr::k_unMaxTrackedDeviceCount) {
-                LOG_CALIB_ERROR("Missing reference device");
+                if (bLogCalibrationState) {
+                    LOG_CALIB_ERROR("Missing reference device");
+                }
                 ok = false;
             }
             if (targetDevice.deviceId >= vr::k_unMaxTrackedDeviceCount) {
-                LOG_CALIB_ERROR("Missing target device");
+                if (bLogCalibrationState) {
+                    LOG_CALIB_ERROR("Missing target device");
+                }
                 ok = false;
             }
             
@@ -792,7 +803,9 @@ namespace spacecal {
             if (!ok) {
                 if (state == CalibrationState::START)
                     state = CalibrationState::NONE;
-                LOG_CALIB_ERROR("Aborting calibration!");
+                if (bLogCalibrationState) {
+                    LOG_CALIB_ERROR("Aborting calibration!");
+                }
                 return;
             }
 

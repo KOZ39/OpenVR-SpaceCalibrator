@@ -246,6 +246,7 @@ namespace spacecal {
 
         double m_lastNotTrackingTargetWarnTime = 0.0;
         double m_lastNotTrackingRefWarnTime = 0.0;
+        double m_lastNoDevicesWarnTime = 0.0;
 
         // for auto device detection
         int m_candidateScore = 0;
