@@ -745,13 +745,50 @@ namespace spacecal {
         ImGui::TextTitle("%s", LOCALE_GET("settings_title").c_str());
 
         // advanced settings
-        if (ImGui::Checkbox(LOCALE_GET("settings_advanced").c_str(), &g_state.bIsSettingsAdvanced)) {
+        if (ImGui::CheckboxWithDescription(LOCALE_GET("settings_advanced").c_str(), &g_state.bIsSettingsAdvanced, LOCALE_GET("settings_advanced_description").c_str())) {
             ConfigurationManager::getInstance()->getConfiguration()->advanced_settings = g_state.bIsSettingsAdvanced;
             ConfigurationManager::getInstance()->saveConfiguration();
         }
-        ImGui::TextDisabled("%s", LOCALE_GET("settings_advanced_description").c_str());
 
         buildLocaleSelector();
+
+        // base station power management
+        ImGui::BeginCard("base_station_power_management");
+        {
+            ImGui::TextHeading(LOCALE_GET("base_station_power_management").c_str());
+
+            const char* bsPowerEnableDescKey = g_state.bBaseStationPowerManagementOffModeIsSleep
+                ? "base_stations_power_mgmt_enable_description_sleep"
+                : "base_stations_power_mgmt_enable_description_standby";
+
+            if (ImGui::CheckboxWithDescription(LOCALE_GET("base_stations_power_mgmt_enable").c_str(), &g_state.bBaseStationPowerManagementEnabled, LOCALE_GET(bsPowerEnableDescKey).c_str())) {
+                ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_power_management_enabled = g_state.bBaseStationPowerManagementEnabled;
+                ConfigurationManager::getInstance()->saveConfiguration();
+            }
+
+            if (ImGui::CheckboxWithDescription(LOCALE_GET("base_stations_power_mgmt_on_startup").c_str(), &g_state.bBaseStationPowerManagementOnStartup, LOCALE_GET("base_stations_power_mgmt_on_startup_description").c_str())) {
+                ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_on_during_startup = g_state.bBaseStationPowerManagementOnStartup;
+                ConfigurationManager::getInstance()->saveConfiguration();
+            }
+
+            if (ImGui::CheckboxWithDescription(LOCALE_GET("base_stations_power_mgmt_on_shutdown").c_str(), &g_state.bBaseStationPowerManagementOnShutdown, LOCALE_GET("base_stations_power_mgmt_on_shutdown_description").c_str())) {
+                ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_off_during_shutdown = g_state.bBaseStationPowerManagementOnShutdown;
+                ConfigurationManager::getInstance()->saveConfiguration();
+            }
+
+            if (ImGui::RadioButtonWithDescription(LOCALE_GET("base_stations_power_mgmt_standby").c_str(), !g_state.bBaseStationPowerManagementOffModeIsSleep, LOCALE_GET("base_stations_power_mgmt_standby_description").c_str())) {
+                ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby = true;
+                ConfigurationManager::getInstance()->saveConfiguration();
+            }
+
+            if (ImGui::RadioButtonWithDescription(LOCALE_GET("base_stations_power_mgmt_sleep").c_str(), g_state.bBaseStationPowerManagementOffModeIsSleep, LOCALE_GET("base_stations_power_mgmt_sleep_description").c_str())) {
+                ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby = false;
+                ConfigurationManager::getInstance()->saveConfiguration();
+            }
+
+            ImGui::TextWrapped(LOCALE_GET("base_stations_power_mgmt_warning").c_str());
+        }
+        ImGui::EndCard();
     }
 
     void page_base_station_management(double currentTime) {
