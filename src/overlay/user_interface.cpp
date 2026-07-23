@@ -1002,35 +1002,50 @@ namespace spacecal {
     }
 
     void page_about(double currentTime) {
+        const float k_SPACING = ImGui::GetStyle().ItemSpacing.y * 1.0f;
+
         ImGui::TextTitle("%s", LOCALE_GET("about_title").c_str());
 
         ImGui::Text(LOCALE_GET("about_description").c_str());
-        ImGui::Text(LOCALE_GET("about_view_source_info").c_str());
+        ImGui::TextWrapped(LOCALE_GET("about_view_source_info").c_str());
+
+        ImGui::Dummy(ImVec2(0, k_SPACING));
 
         ImGui::TextHeading(LOCALE_GET("about_contributors_title").c_str());
-        ImGui::Text(LOCALE_GET("about_contributors_description").c_str());
-        ImGui::Text("pushrax");
-        ImGui::Text("bd_");
-        ImGui::Text("ArticFox");
-        ImGui::Text("hekky");
-        ImGui::Text("pimaker");
+        ImGui::TextWrapped(LOCALE_GET("about_contributors_description").c_str());
+        ImGui::BulletText("pushrax");
+        ImGui::BulletText("bd_");
+        ImGui::BulletText("ArticFox");
+        ImGui::BulletText("hekky");
+        ImGui::BulletText("pimaker");
 
-        if (ImGui::Button(LOCALE_GET("about_link_github").c_str())) {
+        ImGui::Dummy(ImVec2(0, k_SPACING));
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 8.0f));
+
+        if (ImGui::IconButton(ICON_MS_OPEN_IN_BROWSER, LOCALE_GET("about_link_github").c_str())) {
             platform::launchWebpage("https://github.com/hyblocker/OpenVR-SpaceCalibrator");
         }
-        
-        if (ImGui::Button(LOCALE_GET("about_link_discord").c_str())) {
+
+        ImGui::SameLine();
+
+        if (ImGui::IconButton(ICON_MS_OPEN_IN_BROWSER, LOCALE_GET("about_link_discord").c_str())) {
             platform::launchWebpage("https://discord.gg/YWN7Z9T8DP");
         }
-        
-        if (ImGui::Button(LOCALE_GET("about_link_logs_dir").c_str())) {
+
+        ImGui::SameLine();
+
+        if (ImGui::IconButton(ICON_MS_FOLDER_OPEN, LOCALE_GET("about_link_logs_dir").c_str())) {
             platform::launchDirInFileBrowser(util::getSpaceCalibratorLogsDir());
         }
+
+        ImGui::PopStyleVar();
+        ImGui::Dummy(ImVec2(0, k_SPACING));
 
         // ImGui::InputTextMultiline();
 
         ImGui::TextHeading(LOCALE_GET("about_licenses_title").c_str());
-        ImGui::Text(LOCALE_GET("about_licenses_description").c_str());
+        ImGui::TextWrapped(LOCALE_GET("about_licenses_description").c_str());
         ImGui::TextDisabled("LICENSES HERE");
     }
 
