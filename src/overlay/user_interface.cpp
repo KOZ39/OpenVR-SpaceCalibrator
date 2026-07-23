@@ -275,7 +275,7 @@ namespace spacecal {
             ImGui::NewLine();
         }
 
-        float width = ImGui::GetWindowContentRegionWidth() - style.FramePadding.x * 2.0f;
+        float width = ImGui::GetContentRegionAvail().x - style.FramePadding.x * 2.0f;
         float scale = 1.0f / 2.0f;
         if (calibration.isValidCalibration())
         {
@@ -699,7 +699,7 @@ namespace spacecal {
     }
 
     void page_calibration(double currentTime) {
-        ImGui::TextHeading("%s", LOCALE_GET("calibration_title").c_str());
+        ImGui::TextTitle("%s", LOCALE_GET("calibration_title").c_str());
         ImGui::Separator();
 
         if (!isSpacecalRunningStateOk()) {
@@ -741,7 +741,7 @@ namespace spacecal {
     }
     
     void page_graphs(double currentTime) {
-        ImGui::TextHeading("%s", LOCALE_GET("graphs_title").c_str());
+        ImGui::TextTitle("%s", LOCALE_GET("graphs_title").c_str());
 
         // @TODO: numbering or smth
         spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(0);
@@ -749,7 +749,7 @@ namespace spacecal {
     }
 
     void page_settings(double currentTime) {
-        ImGui::TextHeading("%s", LOCALE_GET("settings_title").c_str());
+        ImGui::TextTitle("%s", LOCALE_GET("settings_title").c_str());
 
         // advanced settings
         if (ImGui::Checkbox(LOCALE_GET("settings_advanced").c_str(), &g_state.bIsSettingsAdvanced)) {
@@ -762,7 +762,7 @@ namespace spacecal {
     }
 
     void page_base_station_management(double currentTime) {
-        ImGui::TextHeading("%s", LOCALE_GET("base_stations_title").c_str());
+        ImGui::TextTitle("%s", LOCALE_GET("base_stations_title").c_str());
 
         if (!bluetooth::is_bluetooth_available()) {
             ImGui::TextDisabled(LOCALE_GET("base_stations_no_bluetooth").c_str());
@@ -956,7 +956,7 @@ namespace spacecal {
     }
     
     void page_debug(double currentTime) {
-        ImGui::TextHeading("%s", LOCALE_GET("tab_page_debug").c_str());
+        ImGui::TextTitle("%s", LOCALE_GET("tab_page_debug").c_str());
 
         // @TODO: driverpose_t view
         spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(g_state.dwSelectedCalibrationIndex);
@@ -972,7 +972,7 @@ namespace spacecal {
     }
 
     void page_about(double currentTime) {
-        ImGui::TextHeading("%s", LOCALE_GET("about_title").c_str());
+        ImGui::TextTitle("%s", LOCALE_GET("about_title").c_str());
 
         ImGui::Text(LOCALE_GET("about_description").c_str());
         ImGui::Text(LOCALE_GET("about_view_source_info").c_str());
@@ -1007,14 +1007,14 @@ namespace spacecal {
     // UI CORE LAYOUT
 
     SpaceCalibratorVerticalTab_t g_spaceCalUiTabs[] = {
-        { .szLocaleKey = "tab_page_calibration", .fnDrawTab = page_calibration, },
-        { .szLocaleKey = "tab_page_graphs", .fnDrawTab = page_graphs, },
-        { .szLocaleKey = "tab_page_base_station_management", .fnDrawTab = page_base_station_management, },
-        { .szLocaleKey = "tab_page_settings", .fnDrawTab = page_settings, },
+        { .szLocaleKey = "tab_page_calibration", .szIcon = ICON_MS_TARGET, .fnDrawTab = page_calibration, },
+        { .szLocaleKey = "tab_page_graphs", .szIcon = ICON_MS_STACKED_LINE_CHART, .fnDrawTab = page_graphs, },
+        { .szLocaleKey = "tab_page_base_station_management", .szIcon = ICON_MS_SENSORS, .fnDrawTab = page_base_station_management, }, // ICON_MS_CELL_TOWER
+        { .szLocaleKey = "tab_page_settings", .szIcon = ICON_MS_SETTINGS, .fnDrawTab = page_settings, },
 #if _DEBUG || 1 // @TODO: reserved exclusively for debug mode, may make sense to enable with a flag?
-        { .szLocaleKey = "tab_page_debug", .fnDrawTab = page_debug, },
+        { .szLocaleKey = "tab_page_debug", .szIcon = ICON_MS_TERMINAL, .fnDrawTab = page_debug, },
 #endif
-        { .szLocaleKey = "tab_page_about", .fnDrawTab = page_about, },
+        { .szLocaleKey = "tab_page_about", .szIcon = ICON_MS_INFO, .fnDrawTab = page_about, },
     };
     constexpr size_t k_SIZE_SPACECAL_UI_TABS = sizeof(g_spaceCalUiTabs) / sizeof(g_spaceCalUiTabs[0]);
 
@@ -1036,7 +1036,8 @@ namespace spacecal {
         bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held);
 
         constexpr ImU32 k_TRANSPARENT = IM_COL32(0, 0, 0, 0);
-        constexpr float k_IndicatorWidth = 4.0f; 
+        constexpr float k_IndicatorWidth = 4.0f;
+        constexpr float k_IconTextGap = 8.0f;
         const float k_LeftTextMargin  = style.FramePadding.x * 2 + k_IndicatorWidth; 
 
         if (selected || hovered) {
@@ -1052,7 +1053,11 @@ namespace spacecal {
                 col_bg_min = IM_COL32_SET_ALPHA(col_bg_max, 14); // 5% opacity
             }
             
-            window->DrawList->AddRectFilledMultiColor(bb.Min, bb.Max, col_bg_max, col_bg_min, col_bg_min, col_bg_max);
+            ImVec2 startPos = bb.Min;
+            if (selected) {
+                startPos.x += k_IndicatorWidth;
+            }
+            window->DrawList->AddRectFilledMultiColor(startPos, bb.Max, col_bg_max, col_bg_min, col_bg_min, col_bg_max);
         }
 
         if (selected) {
@@ -1067,12 +1072,20 @@ namespace spacecal {
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
         }
 
+        float final_text_offset_x = k_LeftTextMargin;
+
+        // icon rendering
+        ImVec2 iconSize = ImGui::CalcTextSize(tabData.szIcon, nullptr, true);
+        float icon_y_offset = (size.y - iconSize.y) * 0.5f;
+        ImVec2 icon_pos = ImVec2(bb.Min.x + final_text_offset_x, bb.Min.y + icon_y_offset);
+        ImGui::RenderText(icon_pos, tabData.szIcon);
+        final_text_offset_x += iconSize.x + k_IconTextGap;
+
+        // text rendering
         std::string textStr = LOCALE_GET(tabData.szLocaleKey);
         ImVec2 textSize = ImGui::CalcTextSize(textStr.c_str(), nullptr, true);
         float text_y_offset = (size.y - textSize.y) * 0.5f;
-        float final_text_padding_x = k_LeftTextMargin;
-        ImVec2 text_pos = ImVec2(bb.Min.x + final_text_padding_x, bb.Min.y + text_y_offset);
-
+        ImVec2 text_pos = ImVec2(bb.Min.x + final_text_offset_x, bb.Min.y + text_y_offset);
         ImGui::RenderText(text_pos, textStr.c_str());
 
         return pressed;
@@ -1081,11 +1094,12 @@ namespace spacecal {
     inline void drawMainView(double currentTime) {
         // @TODO: temp hardcode, move to header or some ui_config.h idk
         const float k_SIDEBAR_WIDTH = 180.0f;
-        const float k_SIDEBAR_TAB_HEIGHT = 40.0f;
+        const float k_SIDEBAR_TAB_HEIGHT = 48.0f;
         const float k_CONTENT_AREA_PADDING = 5.0f;
 
         // sidebar
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
         ImGui::BeginChild("Sidebar", ImVec2(k_SIDEBAR_WIDTH, 0), ImGuiChildFlags_None);
         ImGui::Spacing(); 
 
@@ -1102,7 +1116,7 @@ namespace spacecal {
             ImGui::Spacing();
         }
         ImGui::EndChild();
-        ImGui::PopStyleVar();
+        ImGui::PopStyleVar(2);
 
         ImGui::SameLine();
 
@@ -1125,6 +1139,10 @@ namespace spacecal {
     void drawInterface(bool isOverlay, double currentTime) {
         g_state.bIsRunningInOverlay = isOverlay;
         g_state.bIsSettingsAdvanced = ConfigurationManager::getInstance()->getConfiguration()->advanced_settings;
+        g_state.bBaseStationPowerManagementEnabled = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_power_management_enabled;
+        g_state.bBaseStationPowerManagementOnStartup = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_on_during_startup;
+        g_state.bBaseStationPowerManagementOnShutdown = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_off_during_shutdown;
+        g_state.bBaseStationPowerManagementOffModeIsSleep = !ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby;
         auto& io = ImGui::GetIO();
 
         // disable ctrl + tab, pointless in a VR overlay https://github.com/ocornut/imgui/issues/7987

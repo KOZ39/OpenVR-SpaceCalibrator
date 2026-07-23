@@ -10,6 +10,10 @@ namespace spacecal {
     struct UserInterfaceState_t {
         bool bIsRunningInOverlay = false;
         bool bIsSettingsAdvanced = false;
+        bool bBaseStationPowerManagementEnabled = false;
+        bool bBaseStationPowerManagementOnStartup = false;
+        bool bBaseStationPowerManagementOnShutdown = false;
+        bool bBaseStationPowerManagementOffModeIsSleep = true;
         size_t dwSelectedCalibrationIndex = 0; // selected calibration in the ui
         size_t dwSelectedUiPage = 0; // selected vertical tab
 
@@ -18,7 +22,7 @@ namespace spacecal {
 
     struct SpaceCalibratorVerticalTab_t {
         const char* szLocaleKey = nullptr;
-        ; // @TODO: icon
+        const char* szIcon = nullptr;
         void (*fnDrawTab)(double currentTime) = nullptr;
     };
 
