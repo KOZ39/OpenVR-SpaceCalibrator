@@ -103,6 +103,9 @@ namespace spacecal {
             size_t _itersElapsed = 0;
             bool bStationsChannelCollision = false;
             std::thread scannerThread;
+            std::mutex mutexScanThread;
+            std::condition_variable cvScanThread;
+            std::atomic<bool> bScanThreadRunning = false;
         };
 
         BaseStationManagementState_t g_base_station_state;
@@ -329,6 +332,7 @@ namespace spacecal {
         void _ble_callbackStart(simpleble_adapter_t adapter, void* userdata) {
             platform::setThreadName("BluetoothPollThread");
         }
+
         void _ble_callbackStop(simpleble_adapter_t adapter, void* userdata) {}
 
         void _ble_callbackDevUpdate(simpleble_adapter_t adapter, simpleble_peripheral_t peripheral, void* userdata) {
@@ -733,7 +737,7 @@ namespace spacecal {
             }
 
             return false;
-            };
+        }
 
         void _apply_ble_scan_frequency(HANDLE hBtRadio) {
             platform::setThreadName("BluetoothScanFreqThread");
@@ -813,6 +817,15 @@ namespace spacecal {
                 LOG_BLUETOOTH_WARN("Failed to fully initialise base station BLE scanning");
             }
 
+            g_base_station_state.bScanThreadRunning = true;
+
+            {
+                std::unique_lock<std::mutex> lock(g_base_station_state.mutexScanThread);
+                g_base_station_state.cvScanThread.wait(lock, [] {
+                    return !g_base_station_state.bScanThreadRunning;
+                });
+            }
+
 #if OS_WINDOWS
             if (comInitialized) {
                 CoUninitialize();
@@ -832,6 +845,12 @@ namespace spacecal {
                 simpleble_adapter_t adapter = g_base_station_state.aAdapters[i];
                 bSuccess = bSuccess && (simpleble_adapter_scan_stop(adapter) == simpleble_err_t::SIMPLEBLE_SUCCESS);
             }
+
+            {
+                std::lock_guard<std::mutex> lock(g_base_station_state.mutexScanThread);
+                g_base_station_state.bScanThreadRunning = false;
+            }
+            g_base_station_state.cvScanThread.notify_all();
 
             if (g_base_station_state.scannerThread.joinable()) {
                 g_base_station_state.scannerThread.join();
