@@ -650,7 +650,7 @@ namespace spacecal {
                         case PowerState_Awake_From_Sleep:
                             writeData[0] = 0x01;
                             break;
-                        case PowerState_Standby: // @NOTE: unreliable on old fw; idk why exactly yet but fuck around and find ouut exists
+                        case PowerState_Standby: // unavailable on old firmware
                             writeData[0] = 0x02;
                             break;
                         case PowerState_Sleep:
@@ -659,6 +659,13 @@ namespace spacecal {
                         default:
                             isValidCommand = false;
                             LOG_BLUETOOTH_WARN("Got invalid command {:02X} for base station {}, ignoring...", (uint8_t)target_state, szSerialNumber);
+                            break;
+                        }
+                    }
+                    else {
+                        switch (target_state) {
+                        case PowerState_Standby: // remap to sleep on old firmware 2.0s
+                            writeData[0] = PowerState_Sleep;
                             break;
                         }
                     }
