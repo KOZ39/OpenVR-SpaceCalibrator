@@ -450,6 +450,9 @@ namespace spacecal {
     }
 
     bool VRState::isHmdVirtualDesktop() const {
+        if (!vr::VRSystem())
+            return false;
+
         // VD sets ResourceRoot as "virtualdesktop" on the HMD device
         std::string szResourceRoot;
         vr::ETrackedPropertyError err = getSteamVrPropString(vr::k_unTrackedDeviceIndex_Hmd, vr::ETrackedDeviceProperty::Prop_ResourceRoot_String, szResourceRoot);
