@@ -5,6 +5,8 @@
 #include "platform.h"
 #include "localisation.h"
 #include "calibration.h"
+#include "configuration.h"
+#include "base_station_management.h"
 #include <fmt/format.h>
 
 namespace spacecal {
@@ -107,6 +109,12 @@ namespace spacecal {
         // @TODO: Non-steam stuff
 
         // @TODO: log hmd info
+
+        // start base stations on startup if enabled
+        if (ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_power_management_enabled &&
+            ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_on_during_startup) {
+            bluetooth::set_all_base_station_power_state(bluetooth::PowerState_Awake_From_Sleep);
+        }
 
         m_bIsSteamVrAvailable = true;
         return true;
@@ -414,6 +422,16 @@ namespace spacecal {
 
             case vr::EVREventType::VREvent_TrackedDeviceUserInteractionStarted:
             case vr::EVREventType::VREvent_TrackedDeviceUserInteractionEnded:
+                break;
+            case vr::EVREventType::VREvent_Quit:
+            {
+                // start base stations on startup if enabled
+                if (ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_power_management_enabled &&
+                    ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_off_during_shutdown) {
+                    bluetooth::EPowerState_t ePowerState = ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby ? bluetooth::PowerState_Standby : bluetooth::PowerState_Sleep;
+                    bluetooth::set_all_base_station_power_state(ePowerState);
+                }
+            }
                 break;
 
             default:
