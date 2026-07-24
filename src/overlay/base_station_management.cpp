@@ -320,7 +320,7 @@ namespace spacecal {
             bool foundStation = false;
 
             for (size_t i = 0; i < g_base_station_state.aTrackedBaseStations.size() && !foundStation; i++) {
-                if (strcmp(g_base_station_state.aTrackedBaseStations[i].base_station.szSerialNumber.data(), szSerialNumber) == 0) {
+                if (strncmp(g_base_station_state.aTrackedBaseStations[i].base_station.szSerialNumber.data(), szSerialNumber, g_base_station_state.aTrackedBaseStations[i].base_station.szSerialNumber.size()) == 0) {
                     // already present, update this and exit
                     return &g_base_station_state.aTrackedBaseStations[i];
                 }
@@ -597,10 +597,10 @@ namespace spacecal {
 
                     bool foundPowerCharacteristic = false;
                     for (size_t i = 0; i < serviceCount && !foundPowerCharacteristic; i++) {
-                        if (strcmp(bufServices[i].uuid.value, BASE_STATION_2_SERVICE_UUID.value) == 0) {
+                        if (strncmp(bufServices[i].uuid.value, BASE_STATION_2_SERVICE_UUID.value, SIMPLEBLE_UUID_STR_LEN) == 0) {
                             // found base station 2.0 service
                             for (size_t j = 0; j < bufServices[i].characteristic_count; j++) {
-                                if (strcmp(bufServices[i].characteristics[j].uuid.value, BASE_STATION_2_POWER_CHARACTERISTIC_UUID.value) == 0) {
+                                if (strncmp(bufServices[i].characteristics[j].uuid.value, BASE_STATION_2_POWER_CHARACTERISTIC_UUID.value, SIMPLEBLE_UUID_STR_LEN) == 0) {
                                     // found base station 2.0 power characteristic
 #if defined(BLUETOOTH_LOGGING_VERBOSE)
                                     LOG_BLUETOOTH_INFO("PWR CHR: read: {}, writeReq {}, writeCmd: {}, notify: {}, indicate: {}",

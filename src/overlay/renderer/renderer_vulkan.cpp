@@ -110,7 +110,7 @@ namespace spacecal {
 
         inline bool isExtensionAvailable(const ImVector<VkExtensionProperties>& properties, const char* extension) {
             for (const VkExtensionProperties& p : properties)
-                if (strcmp(p.extensionName, extension) == 0)
+                if (strncmp(p.extensionName, extension, VK_MAX_EXTENSION_NAME_SIZE) == 0)
                     return true;
             return false;
         }
@@ -146,7 +146,7 @@ namespace spacecal {
                 // openvr extensions may contain entries glfw requires too! only add unique ones
                 bool is_duplicate = false;
                 for (const char* existing_ext : instance_extensions) {
-                    if (std::strcmp(existing_ext, openvr_instance_extensions[i].c_str()) == 0) {
+                    if (std::strncmp(existing_ext, openvr_instance_extensions[i].c_str(), VK_MAX_EXTENSION_NAME_SIZE) == 0) {
                         is_duplicate = true;
                         break;
                     }

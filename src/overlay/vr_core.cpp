@@ -154,7 +154,7 @@ namespace spacecal {
 #if !defined(_DEBUG)
         // if the tracking system should be ignored, ignore it
         for (size_t i = 0; i < std::size(k_IGNORED_TRACKING_SYSTEMS); i++) {
-            if (strcmp(szTrackingSystem.c_str(), k_IGNORED_TRACKING_SYSTEMS[i]) == 0) {
+            if (strncmp(szTrackingSystem.c_str(), k_IGNORED_TRACKING_SYSTEMS[i], szTrackingSystem.size()) == 0) {
                 return true; // this is a don't care
             }
         }
