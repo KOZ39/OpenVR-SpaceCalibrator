@@ -286,6 +286,7 @@ namespace spacecal {
                     // already present, update this and exit
                     g_base_station_state.aTrackedBaseStations[i].hBtDevice = baseStation.hBtDevice;
                     g_base_station_state.aTrackedBaseStations[i].base_station = baseStation.base_station;
+                    g_base_station_state.aTrackedBaseStations[i].isOldFirmware = baseStation.isOldFirmware;
                     foundStation = true;
                 }
             }
@@ -367,7 +368,7 @@ namespace spacecal {
 
                         baseStationChannel = infoState->channel;
                         baseStationPowerState = (EPowerState_t)infoState->power_state;
-                        isOnOldFirmware = infoState->power_state == PowerState_Awake_TooOldFirmware;
+                        isOnOldFirmware = pBaseStation ? (pBaseStation->isOldFirmware) : (infoState->power_state == PowerState_Awake_TooOldFirmware);
 
 #if defined(BLUETOOTH_LOGGING_VERBOSE)
                         std::string szVerboseBaseStationState = fmt::format("MN: Got {} bytes for {} ({}) :: {:02X}",
@@ -395,7 +396,7 @@ namespace spacecal {
 
                             .hBtDevice = peripheral,
                             .isOldFirmware = isOnOldFirmware,
-                            });
+                        });
                     }
                 }
 
@@ -506,6 +507,7 @@ namespace spacecal {
             }
 
             simpleble_peripheral_t hBtDevice = g_base_station_state.aTrackedBaseStations[index].hBtDevice;
+            bool bIsOldFirmware = g_base_station_state.aTrackedBaseStations[index].isOldFirmware;
             std::string szSerialNumber = g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber;
             g_base_station_state.mutexBaseStationList.unlock();
 
@@ -519,12 +521,38 @@ namespace spacecal {
                 return;
             }
             if (bConnected || simpleble_peripheral_connect(hBtDevice) == SIMPLEBLE_SUCCESS) {
-
                 simpleble_err_t err = SIMPLEBLE_SUCCESS;
                 size_t serviceCount = simpleble_peripheral_services_count(hBtDevice);
                 std::vector<simpleble_service_t> bufServices(serviceCount);
                 for (size_t i = 0; i < serviceCount; i++) {
                     err = simpleble_peripheral_services_get(hBtDevice, i, &bufServices[i]);
+                }
+                
+                // query power characteristic props while we're connected to know which firmware version the base station is on
+                bool foundPowerCharacteristic = false;
+                for (size_t i = 0; i < serviceCount && !foundPowerCharacteristic; i++) {
+                    if (strncmp(bufServices[i].uuid.value, BASE_STATION_2_SERVICE_UUID.value, SIMPLEBLE_UUID_STR_LEN) == 0) {
+                        // found base station 2.0 service
+                        for (size_t j = 0; j < bufServices[i].characteristic_count; j++) {
+                            if (strncmp(bufServices[i].characteristics[j].uuid.value, BASE_STATION_2_POWER_CHARACTERISTIC_UUID.value, SIMPLEBLE_UUID_STR_LEN) == 0) {
+                                // found base station 2.0 power characteristic
+#if defined(BLUETOOTH_LOGGING_VERBOSE)
+                                LOG_BLUETOOTH_INFO("PWR CHR: read: {}, writeReq {}, writeCmd: {}, notify: {}, indicate: {}",
+                                    bufServices[i].characteristics[j].can_read,
+                                    bufServices[i].characteristics[j].can_write_request,
+                                    bufServices[i].characteristics[j].can_write_command,
+                                    bufServices[i].characteristics[j].can_notify,
+                                    bufServices[i].characteristics[j].can_indicate
+                                );
+#endif // BLUETOOTH_LOGGING_VERBOSE
+
+                                bIsOldFirmware = !bufServices[i].characteristics[j].can_read;
+
+                                foundPowerCharacteristic = true;
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 uint8_t writeData[] = { target_channel };
@@ -548,6 +576,8 @@ namespace spacecal {
                 auto& final_station = g_base_station_state.aTrackedBaseStations[index];
                 if (success) {
                     final_station.base_station.channel = target_channel;
+                    final_station.base_station.firmwareSupportsStandby = bIsOldFirmware ? EBaseStation20_StandbySupport_t::StandbySupport_Unavailable : EBaseStation20_StandbySupport_t::StandbySupport_Supported;
+                    final_station.isOldFirmware = bIsOldFirmware;
                 }
             }
             g_base_station_state.mutexBaseStationList.unlock();
@@ -589,130 +619,132 @@ namespace spacecal {
 
                 simpleble_characteristic_t powerChar;
 
-                    size_t serviceCount = simpleble_peripheral_services_count(hBtDevice);
-                    std::vector<simpleble_service_t> bufServices(serviceCount);
-                    for (size_t i = 0; i < serviceCount; i++) {
-                        err = simpleble_peripheral_services_get(hBtDevice, i, &bufServices[i]);
-                    }
+                size_t serviceCount = simpleble_peripheral_services_count(hBtDevice);
+                std::vector<simpleble_service_t> bufServices(serviceCount);
+                for (size_t i = 0; i < serviceCount; i++) {
+                    err = simpleble_peripheral_services_get(hBtDevice, i, &bufServices[i]);
+                }
 
-                    bool foundPowerCharacteristic = false;
-                    for (size_t i = 0; i < serviceCount && !foundPowerCharacteristic; i++) {
-                        if (strncmp(bufServices[i].uuid.value, BASE_STATION_2_SERVICE_UUID.value, SIMPLEBLE_UUID_STR_LEN) == 0) {
-                            // found base station 2.0 service
-                            for (size_t j = 0; j < bufServices[i].characteristic_count; j++) {
-                                if (strncmp(bufServices[i].characteristics[j].uuid.value, BASE_STATION_2_POWER_CHARACTERISTIC_UUID.value, SIMPLEBLE_UUID_STR_LEN) == 0) {
-                                    // found base station 2.0 power characteristic
+                bool foundPowerCharacteristic = false;
+                for (size_t i = 0; i < serviceCount && !foundPowerCharacteristic; i++) {
+                    if (strncmp(bufServices[i].uuid.value, BASE_STATION_2_SERVICE_UUID.value, SIMPLEBLE_UUID_STR_LEN) == 0) {
+                        // found base station 2.0 service
+                        for (size_t j = 0; j < bufServices[i].characteristic_count; j++) {
+                            if (strncmp(bufServices[i].characteristics[j].uuid.value, BASE_STATION_2_POWER_CHARACTERISTIC_UUID.value, SIMPLEBLE_UUID_STR_LEN) == 0) {
+                                // found base station 2.0 power characteristic
 #if defined(BLUETOOTH_LOGGING_VERBOSE)
-                                    LOG_BLUETOOTH_INFO("PWR CHR: read: {}, writeReq {}, writeCmd: {}, notify: {}, indicate: {}",
-                                        bufServices[i].characteristics[j].can_read,
-                                        bufServices[i].characteristics[j].can_write_request,
-                                        bufServices[i].characteristics[j].can_write_command,
-                                        bufServices[i].characteristics[j].can_notify,
-                                        bufServices[i].characteristics[j].can_indicate
-                                    );
+                                LOG_BLUETOOTH_INFO("PWR CHR: read: {}, writeReq {}, writeCmd: {}, notify: {}, indicate: {}",
+                                    bufServices[i].characteristics[j].can_read,
+                                    bufServices[i].characteristics[j].can_write_request,
+                                    bufServices[i].characteristics[j].can_write_command,
+                                    bufServices[i].characteristics[j].can_notify,
+                                    bufServices[i].characteristics[j].can_indicate
+                                );
 #endif // BLUETOOTH_LOGGING_VERBOSE
 
-                                    bIsOldFirmware = !bufServices[i].characteristics[j].can_read;
+                                bIsOldFirmware = !bufServices[i].characteristics[j].can_read;
 
-                                    powerChar = bufServices[i].characteristics[j];
-                                    foundPowerCharacteristic = true;
-                                    break;
-                                }
+                                powerChar = bufServices[i].characteristics[j];
+                                foundPowerCharacteristic = true;
+                                break;
                             }
                         }
                     }
+                }
 
-                    bool isValidCommand = true;
+                bool isValidCommand = true;
 
-                    // 2.0s have 2 firmwares which are relavant, old and new firmware
-                    // 
-                    // new firmware commands and data:
-                    // Awake:
-                    //   0x01
-                    // Standby:
-                    //   0x02
-                    // Sleep:
-                    //   0x01 ; followed by a separate packet with 0x00
-                    // 
-                    // old firmware commands and data:
-                    // Awake:
-                    //   0x09
-                    // Standby:
-                    //   0x02
-                    // Sleep:
-                    //   0x00 ; followed by a separate packet with 0x00
+                // 2.0s have 2 firmwares which are relavant, old and new firmware
+                // 
+                // new firmware commands and data:
+                // Awake:
+                //   0x01
+                // Standby:
+                //   0x02
+                // Sleep:
+                //   0x01 ; followed by a separate packet with 0x00
+                // 
+                // old firmware commands and data:
+                // Awake:
+                //   0x09
+                // Standby:
+                //   0x02
+                // Sleep:
+                //   0x00 ; followed by a separate packet with 0x00
 
-                    // We can query services and depending on the characteristics
-                    // props of BASE_STATION_2_POWER_CHARACTERISTIC_UUID
-                    // we can tell if we're on new or old FW
-                    if (!bIsOldFirmware) {
-                        switch (target_state) {
-                        case PowerState_Awake_From_Sleep:
-                            writeData[0] = 0x01;
-                            break;
-                        case PowerState_Standby: // unavailable on old firmware
-                            writeData[0] = 0x02;
-                            break;
-                        case PowerState_Sleep:
-                            writeData[0] = 0x01;
-                            break;
-                        default:
-                            isValidCommand = false;
-                            LOG_BLUETOOTH_WARN("Got invalid command {:02X} for base station {}, ignoring...", (uint8_t)target_state, szSerialNumber);
-                            break;
-                        }
+                // We can query services and depending on the characteristics
+                // props of BASE_STATION_2_POWER_CHARACTERISTIC_UUID
+                // we can tell if we're on new or old FW
+                if (!bIsOldFirmware) {
+                    switch (target_state) {
+                    case PowerState_Awake_From_Sleep:
+                        writeData[0] = 0x01;
+                        break;
+                    case PowerState_Standby: // unavailable on old firmware
+                        writeData[0] = 0x02;
+                        break;
+                    case PowerState_Sleep:
+                        writeData[0] = 0x01;
+                        break;
+                    default:
+                        isValidCommand = false;
+                        LOG_BLUETOOTH_WARN("Got invalid command {:02X} for base station {}, ignoring...", (uint8_t)target_state, szSerialNumber);
+                        break;
                     }
-                    else {
-                        switch (target_state) {
-                        case PowerState_Standby: // remap to sleep on old firmware 2.0s
-                            writeData[0] = PowerState_Sleep;
-                            break;
-                        }
+                }
+                else {
+                    switch (target_state) {
+                    case PowerState_Standby: // remap to sleep on old firmware 2.0s
+                        writeData[0] = PowerState_Sleep;
+                        break;
+                    }
+                }
+
+                if (isValidCommand) {
+                    err = simpleble_peripheral_write_command(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_POWER_CHARACTERISTIC_UUID, writeData, writeDataSize);
+                    if (err == SIMPLEBLE_SUCCESS) {
+                        success = true;
                     }
 
-                    if (isValidCommand) {
+                    if (target_state == PowerState_Sleep) {
+                        // Sleep cmd requires to send 0x01 followed by 0x00
+                        writeData[0] = 0x00;
                         err = simpleble_peripheral_write_command(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_POWER_CHARACTERISTIC_UUID, writeData, writeDataSize);
                         if (err == SIMPLEBLE_SUCCESS) {
                             success = true;
                         }
-
-                        if (target_state == PowerState_Sleep) {
-                            // Sleep cmd requires to send 0x01 followed by 0x00
-                            writeData[0] = 0x00;
-                            err = simpleble_peripheral_write_command(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_POWER_CHARACTERISTIC_UUID, writeData, writeDataSize);
-                            if (err == SIMPLEBLE_SUCCESS) {
-                                success = true;
-                            } else {
-                                success = false;
-                            }
+                        else {
+                            success = false;
                         }
                     }
+                }
 
-                    err = simpleble_peripheral_disconnect(hBtDevice);
-                    if (err != SIMPLEBLE_SUCCESS) {
-                        LOG_BLUETOOTH_WARN("Failed to disconnect from base station {}...", szSerialNumber);
-                    } else {
-                        const char* szPowerState = "Active";
-                        switch (target_state)
-                        {
-                        case spacecal::bluetooth::PowerState_Sleep:
-                            szPowerState = "Sleep";
-                            break;
-                        case spacecal::bluetooth::PowerState_Standby:
-                            szPowerState = "Standby";
-                            break;
-                        case spacecal::bluetooth::PowerState_Awake_TooOldFirmware:
-                        case spacecal::bluetooth::PowerState_Awake_From_Sleep:
-                        case spacecal::bluetooth::PowerState_Awake_From_Standby:
-                            szPowerState = "Awake";
-                            break;
-                        case spacecal::bluetooth::PowerState_Unknown:
-                        default:
-                            szPowerState = "Unknown";
-                            break;
-                        }
-                        LOG_BLUETOOTH_INFO("Set base station {} to power state {}!", szSerialNumber, szPowerState);
+                err = simpleble_peripheral_disconnect(hBtDevice);
+                if (err != SIMPLEBLE_SUCCESS) {
+                    LOG_BLUETOOTH_WARN("Failed to disconnect from base station {}...", szSerialNumber);
+                }
+                else {
+                    const char* szPowerState = "Active";
+                    switch (target_state)
+                    {
+                    case spacecal::bluetooth::PowerState_Sleep:
+                        szPowerState = "Sleep";
+                        break;
+                    case spacecal::bluetooth::PowerState_Standby:
+                        szPowerState = "Standby";
+                        break;
+                    case spacecal::bluetooth::PowerState_Awake_TooOldFirmware:
+                    case spacecal::bluetooth::PowerState_Awake_From_Sleep:
+                    case spacecal::bluetooth::PowerState_Awake_From_Standby:
+                        szPowerState = "Awake";
+                        break;
+                    case spacecal::bluetooth::PowerState_Unknown:
+                    default:
+                        szPowerState = "Unknown";
+                        break;
                     }
+                    LOG_BLUETOOTH_INFO("Set base station {} to power state {}!", szSerialNumber, szPowerState);
+                }
             }
 
             g_base_station_state.mutexBaseStationList.lock();
@@ -720,6 +752,8 @@ namespace spacecal {
                 auto& final_station = g_base_station_state.aTrackedBaseStations[index];
                 if (success) {
                     final_station.base_station.powerState = target_state;
+                    final_station.base_station.firmwareSupportsStandby = bIsOldFirmware ? EBaseStation20_StandbySupport_t::StandbySupport_Unavailable : EBaseStation20_StandbySupport_t::StandbySupport_Supported;
+                    final_station.isOldFirmware = bIsOldFirmware;
                 }
             }
             g_base_station_state.mutexBaseStationList.unlock();

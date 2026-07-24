@@ -25,6 +25,12 @@ namespace spacecal {
             BaseStationType_Unknown,
         };
 
+        enum EBaseStation20_StandbySupport_t : uint8_t {
+            StandbySupport_Unknown,
+            StandbySupport_Supported,
+            StandbySupport_Unavailable,
+        };
+
         struct BaseStation_t {
             std::string szSerialNumber; // LHB-XXXXXXXX
             std::string szMacAddress;
@@ -35,6 +41,7 @@ namespace spacecal {
 
             EBaseStationType_t eType = EBaseStationType_t::BaseStationType_Unknown;
             EPowerState_t powerState = EPowerState_t::PowerState_Unknown;
+            EBaseStation20_StandbySupport_t firmwareSupportsStandby = EBaseStation20_StandbySupport_t::StandbySupport_Unknown;
             
             bool isConnected = false;
         };
