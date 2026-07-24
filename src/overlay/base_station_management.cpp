@@ -539,7 +539,7 @@ namespace spacecal {
                     LOG_BLUETOOTH_WARN("Failed to disconnect from base station {}...", szSerialNumber);
                 }
                 else {
-                    LOG_BLUETOOTH_INFO("Disconnected from base station {}!", szSerialNumber);
+                    LOG_BLUETOOTH_INFO("Set base station {} to channel {}!", szSerialNumber, target_channel);
                 }
             }
 
@@ -684,9 +684,27 @@ namespace spacecal {
                     err = simpleble_peripheral_disconnect(hBtDevice);
                     if (err != SIMPLEBLE_SUCCESS) {
                         LOG_BLUETOOTH_WARN("Failed to disconnect from base station {}...", szSerialNumber);
-                    }
-                    else {
-                        LOG_BLUETOOTH_INFO("Disconnected from base station {}!", szSerialNumber);
+                    } else {
+                        const char* szPowerState = "Active";
+                        switch (target_state)
+                        {
+                        case spacecal::bluetooth::PowerState_Sleep:
+                            szPowerState = "Sleep";
+                            break;
+                        case spacecal::bluetooth::PowerState_Standby:
+                            szPowerState = "Standby";
+                            break;
+                        case spacecal::bluetooth::PowerState_Awake_TooOldFirmware:
+                        case spacecal::bluetooth::PowerState_Awake_From_Sleep:
+                        case spacecal::bluetooth::PowerState_Awake_From_Standby:
+                            szPowerState = "Awake";
+                            break;
+                        case spacecal::bluetooth::PowerState_Unknown:
+                        default:
+                            szPowerState = "Unknown";
+                            break;
+                        }
+                        LOG_BLUETOOTH_INFO("Set base station {} to power state {}!", szSerialNumber, szPowerState);
                     }
             }
 
