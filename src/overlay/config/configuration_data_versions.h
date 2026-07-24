@@ -114,8 +114,8 @@ namespace spacecal {
 
                 struct BaseStationManagementData {
                     bool auto_power_management_enabled = false;
-                    bool auto_turn_on_during_startup = false;
-                    bool auto_turn_off_during_shutdown = false;
+                    bool auto_turn_on_during_startup = true;
+                    bool auto_turn_off_during_shutdown = true;
                     bool off_should_use_standby = false;
                     std::unordered_map<std::string, std::string> nicknames; // KV pair -> "LHB XXXXXXXX" to "my nick name"
                 };
@@ -123,9 +123,9 @@ namespace spacecal {
                 std::string ui_locale = "system";
                 bool advanced_settings = false;
 
-                std::vector<Calibration_t> calibrations;
-
                 BaseStationManagementData base_stations;
+
+                std::vector<Calibration_t> calibrations;
             };
 
             typedef Configuration_0 Configuration_Latest;
