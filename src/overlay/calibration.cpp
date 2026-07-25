@@ -634,6 +634,7 @@ namespace spacecal {
     }
     
     void TrackingSystemCalibration::reset() {
+        LOG_CALIB_INFO("Resetting calibration...");
         m_samples.clear();
         m_sampleHistory.clear();
         // @NOTE: should we do this? need to compare with live behaviour
@@ -883,6 +884,15 @@ namespace spacecal {
     }
     
     void TrackingSystemCalibration::assignTarget(CalibrationDevice& device) {
+        // prevent stale state, check if the device is valid and wasnt disconnected, else reset and find it again (may not work!)
+        if (device.deviceId < vr::k_unMaxTrackedDeviceCount) {
+            const auto& currentDev = VRState::getInstance()->getVrDevice(device.deviceId);
+
+            if (!currentDev.bIsConnected || (!device.deviceSerialNumber.empty() && currentDev.szSerial != device.deviceSerialNumber)) {
+                device.deviceId = vr::k_unTrackedDeviceIndexInvalid;
+            }
+        }
+
         if (device.deviceId == vr::k_unTrackedDeviceIndexInvalid) {
             auto theDevice = VRState::getInstance()->findVrDevice(device.trackingSystem, device.deviceModel, device.deviceSerialNumber);
             if (theDevice.bIsConnected && theDevice.dwDeviceIndex < vr::k_unMaxTrackedDeviceCount) {
