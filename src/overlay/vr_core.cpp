@@ -289,7 +289,7 @@ namespace spacecal {
                 m_bStateDirty = true;
                 break;
             case vr::EVREventType::VREvent_TrackedDeviceRoleChanged:
-                LOG_OPENVR_INFO("Device role change at index");
+                LOG_OPENVR_INFO("Device role change");
                 // trackedDeviceIndex is invalid so fuck if i know what changed
                 // why its not populated is beyond me but oh well
                 m_bStateDirty = true;
@@ -395,6 +395,11 @@ namespace spacecal {
             case vr::EVREventType::VREvent_ShowRenderModels:
             case vr::EVREventType::VREvent_SceneApplicationStateChanged:
             case vr::EVREventType::VREvent_SceneAppPipeDisconnected:
+            case vr::EVREventType::VREvent_KeyboardOpened_Global:
+            case vr::EVREventType::VREvent_KeyboardClosed:
+            case vr::EVREventType::VREvent_KeyboardClosed_Global:
+            case vr::EVREventType::VREvent_KeyboardDone:
+            case vr::EVREventType::VREvent_KeyboardCharInput:
                 
             case vr::EVREventType::VREvent_RequestScreenshot:
             case vr::EVREventType::VREvent_ScreenshotTaken:
@@ -425,7 +430,7 @@ namespace spacecal {
                 break;
             case vr::EVREventType::VREvent_Quit:
             {
-                // start base stations on startup if enabled
+                // turn off base stations at vr shutdown if enabled
                 if (ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_power_management_enabled &&
                     ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_off_during_shutdown) {
                     bluetooth::EPowerState_t ePowerState = ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby ? bluetooth::PowerState_Standby : bluetooth::PowerState_Sleep;
