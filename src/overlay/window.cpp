@@ -304,10 +304,6 @@ namespace spacecal {
                 auto& io = ImGui::GetIO();
                 dashboardVisible = vr::VROverlay()->IsActiveDashboardOverlay(hOverlayHandle);
 
-                // @FIXME: This is currently hard-coded for windows as i copy pasted this from the 1.5.1 codebase
-                //         need to figure out if imgui handles UTF8 directly and SteamVR does UTF8 directly, and adjust code accordingly
-                //         also abstract the code into platform_win32 and platform_linux
-
                 // After closing the keyboard, this code waits one frame for ImGui to pick up the new text from SetActiveText
                 // before clearing the active widget. Then it waits another frame before allowing the keyboard to open again,
                 // otherwise it will do so instantly since WantTextInput is still true on the second frame.
@@ -324,12 +320,6 @@ namespace spacecal {
                     auto textInfo = ImGui::GetInputTextState(id);
 
                     if (textInfo != nullptr) {
-#if 0
-                        // @TODO: do we even need this? imgui and openvr afaik are both utf8, so no need to convert encoding between the two
-                        textBuf[0] = 0;
-                        int len = WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)textInfo->TextA.Data, textInfo->TextA.Size, textBuf, sizeof(textBuf), nullptr, nullptr);
-                        textBuf[std::min(static_cast<size_t>(len), sizeof(textBuf) - 1)] = 0;
-#endif                   
                         memset(textBuf, 0, sizeof(textBuf));
                         size_t dwTextLength = std::min(static_cast<size_t>(textInfo->TextLen), sizeof(textBuf) - 1);
                         memcpy(textBuf, textInfo->TextA.Data, dwTextLength);
@@ -365,28 +355,70 @@ namespace spacecal {
                         io.AddMouseWheelEvent(x, m_isYFlipped ? y : y);
                         break;
                     }
-                    case vr::VREvent_KeyboardDone: {
-                        uint32_t dwTextBufSize = vr::VROverlay()->GetKeyboardText(textBuf, sizeof(textBuf));
+                    case vr::VREvent_KeyboardCharInput: {
+                        switch (vrEvent.data.keyboard.cNewInput[0]) {
+                        case '\b': {
+                            io.AddKeyEvent(ImGuiKey_Backspace, true);
+                            io.AddKeyEvent(ImGuiKey_Backspace, false);
+                            break;
+                        }
+                        case '\n': {
+                            io.AddKeyEvent(ImGuiKey_Enter, true);
+                            io.AddKeyEvent(ImGuiKey_Enter, false);
+                            vr::VROverlay()->HideKeyboard();
+                            break;
+                        }
+                        case 27: {
+                            if (vrEvent.data.keyboard.cNewInput[1] == 91) {
+                                switch (vrEvent.data.keyboard.cNewInput[2]) {
+                                case 65: {
+                                    io.AddKeyEvent(ImGuiKey_UpArrow, true);
+                                    io.AddKeyEvent(ImGuiKey_UpArrow, false);
+                                    break;
+                                }
+                                case 66: {
+                                    io.AddKeyEvent(ImGuiKey_DownArrow, true);
+                                    io.AddKeyEvent(ImGuiKey_DownArrow, false);
+                                    break;
+                                }
+                                case 67: {
+                                    io.AddKeyEvent(ImGuiKey_RightArrow, true);
+                                    io.AddKeyEvent(ImGuiKey_RightArrow, false);
+                                    break;
+                                }
+                                case 68: {
+                                    io.AddKeyEvent(ImGuiKey_LeftArrow, true);
+                                    io.AddKeyEvent(ImGuiKey_LeftArrow, false);
+                                    break;
+                                }
+                                }
+                            }
+                            break;
+                        }
+                        default: {
+                            io.AddInputCharactersUTF8(vrEvent.data.keyboard.cNewInput);
+                            break;
+                        }
+                        }
 
-                        int id = ImGui::GetActiveID();
-                        auto textInfo = ImGui::GetInputTextState(id);
-
-                        textInfo->TextA.resize(dwTextBufSize + 1); // null terminator
-                        memcpy(textInfo->TextA.Data, textBuf, dwTextBufSize);
-                        textInfo->TextLen = dwTextBufSize;
-
-#if 0
-                        // @TODO: do we even need this? imgui and openvr afaik are both utf8, so no need to convert encoding between the two
-                        int bufSize = MultiByteToWideChar(CP_UTF8, 0, textBuf, -1, nullptr, 0);
-                        textInfo->TextA.resize(bufSize);
-                        MultiByteToWideChar(CP_UTF8, 0, textBuf, -1, (LPWSTR)textInfo->TextA.Data, bufSize);
-                        textInfo->TextLen = bufSize;
-                        textInfo->TextLen = WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)textInfo->TextA.Data, textInfo->TextA.Size, nullptr, 0, nullptr, nullptr);
-#endif
-
-                        bKeyboardJustClosed = true;
                         break;
                     }
+                    case vr::VREvent_KeyboardDone: {
+                        // @TODO: fallthrough?
+                        if (bKeyboardOpen) {
+                            bKeyboardJustClosed = true;
+                            vr::VROverlay()->HideKeyboard();
+                        }
+                        break;
+                    }
+                    case vr::VREvent_KeyboardClosed_Global: {
+                        if (vrEvent.data.keyboard.overlayHandle == hOverlayHandle) {
+                            bKeyboardOpen = false;
+                            vr::VROverlay()->HideKeyboard();
+                        }
+                        break;
+                    }
+
                     case vr::VREvent_Quit:
                         return;
                     }
