@@ -482,6 +482,11 @@ namespace spacecal {
 
             uint8_t matches = 0;
 
+            // guard against empty data
+            if (model.empty() || serial.empty() || trackingSystem.empty() || device.szModel.empty() || device.szSerial.empty() || device.szTrackingSystemId.empty()) {
+                continue;
+            }
+
             if (device.szModel == model) {
                 matches++;
             }
