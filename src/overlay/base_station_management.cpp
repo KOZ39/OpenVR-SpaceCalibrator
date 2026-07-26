@@ -285,8 +285,16 @@ namespace spacecal {
                 if (g_base_station_state.aTrackedBaseStations[i].base_station.szSerialNumber == baseStation.base_station.szSerialNumber) {
                     // already present, update this and exit
                     g_base_station_state.aTrackedBaseStations[i].hBtDevice = baseStation.hBtDevice;
-                    g_base_station_state.aTrackedBaseStations[i].base_station = baseStation.base_station;
                     g_base_station_state.aTrackedBaseStations[i].isOldFirmware = baseStation.isOldFirmware;
+                    g_base_station_state.aTrackedBaseStations[i].base_station.szSerialNumber = baseStation.base_station.szSerialNumber;
+                    g_base_station_state.aTrackedBaseStations[i].base_station.szMacAddress = baseStation.base_station.szMacAddress;
+                    g_base_station_state.aTrackedBaseStations[i].base_station.channel = baseStation.base_station.channel;
+                    g_base_station_state.aTrackedBaseStations[i].base_station.eType = baseStation.base_station.eType;
+                    g_base_station_state.aTrackedBaseStations[i].base_station.powerState = baseStation.base_station.powerState;
+                    g_base_station_state.aTrackedBaseStations[i].base_station.isConnected = baseStation.base_station.isConnected;
+                    if (baseStation.base_station.firmwareSupportsStandby != EBaseStation20_StandbySupport_t::StandbySupport_Unknown) {
+                        g_base_station_state.aTrackedBaseStations[i].base_station.firmwareSupportsStandby = baseStation.base_station.firmwareSupportsStandby;
+                    }
                     foundStation = true;
                 }
             }
