@@ -1191,6 +1191,10 @@ namespace spacecal {
         g_state.bBaseStationPowerManagementOffModeIsSleep = !ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby;
         auto& io = ImGui::GetIO();
 
+#if _DEBUG
+#define IMGUI_USE_DEBUG_WINDOW
+#endif
+
         // disable ctrl + tab, pointless in a VR overlay https://github.com/ocornut/imgui/issues/7987
 #if !defined(IMGUI_USE_DEBUG_WINDOW)
         ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Tab, ImGuiInputFlags_RouteGlobal);
