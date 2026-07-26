@@ -42,6 +42,7 @@ namespace spacecal {
         [[nodiscard]] inline ipc::protocol::SharedData_HmdMetadata getHmdMeta() const { return m_hmdMetadata; }
     private:
         bool updateSteamVRDevice(const vr::TrackedDeviceIndex_t deviceId);
+        void invalidateAllSamples(); // private helper
 
     private:
         static VRState* s_instance;

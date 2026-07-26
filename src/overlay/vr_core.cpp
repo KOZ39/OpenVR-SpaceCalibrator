@@ -295,48 +295,62 @@ namespace spacecal {
                 m_bStateDirty = true;
                 break;
 
+            // @TODO: nuke the insanely verbose logging from events
             // suspect: lighthouse "universe" jumps are actually chaperone being weird
             case vr::EVREventType::VREvent_ChaperoneDataHasChanged:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone data change event at index {}", vrEvent.trackedDeviceIndex);
                 break;
             case vr::EVREventType::VREvent_ChaperoneUniverseHasChanged:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone universe change event at index {}", vrEvent.trackedDeviceIndex);
                 break;
             case vr::EVREventType::VREvent_ChaperoneTempDataHasChanged:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone temp data change event at index {}", vrEvent.trackedDeviceIndex);
                 break;
             case vr::EVREventType::VREvent_ChaperoneSettingsHaveChanged:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone settings change event at index {}", vrEvent.trackedDeviceIndex);
                 break;
             case vr::EVREventType::VREvent_SeatedZeroPoseReset:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone seated recenter event at index {}", vrEvent.trackedDeviceIndex);
                 break;
             case vr::EVREventType::VREvent_ChaperoneFlushCache:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone flush cache event at index {}", vrEvent.trackedDeviceIndex);
                 break;
             case vr::EVREventType::VREvent_ChaperoneRoomSetupStarting:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone room setup init event at index {}", vrEvent.trackedDeviceIndex);
                 break;
             case vr::EVREventType::VREvent_ChaperoneRoomSetupCommitted:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone room setup commit event at index {}", vrEvent.trackedDeviceIndex);
                 break;
             case vr::EVREventType::VREvent_StandingZeroPoseReset:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone standing recenter event at index {}", vrEvent.trackedDeviceIndex);
                 break;
             case vr::EVREventType::VREvent_Reserved_0809:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone unk 809 event at index {}", vrEvent.trackedDeviceIndex);
                 break;
             case vr::EVREventType::VREvent_Reserved_0810:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone unk 810 event at index {}", vrEvent.trackedDeviceIndex);
                 break;
             case vr::EVREventType::VREvent_Reserved_0811:
+                invalidateAllSamples();
                 LOG_OPENVR_INFO("Chaperone unk 811 event at index {}", vrEvent.trackedDeviceIndex);
                 break;
 
-                // @TODO: inform the calibration algorithm about these states? need to test
             case vr::EVREventType::VREvent_EnterStandbyMode:
-                break;
             case vr::EVREventType::VREvent_LeaveStandbyMode:
+            case vr::EVREventType::VREvent_WirelessDisconnect:
+            case vr::EVREventType::VREvent_WirelessReconnect:
+                invalidateAllSamples();
                 break;
 
             // @HACK: catch a bunch of dont cares here
@@ -451,6 +465,12 @@ namespace spacecal {
         {
             m_bStateDirty = true;
             m_lastHmdMetaState = m_hmdMetadata;
+        }
+    }
+
+    void VRState::invalidateAllSamples() {
+        for (size_t i = 0; i < CalibrationManager::getInstance()->getCalibrationCount(); i++) {
+            CalibrationManager::getInstance()->getCalibration(i).clearSamples();
         }
     }
 
