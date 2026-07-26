@@ -966,8 +966,13 @@ namespace spacecal {
 
         bool set_all_base_station_power_state(EPowerState_t state) {
             bool bResult = true;
-            std::lock_guard<std::mutex> lock(g_base_station_state.mutexBaseStationList);
-            for (size_t i = 0; i < g_base_station_state.aTrackedBaseStations.size(); i++) {
+
+            size_t dwBaseStationCount = 0;
+            {
+                std::lock_guard<std::mutex> lock(g_base_station_state.mutexBaseStationList);
+                dwBaseStationCount = g_base_station_state.aTrackedBaseStations.size();
+            }
+            for (size_t i = 0; i < dwBaseStationCount; i++) {
                 bResult = bResult && set_base_station_power_state(i, state);
             }
 
