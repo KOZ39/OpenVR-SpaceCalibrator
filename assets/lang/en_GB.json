@@ -11,6 +11,7 @@
   "vr_troubleshooting_generic": "Please connect your VR headset and launch SteamVR first. ({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
 
   "calibration_title": "Calibration",
+  "calibration_none": "No Calibration. Please create a new calibration to get started.", // Shown when there are no calibrations active
   "calibration_new": "New Calibration",
   "calibration_delete": "Delete Calibration",
   "calibration_next": "Next Calibration",
@@ -40,6 +41,7 @@
   "calibration_info_continuous_progress": "Continuous calibration active. Progress represents how close to attempting a calibration we are. Calibrations tend to be rejected due to worse error.", /* this is worded like absolute shit holy fuck */
 
   "calibration_speed": "Calibration Speed",
+  "calibration_speed_description": "How long it takes to calibrate. Slower calibrations tend to be more accurate.",
   "calibration_speed_fast": "Fast",
   "calibration_speed_slow": "Slow",
   "calibration_speed_very_slow": "Very Slow",
@@ -76,20 +78,36 @@
   /* base stations */
   "base_stations_title": "Base Station Management",
   "base_stations_no_bluetooth": "Failed to find a valid Bluetooth adapter. Please connect a BLE capable Bluetooth device to be able to use Base Station Management.",
-  "base_stations_none_found": "No Base Stations detected. If you have any, make sure they are plugged in!",
-  "base_stations_header_info": "{0} [{1}]", // 0: type (1.0 / 2.0), 1: station ID (LHB XXXXXXXX) / nickname
+  "base_stations_none_found": "No Base Stations detected. If you have any, make sure they are plugged in.",
+  "base_stations_header_info": "{0}", // 0: station ID (LHB XXXXXXXX) / nickname
+  "base_stations_warning_collision": "Channel collision detected! This will cause tracking issues. Your Base Stations should each use a unique channel.",
+  "base_stations_state_sleep": "Asleep",
+  "base_stations_state_standby": "Standby",
+  "base_stations_state_active": "Active",
+  "base_stations_state_unknown": "Unknown",
+  "base_stations_channel_select_label": "Select a Base Station channel:",
+
+  /* actions */
   "base_stations_action_wake_all": "Wake All",
   "base_stations_action_sleep_all": "Sleep All",
   "base_stations_action_fix_collisions": "Fix Channel Collisions",
-  "base_stations_warning_collision": "Warning: Channel collision detected!",
-  "base_stations_state_sleep": "[Asleep]",
-  "base_stations_state_standby": "[Standby]",
-  "base_stations_state_active": "[Active]",
-  "base_stations_state_unknown": "[Unknown]",
-  "base_stations_channel_select_label": "Channel Select:",
   "base_stations_btn_wake": "Wake",
   "base_stations_btn_standby": "Standby",
-  "base_stations_btn_sleep": "Power Off (Sleep)",
+  "base_stations_btn_sleep": "Sleep",
+
+  "base_station_power_management": "Base Station Power Management",
+  "base_stations_power_mgmt_enable": "Enable power management *",
+  "base_stations_power_mgmt_enable_description_standby": "Powered base stations go into standby mode when SteamVR is not in use, and wake up again when SteamVR starts.",
+  "base_stations_power_mgmt_enable_description_sleep": "Powered base stations go into sleep mode when SteamVR is not in use, and wake up again when SteamVR starts.",
+  "base_stations_power_mgmt_on_startup": "Turn on Base Stations on SteamVR startup",
+  "base_stations_power_mgmt_on_startup_description": "Unpowered base stations wake up when SteamVR starts.",
+  "base_stations_power_mgmt_on_shutdown": "Turn off Base Stations on SteamVR shutdown",
+  "base_stations_power_mgmt_on_shutdown_description": "Powered base stations are powered down when SteamVR is not in use.",
+  "base_stations_power_mgmt_standby": "Standby",
+  "base_stations_power_mgmt_standby_description": "Base Stations will power off only their lasers for a faster wake up when SteamVR starts. This is unavailable on Base Station 1.0s and some Base Station 2.0s, and Sleep will be used in these cases.",
+  "base_stations_power_mgmt_sleep": "Sleep",
+  "base_stations_power_mgmt_sleep_description": "Base Stations will power off their lasers and motors.",
+  "base_stations_power_mgmt_warning": "* NOT RECOMMENDED for shared tracking spaces with multiple SteamVR users.",
 
   /* settings */
   "settings_title": "Settings",
@@ -105,6 +123,8 @@
   "about_view_source_info": "You may view the source code on the GitHub repository.",
   "about_contributors_title": "Contributors",
   "about_contributors_description": "Space Calibrator is made possible with the help of the following people:",
+  "about_translators_title": "Translators",
+  "about_translators_description": "Space Calibrator has been translated by the following people:",
   "about_licenses_title": "Licenses",
   "about_licenses_description": "This program is licensed under the MIT license. Other dependencies are licensed under other licenses, please view the licenses below for more information.",
   "about_link_github": "GitHub",

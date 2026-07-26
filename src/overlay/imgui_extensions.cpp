@@ -1,6 +1,7 @@
 #include "imgui_extensions.h"
 
 #include "imgui_internal.h"
+#include <fmt/format.h>
 
 namespace ImGui::fonts {
     ImFont* pDefault = nullptr;
@@ -129,4 +130,63 @@ void ImGui::EndGroupPanel()
     ImGui::Dummy(ImVec2(0.0f, 0.0f));
 
     ImGui::EndGroup();
+}
+
+bool ImGui::CheckboxWithDescription(const char* title, bool* v, const char* desc) {
+    ImGui::BeginGroup();
+    bool changed = ImGui::Checkbox(fmt::format("##{}", title).c_str(), v);
+    ImGui::SameLine();
+    float yOffsetToTop = ImGui::GetStyle().FramePadding.y +
+        (ImGui::GetFrameHeight() - (ImGui::GetStyle().FramePadding.y * 2.0f) - ImGui::GetTextLineHeight()) * 0.5f;
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() - yOffsetToTop);
+    ImGui::BeginGroup();
+    ImGui::TextUnformatted(title);
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y + 2.0f);
+    ImGui::TextWrappedDisabled(desc);
+    ImGui::EndGroup();
+    ImGui::EndGroup();
+    ImGui::Spacing();
+    return changed;
+}
+
+bool ImGui::RadioButtonWithDescription(const char* title, bool v, const char* desc) {
+    ImGui::BeginGroup();
+    bool changed = ImGui::RadioButton(fmt::format("##{}", title).c_str(), v);
+    ImGui::SameLine();
+    float yOffsetToTop = ImGui::GetStyle().FramePadding.y +
+        (ImGui::GetFrameHeight() - (ImGui::GetStyle().FramePadding.y * 2.0f) - ImGui::GetTextLineHeight()) * 0.5f;
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() - yOffsetToTop);
+    ImGui::BeginGroup();
+    ImGui::TextUnformatted(title);
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y + 2.0f);
+    ImGui::TextWrappedDisabled(desc);
+    ImGui::EndGroup();
+    ImGui::EndGroup();
+    ImGui::Spacing();
+    return changed;
+}
+
+void ImGui::PillText(const char* text, const ImVec4& bgColor, const ImVec4& textColor) {
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    if (window->SkipItems) return;
+
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    const ImGuiID id = window->GetID(text);
+
+    const ImVec2 padding = ImVec2(k_PILL_PADDING_X, k_PILL_PADDING_Y);
+    const ImVec2 textSize = ImGui::CalcTextSize(text, NULL, true);
+
+    const ImVec2 pos = window->DC.CursorPos;
+    const ImVec2 size = ImVec2(textSize.x + padding.x * 2.0f, textSize.y + padding.y * 2.0f);
+    const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+
+    ImGui::ItemSize(size, style.FramePadding.y);
+    if (!ImGui::ItemAdd(bb, id)) return;
+
+    const float rounding = size.y * 0.5f;
+    window->DrawList->AddRectFilled(bb.Min, bb.Max, ImGui::ColorConvertFloat4ToU32(bgColor), rounding);
+
+    const ImVec2 textPos = ImVec2(bb.Min.x + padding.x, bb.Min.y + padding.y);
+    window->DrawList->AddText(textPos, ImGui::ColorConvertFloat4ToU32(textColor), text);
 }

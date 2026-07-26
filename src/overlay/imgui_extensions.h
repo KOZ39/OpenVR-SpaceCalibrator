@@ -16,6 +16,8 @@ namespace ImGui
 
 	constexpr float k_BORDER_WIDTH = 1.0f;
 	constexpr float k_TITLE_FONT_SIZE = 32.0f;
+	constexpr float k_PILL_PADDING_X = 8.0f;
+	constexpr float k_PILL_PADDING_Y = 3.0f;
 
 	// Group panels taken from https://github.com/ocornut/imgui/issues/1496#issuecomment-655048353
 	// Licensed under CC0 license as per https://github.com/ocornut/imgui/issues/1496#issuecomment-1287772456
@@ -134,39 +136,10 @@ namespace ImGui
 		ImGui::PopStyleColor(2);;
 	}
 
-	inline bool CheckboxWithDescription(const char* title, bool* v, const char* desc) {
-		ImGui::BeginGroup();
-		bool changed = ImGui::Checkbox(fmt::format("##{}", title).c_str(), v);
-		ImGui::SameLine();
-		float yOffsetToTop = ImGui::GetStyle().FramePadding.y +
-			(ImGui::GetFrameHeight() - (ImGui::GetStyle().FramePadding.y * 2.0f) - ImGui::GetTextLineHeight()) * 0.5f;
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - yOffsetToTop);
-		ImGui::BeginGroup();
-		ImGui::TextUnformatted(title);
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y + 2.0f);
-		ImGui::TextWrappedDisabled(desc);
-		ImGui::EndGroup();
-		ImGui::EndGroup();
-		ImGui::Spacing();
-		return changed;
-	}
+	bool CheckboxWithDescription(const char* title, bool* v, const char* desc);
+	bool RadioButtonWithDescription(const char* title, bool v, const char* desc);
 
-	inline bool RadioButtonWithDescription(const char* title, bool v, const char* desc) {
-		ImGui::BeginGroup();
-		bool changed = ImGui::RadioButton(fmt::format("##{}", title).c_str(), v);
-		ImGui::SameLine();
-		float yOffsetToTop = ImGui::GetStyle().FramePadding.y +
-			(ImGui::GetFrameHeight() - (ImGui::GetStyle().FramePadding.y * 2.0f) - ImGui::GetTextLineHeight()) * 0.5f;
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - yOffsetToTop);
-		ImGui::BeginGroup();
-		ImGui::TextUnformatted(title);
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y + 2.0f);
-		ImGui::TextWrappedDisabled(desc);
-		ImGui::EndGroup();
-		ImGui::EndGroup();
-		ImGui::Spacing();
-		return changed;
-	}
+	void PillText(const char* text, const ImVec4& bgColor, const ImVec4& textColor = ImVec4(0.93f, 0.94f, 0.96f, 1.0f));
 
 	// @TODO: advanced settings helpers for setting colours etc
 

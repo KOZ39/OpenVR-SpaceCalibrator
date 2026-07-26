@@ -316,32 +316,43 @@ namespace spacecal {
         ImGui::NewLine();
         auto speed = calibration.calibrationSpeed;
 
-        ImGui::Columns(4, nullptr, false);
-        ImGui::TextUnformatted(fmt::format("{}  {}", ICON_MS_SPEED, LOCALE_GET("calibration_speed").c_str()).c_str());
+        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(ImGui::GetStyle().CellPadding.x + ImGui::GetStyle().ItemSpacing.x, ImGui::GetStyle().CellPadding.y));
+        if (ImGui::BeginTable("SpeedSelectionTable", 4, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_PadOuterX)) {
+            ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Fast", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Slow", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("VerySlow", ImGuiTableColumnFlags_WidthFixed);
 
-        ImGui::NextColumn();
-        if (ImGui::RadioButton(LOCALE_GET("calibration_speed_fast").c_str(), speed == CalibrationSpeed::FAST)) {
-            calibration.calibrationSpeed = CalibrationSpeed::FAST;
-            calibration.clearSamples();
+            ImGui::TableNextRow();
+
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted(LOCALE_GET("calibration_speed").c_str());
+            ImGui::TextDisabled("%s", LOCALE_GET("calibration_speed_description").c_str());
+
+            ImGui::TableNextColumn();
+            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_fast").c_str(), speed == CalibrationSpeed::FAST)) {
+                calibration.calibrationSpeed = CalibrationSpeed::FAST;
+                calibration.clearSamples();
+            }
+
+            ImGui::TableNextColumn();
+            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_slow").c_str(), speed == CalibrationSpeed::SLOW)) {
+                calibration.calibrationSpeed = CalibrationSpeed::SLOW;
+                calibration.clearSamples();
+            }
+
+            ImGui::TableNextColumn();
+            if (ImGui::RadioButton(LOCALE_GET("calibration_speed_very_slow").c_str(), speed == CalibrationSpeed::VERY_SLOW)) {
+                calibration.calibrationSpeed = CalibrationSpeed::VERY_SLOW;
+                calibration.clearSamples();
+            }
+
+            ImGui::EndTable();
         }
-
-        ImGui::NextColumn();
-        if (ImGui::RadioButton(LOCALE_GET("calibration_speed_slow").c_str(), speed == CalibrationSpeed::SLOW)) {
-            calibration.calibrationSpeed = CalibrationSpeed::SLOW;
-            calibration.clearSamples();
-        }
-
-        ImGui::NextColumn();
-        if (ImGui::RadioButton(LOCALE_GET("calibration_speed_very_slow").c_str(), speed == CalibrationSpeed::VERY_SLOW)) {
-            calibration.calibrationSpeed = CalibrationSpeed::VERY_SLOW;
-            calibration.clearSamples();
-        }
-
-        ImGui::Columns(1);
-
+        ImGui::PopStyleVar();
+        
         if (g_state.bIsSettingsAdvanced) {
-            ImGui::Checkbox(LOCALE_GET("settings_calibrate_motion_vectors").c_str(), &calibration.calibrateMotionVectors);
-            ImGui::TextDisabled("%s", LOCALE_GET("settings_calibrate_motion_vectors_description").c_str());
+            ImGui::CheckboxWithDescription(LOCALE_GET("settings_calibrate_motion_vectors").c_str(), &calibration.calibrateMotionVectors, LOCALE_GET("settings_calibrate_motion_vectors_description").c_str());
         }
 
         if (calibration.isCalibrating()) {
@@ -421,7 +432,6 @@ namespace spacecal {
 
     struct PlotUiState {
         double referenceTime = 0.0;
-        double lastMouseX = -HUGE_VAL;
         bool wasHoveredThisFrame = false;
         
         std::vector<double> calAppliedTimeBuffer;
@@ -458,7 +468,7 @@ namespace spacecal {
         double xScale = 1.0; // used for eg zooming in to specific graphs like velocity
         ImPlotAxisFlags yFlags = ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit;
 
-        // ptr to next graph config to draw in the ui
+        // ptr to next graph config to draw in the same plot
         const GraphConfig* pNext = nullptr;
     };
 
@@ -479,12 +489,12 @@ namespace spacecal {
             ImPlot::PlotInfLines("##CalibrationAppliedTimeByRelPose", g_PlotUiState.calByRelPoseTimeBuffer.data(), static_cast<int>(g_PlotUiState.calByRelPoseTimeBuffer.size()), defaultSpec);
         }
 
-        ImPlotSpec tagSpec;
-        tagSpec.LineColor = ImVec4(0.5f, 0.5f, 1.0f, 1.0f);
-        ImPlot::PlotInfLines("##TagLine", &g_PlotUiState.lastMouseX, 1, tagSpec);
-
         if (ImPlot::IsPlotHovered()) {
-            g_PlotUiState.lastMouseX = ImPlot::GetPlotMousePos().x;
+
+            ImPlotSpec tagSpec;
+            tagSpec.LineColor = ImVec4(0.5f, 0.5f, 1.0f, 1.0f);
+            float lastMouseX = (float) ImPlot::GetPlotMousePos().x;
+            ImPlot::PlotInfLines("##TagLine", &lastMouseX, 1, tagSpec);
             g_PlotUiState.wasHoveredThisFrame = true;
         }
     }
@@ -505,7 +515,7 @@ namespace spacecal {
                     scalarScratch.clear();
                     scalarScratch.reserve(ts.size());
                     for (int i = 0; i < ts.size(); i++) {
-                        scalarScratch.push_back({ ts[i].time - g_PlotUiState.referenceTime, ts[i].value });
+                        scalarScratch.push_back({ g_PlotUiState.referenceTime - ts[i].time, ts[i].value });
                     }
                     spec.Stride = static_cast<int>(sizeof(scalarScratch[0]));
                     ImPlot::PlotLine(cfg->menuName, &scalarScratch[0].time, &scalarScratch[0].value, static_cast<int>(scalarScratch.size()), spec);
@@ -517,7 +527,7 @@ namespace spacecal {
                     vec3Scratch.clear();
                     vec3Scratch.reserve(ts.size());
                     for (int i = 0; i < ts.size(); i++) {
-                        vec3Scratch.push_back({ ts[i].time - g_PlotUiState.referenceTime, ts[i].value });
+                        vec3Scratch.push_back({ g_PlotUiState.referenceTime - ts[i].time, ts[i].value });
                     }
                     spec.Stride = static_cast<int>(sizeof(vec3Scratch[0]));
                     std::string labelX = fmt::format("{}.X", cfg->menuName);
@@ -537,7 +547,7 @@ namespace spacecal {
     void drawComposedPlot(double timeSpan, const GraphConfig* rootCfg, const CalibrationErrorMetrics& metrics) {
         if (ImPlot::BeginPlot(rootCfg->menuId, ImVec2(-1, 0), ImPlotFlags_None)) {
             ImPlot::SetupAxes(nullptr, rootCfg->szAxisUnits, 0, rootCfg->yFlags);
-            ImPlot::SetupAxisLimits(ImAxis_X1, -timeSpan * rootCfg->xScale, 0, ImGuiCond_Always);
+            ImPlot::SetupAxisLimits(ImAxis_X1, timeSpan * rootCfg->xScale, 0, ImGuiCond_Always);
             ImPlot::SetupAxisLimits(ImAxis_Y1, 0, rootCfg->yLimit, ImGuiCond_Appearing);
 
             addApplyTicks();
@@ -565,7 +575,7 @@ namespace spacecal {
         scratch.clear();
         scratch.reserve(ts.size());
         for (int i = 0; i < ts.size(); i++) {
-            scratch.push_back({ ts[i].time - g_PlotUiState.referenceTime, ts[i].value });
+            scratch.push_back({ g_PlotUiState.referenceTime - ts[i].time, ts[i].value });
         }
 
         ImPlot::PushColormap(g_PlotUiState.axisVarianceColormap);
@@ -625,10 +635,9 @@ namespace spacecal {
 
         g_PlotUiState.wasHoveredThisFrame = false;
         auto avail = ImGui::GetContentRegionAvail();
-        auto bgCol = ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
 
-        ImGui::PushStyleColor(ImGuiCol_TableRowBg, bgCol);
-        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, bgCol);
+        ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, ImVec4(0, 0, 0, 0));
         ImPlot::PushStyleColor(ImPlotCol_FrameBg, ImVec4(0, 0, 0, 0));
 
         std::string childId = fmt::format("##MetricsPanel_{}", targetDeviceName);
@@ -652,8 +661,8 @@ namespace spacecal {
         g_PlotUiState.calAppliedTimeBuffer.clear();
         g_PlotUiState.calByRelPoseTimeBuffer.clear();
         for (const auto& sample : metrics.calibrationApplied.data()) {
-            if (sample.value) g_PlotUiState.calAppliedTimeBuffer.push_back(sample.time - g_PlotUiState.referenceTime);
-            else              g_PlotUiState.calByRelPoseTimeBuffer.push_back(sample.time - g_PlotUiState.referenceTime);
+            if (sample.value) g_PlotUiState.calAppliedTimeBuffer.push_back(g_PlotUiState.referenceTime - sample.time);
+            else              g_PlotUiState.calByRelPoseTimeBuffer.push_back(g_PlotUiState.referenceTime - sample.time);
         }
 
         const char* pMetricsAddress = reinterpret_cast<const char*>(&metrics);
@@ -693,10 +702,6 @@ namespace spacecal {
 
         ImPlot::PopStyleColor(1);
         ImGui::PopStyleColor(2);
-
-        if (!g_PlotUiState.wasHoveredThisFrame) {
-            g_PlotUiState.lastMouseX = -HUGE_VAL;
-        }
     }
 
     void page_calibration(double currentTime) {
@@ -711,6 +716,7 @@ namespace spacecal {
 
             if (dwNumCalibrations == 0) {
                 // @TODO: no calibrations edge case handling
+                ImGui::TextTitle("%s", LOCALE_GET("calibration_none").c_str());
             }
 
             for (size_t i = 0; i < dwNumCalibrations; i++) {
@@ -757,6 +763,7 @@ namespace spacecal {
         {
             ImGui::TextHeading(LOCALE_GET("base_station_power_management").c_str());
 
+            const float fCheckboxTextIndent = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.x;
             const char* bsPowerEnableDescKey = g_state.bBaseStationPowerManagementOffModeIsSleep
                 ? "base_stations_power_mgmt_enable_description_sleep"
                 : "base_stations_power_mgmt_enable_description_standby";
@@ -766,6 +773,8 @@ namespace spacecal {
                 ConfigurationManager::getInstance()->saveConfiguration();
             }
 
+            ImGui::BeginDisabled(!g_state.bBaseStationPowerManagementEnabled);
+            ImGui::Indent(fCheckboxTextIndent);
             if (ImGui::CheckboxWithDescription(LOCALE_GET("base_stations_power_mgmt_on_startup").c_str(), &g_state.bBaseStationPowerManagementOnStartup, LOCALE_GET("base_stations_power_mgmt_on_startup_description").c_str())) {
                 ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_on_during_startup = g_state.bBaseStationPowerManagementOnStartup;
                 ConfigurationManager::getInstance()->saveConfiguration();
@@ -776,6 +785,7 @@ namespace spacecal {
                 ConfigurationManager::getInstance()->saveConfiguration();
             }
 
+            ImGui::Indent(fCheckboxTextIndent);
             if (ImGui::RadioButtonWithDescription(LOCALE_GET("base_stations_power_mgmt_standby").c_str(), !g_state.bBaseStationPowerManagementOffModeIsSleep, LOCALE_GET("base_stations_power_mgmt_standby_description").c_str())) {
                 ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby = true;
                 ConfigurationManager::getInstance()->saveConfiguration();
@@ -785,6 +795,9 @@ namespace spacecal {
                 ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby = false;
                 ConfigurationManager::getInstance()->saveConfiguration();
             }
+            ImGui::Unindent(fCheckboxTextIndent);
+            ImGui::Unindent(fCheckboxTextIndent);
+            ImGui::EndDisabled();
 
             ImGui::TextWrapped(LOCALE_GET("base_stations_power_mgmt_warning").c_str());
         }
@@ -795,6 +808,8 @@ namespace spacecal {
         ImGui::TextTitle("%s", LOCALE_GET("base_stations_title").c_str());
 
         if (!bluetooth::is_bluetooth_available()) {
+            ImGui::TextDisabled(ICON_MS_BLUETOOTH_DISABLED "  ");
+            ImGui::SameLine();
             ImGui::TextDisabled(LOCALE_GET("base_stations_no_bluetooth").c_str());
             return;
         }
@@ -803,114 +818,172 @@ namespace spacecal {
         size_t dwBaseStationCount = bluetooth::get_base_station_count();
 
         if (dwBaseStationCount > 0) {
-            if (ImGui::Button(LOCALE_GET("base_stations_action_wake_all").c_str())) {
+            // @TODO: warning card with fix button?
+            if (bluetooth::do_base_station_channels_collide()) {
+                ImGui::TextWrappedColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), LOCALE_GET("base_stations_warning_collision").c_str());
+            }
+
+            if (ImGui::IconButton(ICON_MS_MODE_OFF_ON, LOCALE_GET("base_stations_action_wake_all").c_str())) {
                 bluetooth::set_all_base_station_power_state(bluetooth::PowerState_Awake_From_Standby);
             }
             ImGui::SameLine();
-            if (ImGui::Button(LOCALE_GET("base_stations_action_sleep_all").c_str())) {
+            if (ImGui::IconButton(ICON_MS_LIGHT_OFF, LOCALE_GET("base_stations_action_sleep_all").c_str())) {
                 bluetooth::set_all_base_station_power_state(bluetooth::PowerState_Sleep);
             }
             ImGui::SameLine();
-            if (ImGui::Button(LOCALE_GET("base_stations_action_fix_collisions").c_str())) {
+            if (ImGui::IconButton(ICON_MS_WIFI_CHANNEL, LOCALE_GET("base_stations_action_fix_collisions").c_str())) {
                 bluetooth::auto_assign_base_station_channels();
             }
 
-            if (bluetooth::do_base_station_channels_collide()) {
-                ImGui::SameLine();
-                ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "%s", LOCALE_GET("base_stations_warning_collision").c_str());
-            }
+            ImGui::Spacing();
             ImGui::Separator();
+            ImGui::Spacing();
         }
 
         if (dwBaseStationCount < 1) {
             ImGui::TextDisabled(LOCALE_GET("base_stations_none_found").c_str());
-        }
-        else {
+        } else {
+            uint16_t activeChannelsMask = 0; // bitwise mask; we have 16 channels on 2.0s so only up to 16 unique bits (slots) to use
+
+            // build a bitwise mask of the occupied channels, if one is set more than once 
             for (size_t i = 0; i < dwBaseStationCount; i++) {
                 auto base_station = bluetooth::get_base_station(i);
-
-                ImGui::PushID(static_cast<int>(i));
-                ImGui::BeginGroup();
-
-                const char* typeStr = (base_station.eType == bluetooth::BaseStationType_10) ? "1.0" : "2.0";
-                std::string szBaseStationName = base_station.szSerialNumber;
-                std::string headerText = LOCALE_FORMAT("base_stations_header_info", typeStr, szBaseStationName);
-                ImGui::Text("%s", headerText.c_str());
-
-                ImGui::SameLine(ImGui::GetWindowWidth() - 150.0f);
-                switch (base_station.powerState) {
-                case bluetooth::PowerState_Sleep:
-                    ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "%s", LOCALE_GET("base_stations_state_sleep").c_str());
-                    break;
-                case bluetooth::PowerState_Standby:
-                    ImGui::TextColored(ImVec4(0.9f, 0.6f, 0.1f, 1.0f), "%s", LOCALE_GET("base_stations_state_standby").c_str());
-                    break;
-                case bluetooth::PowerState_Awake_From_Sleep:
-                case bluetooth::PowerState_Awake_From_Standby:
-                case bluetooth::PowerState_Awake_TooOldFirmware:
-                    ImGui::TextColored(ImVec4(0.2f, 0.9f, 0.2f, 1.0f), "%s", LOCALE_GET("base_stations_state_active").c_str());
-                    break;
-                default:
-                    ImGui::TextDisabled("%s", LOCALE_GET("base_stations_state_unknown").c_str());
-                    break;
-                }
-
-                ImGui::Spacing();
-
                 if (base_station.eType == bluetooth::BaseStationType_20) {
-                    ImGui::Text("%s", LOCALE_GET("base_stations_channel_select_label").c_str());
+                    auto channel = base_station.channel;
+                    if (IS_BASE_STATION_20_CHANNEL_VALID(channel)) {
+                        uint16_t channelBit = (1U << (channel - 1));
+                        activeChannelsMask |= channelBit;
+                    }
+                }
+            }
 
-                    for (int row = 0; row < 2; ++row) {
-                        for (int col = 0; col < 8; ++col) {
-                            uint8_t targetChannel = static_cast<uint8_t>((row * 8) + col + 1);
+            if (ImGui::BeginTable("base_stations_grid", 2, ImGuiTableFlags_SizingStretchSame)) {
+                for (size_t i = 0; i < dwBaseStationCount; i++) {
+                    auto base_station = bluetooth::get_base_station(i);
 
-                            std::string channelBtnLabel = fmt::format("{}", targetChannel);
+                    ImGui::TableNextColumn();
+                    ImGui::BeginCard(fmt::format("card_base_station__{}", i).c_str());
 
-                            bool isCurrent = (base_station.channel == targetChannel);
-                            if (isCurrent) {
-                                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
-                                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.7f, 0.2f, 1.0f));
-                            }
-                            else {
-                                ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
-                                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
-                            }
+                    // @TODO: somehow nickname
+                    const char* typeStr = (base_station.eType == bluetooth::BaseStationType_10) ? "1.0" : "2.0";
+                    std::string szBaseStationName = base_station.szSerialNumber;
+                    std::string headerText = LOCALE_FORMAT("base_stations_header_info", szBaseStationName);
 
-                            if (ImGui::Button(channelBtnLabel.c_str(), ImVec2(25.0f, 25.0f))) {
-                                bluetooth::set_base_station_channel(i, targetChannel);
-                            }
+                    const float lineStartY = ImGui::GetCursorPosY();
+                    const float pillHeight = ImGui::GetFontSize() + (ImGui::k_PILL_PADDING_Y * 2.0f);
+                    const float textOffsetY = (pillHeight - ImGui::GetFontSize()) * 0.5f;
+                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + textOffsetY);
+                    ImGui::TextHeading("%s", headerText.c_str());
+                    ImGui::SameLine();
+                    ImGui::SetCursorPosY(lineStartY);
+                    ImGui::PillText(typeStr, ImVec4(0.37f, 0.51f, 0.67f, 1.0f));
 
-                            ImGui::PopStyleColor(2);
+                    std::string statusStr;
+                    ImVec4 statusBgColor;
+                    switch (base_station.powerState) {
+                    case bluetooth::PowerState_Sleep:
+                        statusStr = LOCALE_GET("base_stations_state_sleep");
+                        statusBgColor = ImVec4(0.82f, 0.53f, 0.44f, 1.0f); // Amber 
+                        break;
+                    case bluetooth::PowerState_Standby:
+                        statusStr = LOCALE_GET("base_stations_state_standby");
+                        statusBgColor = ImVec4(0.92f, 0.8f, 0.55f, 1.0f); // Yellow
+                        break;
+                    case bluetooth::PowerState_Awake_From_Sleep:
+                    case bluetooth::PowerState_Awake_From_Standby:
+                    case bluetooth::PowerState_Awake_TooOldFirmware:
+                        statusStr = LOCALE_GET("base_stations_state_active");
+                        statusBgColor = ImVec4(0.64f, 0.75f, 0.55f, 1.0f); // Green
+                        break;
+                    default:
+                        statusStr = LOCALE_GET("base_stations_state_unknown");
+                        statusBgColor = ImVec4(0.71f, 0.56f, 0.68f, 1.0f);
+                        break;
+                    }
 
-                            if (col < 7) {
-                                ImGui::SameLine();
+                    float pillWidth = ImGui::CalcTextSize(statusStr.c_str()).x + ImGui::k_PILL_PADDING_X * 2.0f;
+                    ImGui::SameLine(ImGui::GetContentRegionAvail().x - pillWidth);
+                    ImGui::PushFont(ImGui::fonts::pHeading);
+                    ImGui::PillText(statusStr.c_str(), statusBgColor, ImVec4(0.23f, 0.26f, 0.32f, 1.0f));
+                    ImGui::PopFont();
+
+                    ImGui::Spacing();
+
+                    if (base_station.eType == bluetooth::BaseStationType_20) {
+                        ImGui::Text("%s", LOCALE_GET("base_stations_channel_select_label").c_str());
+
+                        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 24.0f);
+                        ImVec2 buttonSize = ImVec2(48.0f, 48.0f);
+                        for (int row = 0; row < 2; ++row) {
+                            for (int col = 0; col < 8; ++col) {
+                                uint8_t targetChannel = static_cast<uint8_t>((row * 8) + col + 1);
+
+                                std::string channelBtnLabel = fmt::format("{}", targetChannel);
+
+                                uint16_t channelBit = (1U << (targetChannel - 1));
+                                bool isOccupied = (activeChannelsMask & channelBit) == channelBit;
+                                bool isCurrent = (base_station.channel == targetChannel);
+
+                                if (isCurrent) {
+                                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.66f, 0.46f, 1.0f));
+                                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.64f, 0.75f, 0.55f, 1.0f));
+                                }
+                                else if (isOccupied) {
+                                    // if the channel is used by another station make it appear disabled!
+                                    ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button] * ImGui::GetStyle().DisabledAlpha);
+                                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered] * ImGui::GetStyle().DisabledAlpha);
+                                }
+                                else {
+                                    ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+                                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
+                                }
+
+                                if (!isCurrent && !isOccupied) {
+                                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+                                }
+                                if (ImGui::Button(channelBtnLabel.c_str(), buttonSize)) {
+                                    bluetooth::set_base_station_channel(i, targetChannel);
+                                }
+                                if (!isCurrent && !isOccupied) {
+                                    ImGui::PopStyleVar();
+                                }
+
+                                ImGui::PopStyleColor(2);
+
+                                if (col < 7) {
+                                    ImGui::SameLine();
+                                }
                             }
                         }
+                        ImGui::PopStyleVar();
+                        ImGui::Spacing();
                     }
-                    ImGui::Spacing();
-                }
 
-                if (ImGui::Button(LOCALE_GET("base_stations_btn_wake").c_str())) {
-                    bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Awake_From_Standby);
-                }
-                ImGui::SameLine();
-                if (ImGui::Button(LOCALE_GET("base_stations_btn_standby").c_str())) {
-                    bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Standby);
-                }
-                ImGui::SameLine();
-                if (ImGui::Button(LOCALE_GET("base_stations_btn_sleep").c_str())) {
-                    bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Sleep);
-                }
+                    if (ImGui::IconButton(ICON_MS_MODE_OFF_ON, LOCALE_GET("base_stations_btn_wake").c_str())) {
+                        bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Awake_From_Standby);
+                    }
+                    // standby is unsupported on 1.0s
+                    if (base_station.eType == bluetooth::BaseStationType_20) {
+                        ImGui::SameLine();
+                        // if we know the base station is on old firmware, disable standby, as it's an unsupported operation anyway
+                        ImGui::BeginDisabled(base_station.firmwareSupportsStandby == bluetooth::EBaseStation20_StandbySupport_t::StandbySupport_Unavailable);
+                        if (ImGui::IconButton(ICON_MS_ENERGY_SAVINGS_LEAF, LOCALE_GET("base_stations_btn_standby").c_str())) {
+                            bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Standby);
+                        }
+                        ImGui::EndDisabled();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::IconButton(ICON_MS_LIGHT_OFF, LOCALE_GET("base_stations_btn_sleep").c_str())) {
+                        bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Sleep);
+                    }
 
-                ImGui::EndGroup();
+                    ImGui::EndCard();
 
-                if (i < dwBaseStationCount - 1) {
-                    ImGui::Spacing();
-                    ImGui::Separator();
-                    ImGui::Spacing();
+                    if (i < dwBaseStationCount - 1) {
+                        ImGui::Spacing();
+                    }
                 }
-
-                ImGui::PopID();
+                ImGui::EndTable();
             }
         }
     }
@@ -988,7 +1061,6 @@ namespace spacecal {
     void page_debug(double currentTime) {
         ImGui::TextTitle("%s", LOCALE_GET("tab_page_debug").c_str());
 
-        // @TODO: driverpose_t view
         spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(g_state.dwSelectedCalibrationIndex);
         if (calibration.referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
             debug_driver_pose_viewer("Reference device DriverPose_t", CalibrationManager::getInstance()->m_poses[calibration.referenceDevice.deviceId]);
@@ -1018,6 +1090,14 @@ namespace spacecal {
         ImGui::BulletText("ArticFox");
         ImGui::BulletText("hekky");
         ImGui::BulletText("pimaker");
+
+        ImGui::Dummy(ImVec2(0, k_SPACING));
+
+        ImGui::TextHeading(LOCALE_GET("about_translators_title").c_str());
+        ImGui::TextWrapped(LOCALE_GET("about_translators_description").c_str());
+        ImGui::BulletText("hekky");
+        ImGui::BulletText("Hash");
+        ImGui::BulletText("cyly");
 
         ImGui::Dummy(ImVec2(0, k_SPACING));
 
