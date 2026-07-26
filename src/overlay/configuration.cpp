@@ -56,6 +56,7 @@ namespace spacecal {
 
         // Load config from disk. If it does not exist, create a new config
         if (loadConfiguration() != ConfigurationError::Ok) {
+            // @TODO: need to return if a config didn't exist so that we can set initial values according to SteamVR settings
             saveConfiguration();
         }
     }
@@ -127,7 +128,7 @@ namespace spacecal {
         }
 
         bool hasUpgradedConfig = false;
-        if (version < (uint32_t)spacecal::config::versioned::DataVersions::Current) {
+        if (version < (uint32_t)spacecal::config::versioned::DataVersions::Current || version == (uint32_t)spacecal::config::versioned::DataVersions::Legacy) {
             // perform upgrade on config
             hasUpgradedConfig = upgradeConfigToLatest(version, &json);
             if (hasUpgradedConfig) {
