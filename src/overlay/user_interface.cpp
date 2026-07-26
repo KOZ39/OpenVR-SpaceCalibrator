@@ -1113,8 +1113,8 @@ namespace spacecal {
             window->DrawList->AddRectFilled(line_min, line_max, col_line, style.FrameRounding, ImDrawFlags_RoundCornersLeft);
         }
 
-        if (!selected && hovered) {
-            ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        if (selected && hovered) {
+            g_state.bCursorOverriddenThisFrame = true;
         }
 
         float final_text_offset_x = k_LeftTextMargin;
@@ -1184,6 +1184,7 @@ namespace spacecal {
     void drawInterface(bool isOverlay, double currentTime) {
         g_state.bIsRunningInOverlay = isOverlay;
         g_state.bIsSettingsAdvanced = ConfigurationManager::getInstance()->getConfiguration()->advanced_settings;
+        g_state.bCursorOverriddenThisFrame = false;
         g_state.bBaseStationPowerManagementEnabled = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_power_management_enabled;
         g_state.bBaseStationPowerManagementOnStartup = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_on_during_startup;
         g_state.bBaseStationPowerManagementOnShutdown = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_off_during_shutdown;
@@ -1216,6 +1217,11 @@ namespace spacecal {
 
         buildVersionInfo();
         ImGui::End();
+
+        // mouse cursor
+        if (ImGui::IsAnyItemHovered() && !g_state.bCursorOverriddenThisFrame) {
+            ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        }
 
 #if defined(IMGUI_USE_DEBUG_WINDOW)
         ImGui::ShowDemoWindow();

@@ -10,6 +10,7 @@ namespace spacecal {
     struct UserInterfaceState_t {
         bool bIsRunningInOverlay = false;
         bool bIsSettingsAdvanced = false;
+        bool bCursorOverriddenThisFrame = false;
         bool bBaseStationPowerManagementEnabled = false;
         bool bBaseStationPowerManagementOnStartup = false;
         bool bBaseStationPowerManagementOnShutdown = false;
