@@ -200,6 +200,10 @@ namespace spacecal {
         }
 
         void Renderer_DX11::cleanup_d3d_device() {
+            if (m_pd3dDeviceContext) {
+                m_pd3dDeviceContext->ClearState();
+                m_pd3dDeviceContext->Flush();
+            }
             cleanup_render_target();
             SAFE_RELEASE(m_pSwapChain);
             SAFE_RELEASE(m_pd3dDeviceContext);
