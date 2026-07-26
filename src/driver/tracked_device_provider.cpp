@@ -109,6 +109,37 @@ namespace spacecal {
         Eigen::Quaterniond baseRot = eigenFromHmdQuat(pose.qRotation);
         Eigen::Vector3d    basePos = eigenVecFromHmdVec(pose.vecPosition);
 
+        double deltaTime = -pose.poseTimeOffset + fPredictedSecondsToPhotonsFromNow;
+
+        constexpr double k_PREDICTION_MIN_DELTA_TIME = 0.0001; // 0.1ms
+        constexpr double k_PREDICTION_MIN_VELOCITY = 0.00001; // 0.00001 rad/s
+
+        // we need to apply pose prediction here or the poses for relative calibration will be off.
+        
+        // kinematic displacement for constant acceleration
+        // we assume constant accel and velocity as we have instantaneous vel and accel
+        // taking an integral, as we approach the limit 0, we're effectively splitting the equation into multiple small units until they're infinitely small
+        // suppose instead of taking the limit to 0 we take the limit to HMD_REFRESH_RATE instead, if we integrate using that assumption we're effectively
+        // taking multiple instantaneous samples of the velocity and acceleration, so we can assume constant acceleration and velocity here for prediction purposes
+
+        if (deltaTime > k_PREDICTION_MIN_DELTA_TIME) {
+            // s = ut + (1/2)at^2
+            Eigen::Vector3d vel = eigenVecFromHmdVec(pose.vecVelocity);
+            Eigen::Vector3d accel = eigenVecFromHmdVec(pose.vecAcceleration);
+            basePos += (vel * deltaTime) + (0.5 * accel * deltaTime * deltaTime);
+
+            // angular prediction (rotation)
+            // NOTE we IGNORE angular accel because its too noisy to be useful for prediction!
+            Eigen::Vector3d angVel = eigenVecFromHmdVec(pose.vecAngularVelocity);
+            double angVelMag = angVel.norm();
+            if (angVelMag > k_PREDICTION_MIN_VELOCITY) {
+                Eigen::Vector3d axis = angVel / angVelMag;
+                double angle = angVelMag * deltaTime;
+                Eigen::Quaterniond deltaRot(Eigen::AngleAxisd(angle, axis));
+                baseRot = deltaRot * baseRot;
+            }
+        }
+
         Eigen::Quaterniond worldFromDriverRot = eigenFromHmdQuat(pose.qWorldFromDriverRotation);
         Eigen::Vector3d    worldFromDriverPos = eigenVecFromHmdVec(pose.vecWorldFromDriverTranslation);
 
