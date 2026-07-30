@@ -134,34 +134,70 @@ void ImGui::EndGroupPanel()
 
 bool ImGui::CheckboxWithDescription(const char* title, bool* v, const char* desc) {
     ImGui::BeginGroup();
+
+    ImVec2 startPos = ImGui::GetCursorPos();
+    float contentWidth = ImGui::GetContentRegionAvail().x;
+    
     bool changed = ImGui::Checkbox(fmt::format("##{}", title).c_str(), v);
+    
     ImGui::SameLine();
     float yOffsetToTop = ImGui::GetStyle().FramePadding.y +
         (ImGui::GetFrameHeight() - (ImGui::GetStyle().FramePadding.y * 2.0f) - ImGui::GetTextLineHeight()) * 0.5f;
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() - yOffsetToTop);
+    
     ImGui::BeginGroup();
     ImGui::TextUnformatted(title);
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y + 2.0f);
     ImGui::TextWrappedDisabled(desc);
     ImGui::EndGroup();
     ImGui::EndGroup();
+
+    ImVec2 minPos = ImGui::GetItemRectMin();
+    ImVec2 maxPos = ImGui::GetItemRectMax();
+    ImVec2 size = ImVec2(maxPos.x - minPos.x, maxPos.y - minPos.y);
+    ImVec2 endPos = ImGui::GetCursorPos();
+    float height = endPos.y - startPos.y;
+    ImGui::SetCursorPos(startPos);
+    if (ImGui::InvisibleButton(fmt::format("##hit_{}", title).c_str(), size)) {
+        *v = !(*v);
+        changed = true;
+    }
+    
+    ImGui::SetCursorPos(endPos);
     ImGui::Spacing();
     return changed;
 }
 
 bool ImGui::RadioButtonWithDescription(const char* title, bool v, const char* desc) {
     ImGui::BeginGroup();
+
+    ImVec2 startPos = ImGui::GetCursorPos();
+    float contentWidth = ImGui::GetContentRegionAvail().x;
+
     bool changed = ImGui::RadioButton(fmt::format("##{}", title).c_str(), v);
     ImGui::SameLine();
     float yOffsetToTop = ImGui::GetStyle().FramePadding.y +
         (ImGui::GetFrameHeight() - (ImGui::GetStyle().FramePadding.y * 2.0f) - ImGui::GetTextLineHeight()) * 0.5f;
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() - yOffsetToTop);
+
     ImGui::BeginGroup();
     ImGui::TextUnformatted(title);
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y + 2.0f);
     ImGui::TextWrappedDisabled(desc);
     ImGui::EndGroup();
     ImGui::EndGroup();
+
+    ImVec2 minPos = ImGui::GetItemRectMin();
+    ImVec2 maxPos = ImGui::GetItemRectMax();
+    ImVec2 size = ImVec2(maxPos.x - minPos.x, maxPos.y - minPos.y);
+    ImVec2 endPos = ImGui::GetCursorPos();
+    float height = endPos.y - startPos.y;
+    ImGui::SetCursorPos(startPos);
+    if (ImGui::InvisibleButton(fmt::format("##hit_{}", title).c_str(), size)) {
+        changed = true;
+    }
+
+    ImGui::SetCursorPos(endPos);
     ImGui::Spacing();
     return changed;
 }
