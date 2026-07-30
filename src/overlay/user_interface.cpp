@@ -11,6 +11,7 @@
 
 namespace spacecal {
 
+    std::string g_licenses_text;
     UserInterfaceState_t g_state = {};
 
     inline std::string getTrackingSystemFriendlyName(const std::string& szTrackingSystemName) {
@@ -1069,6 +1070,7 @@ namespace spacecal {
             debug_driver_pose_viewer("Target device DriverPose_t", CalibrationManager::getInstance()->m_poses[calibration.targetDevice.deviceId]);
         }
 
+        // @TODO: remove
         // @HACK: temp for testing if this unfucks overlay input lmao
         ImGui::InputText("test textbox (keyboard shouldnt be corrupt)", g_state.fooText, sizeof(g_state.fooText));
     }
@@ -1122,11 +1124,18 @@ namespace spacecal {
         ImGui::PopStyleVar();
         ImGui::Dummy(ImVec2(0, k_SPACING));
 
-        // ImGui::InputTextMultiline();
-
         ImGui::TextHeading(LOCALE_GET("about_licenses_title").c_str());
         ImGui::TextWrapped(LOCALE_GET("about_licenses_description").c_str());
-        ImGui::TextDisabled("LICENSES HERE");
+
+        ImGui::InputTextMultiline(
+            "##licenses_box",
+            g_licenses_text.data(),
+            g_licenses_text.size() + 1,
+            ImVec2(
+                ImGui::GetContentRegionAvail().x,
+                ImMax(ImGui::GetWindowHeight() - ImGui::GetStyle().WindowPadding.y - ImGui::GetTextLineHeightWithSpacing() * 3.0f, ImGui::GetTextLineHeightWithSpacing() * 6.0f)
+            ),
+            ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_WordWrap);
     }
 
     // UI CORE LAYOUT

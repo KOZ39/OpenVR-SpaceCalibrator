@@ -13,6 +13,10 @@
 #include <windows.h>
 #endif
 
+namespace spacecal {
+    extern std::string g_licenses_text;
+}
+
 #if OS_WINDOWS
 // http://developer.download.nvidia.com/devzone/devcenter/gamegraphics/files/OptimusRenderingPolicies.pdf
 extern "C" __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
@@ -98,6 +102,21 @@ int entry_point(int argc, char* argv[]) {
 
     // Initialise base station management
     spacecal::bluetooth::init_base_station_management();
+
+    // load license text
+    std::string szLicensesPath = (util::getSpaceCalibratorInstallDir() / "LICENSE").string();
+    if (std::filesystem::is_regular_file(szLicensesPath)) {
+        FILE* pFile = fopen(szLicensesPath.c_str(), "rb");
+        fseek(pFile, 0, SEEK_END);
+        size_t fileSize = ftell(pFile);
+        spacecal::g_licenses_text.resize(fileSize + 1);
+        rewind(pFile);
+        size_t bytesRead = fread(spacecal::g_licenses_text.data(), 1, fileSize, pFile);
+        fclose(pFile);
+        // ensure null terminator
+        spacecal::g_licenses_text[bytesRead] = '\0';
+        spacecal::g_licenses_text.resize(bytesRead);
+    }
 
     LOG_INFO("Started Space Calibrator Nova!");
 
