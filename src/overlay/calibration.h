@@ -30,7 +30,7 @@ namespace spacecal {
     constexpr double k_METRIC_HISTORY_TIMESPAN = 60.0; // how much time in seconds we keep track of for the graphs
     constexpr double k_WARN_DEVICE_NOT_TRACKING_INTERVAL_SEC = 5.0; // time in seconds between "Device isnt tracking" log msgs
 
-    enum class CalibrationState {
+    enum class CalibrationState : uint8_t {
         // calibration is inactive
         NONE,
         // calibration is starting
@@ -56,7 +56,7 @@ namespace spacecal {
         VERY_SLOW = 500,
     };
 
-    enum class CalibrationError {
+    enum class CalibrationError : uint8_t {
         None,
         LackOfRotationalVariance, // move around more
         LackOfTranslationVariance, // move around more
@@ -112,7 +112,7 @@ namespace spacecal {
         TimeSeries<Eigen::Vector3d> posOffset_rawComputed;
         TimeSeries<Eigen::Vector3d> posOffset_currentCal;
         TimeSeries<Eigen::Vector3d> posOffset_rmsError;
-        
+
         TimeSeries<double> pose_ref_velocity_mag;
         TimeSeries<double> pose_tgt_velocity_mag;
 
@@ -167,7 +167,7 @@ namespace spacecal {
             m_lastRmsError = INFINITY;
             m_lastAxisVariance = 0.0;
         }
-        
+
     public:
         bool isActive = false; // enabled in the UI
         bool hmdIsInReferenceTrackingSystem = false; // whether the hmd is part of the reference device tracking system
@@ -175,8 +175,8 @@ namespace spacecal {
         bool hideContinuousTracker = false;
         bool calibrateMotionVectors = true; // if set to true, will apply calibrations to velocity and acceleration (and angular counterparts)
         CalibrationError calibrationError = CalibrationError::Unknown; // error state of the last calibration, to be used by ui
-        CalibrationSpeed calibrationSpeed = CalibrationSpeed::FAST;
         CalibrationState state = CalibrationState::NONE;
+        CalibrationSpeed calibrationSpeed = CalibrationSpeed::FAST;
 
         CalibrationDevice referenceDevice; // what we are calibrating to (ie this will become the ABSOLUTE ORIGIN)
         CalibrationDevice targetDevice; // what we are calibrating (ie this tracking system will be manipulated to match the ref)
@@ -192,8 +192,8 @@ namespace spacecal {
 
     private:
         Sample_t collectSample(double currentTime) const;
-        inline size_t getSampleCount() const { return (size_t) calibrationSpeed; }
-        [[nodiscard]] inline size_t getMaxSampleHistorySize() const { return (size_t) calibrationSpeed * 5; }
+        inline size_t getSampleCount() const { return (size_t)calibrationSpeed; }
+        [[nodiscard]] inline size_t getMaxSampleHistorySize() const { return (size_t)calibrationSpeed * 5; }
 
         // a delta sample, used for calibration internal maths
         struct DeltaSample_t {
@@ -230,11 +230,11 @@ namespace spacecal {
     private:
         double m_lastTick = 0.0;
         double m_lastScan = 0.0;
-        
+
         float m_xTargetPrev = 0.0f;
         float m_yTargetPrev = 0.0f;
         float m_zTargetPrev = 0.0f;
-        
+
         float m_xRefPrev = 0.0f;
         float m_yRefPrev = 0.0f;
         float m_zRefPrev = 0.0f;
