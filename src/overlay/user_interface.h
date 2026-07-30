@@ -6,6 +6,14 @@
 
 namespace spacecal {
 
+    namespace Colors {
+        extern ImVec4 Amber;
+        extern ImVec4 Yellow;
+        extern ImVec4 Green;
+        extern ImVec4 Purple;
+        extern ImVec4 Gray;
+    }
+
     // state for the UI
     struct UserInterfaceState_t {
         bool bIsRunningInOverlay = false;

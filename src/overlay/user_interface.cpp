@@ -14,6 +14,14 @@ namespace spacecal {
     std::string g_licenses_text;
     UserInterfaceState_t g_state = {};
 
+    namespace Colors {
+        ImVec4 Amber(0.82f, 0.53f, 0.44f, 1.0f);
+        ImVec4 Yellow(0.92f, 0.8f, 0.55f, 1.0f);
+        ImVec4 Green(0.64f, 0.75f, 0.55f, 1.0f);
+        ImVec4 Purple(0.71f, 0.56f, 0.68f, 1.0f);
+        ImVec4 Gray(0.37f, 0.51f, 0.67f, 1.0f);
+    }
+
     inline std::string getTrackingSystemFriendlyName(const std::string& szTrackingSystemName) {
 
         // maps tracking system name to a unique entry per tracking device
@@ -272,7 +280,7 @@ namespace spacecal {
         if (calibration.isValidCalibration() && !calibration.isActive)
         {
             std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
-            ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1), "%s", LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
+            ImGui::TextColored(Colors::Amber, "%s", LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
             ImGui::NewLine();
         }
 
@@ -881,28 +889,28 @@ namespace spacecal {
                     ImGui::TextHeading("%s", headerText.c_str());
                     ImGui::SameLine();
                     ImGui::SetCursorPosY(lineStartY);
-                    ImGui::PillText(typeStr, ImVec4(0.37f, 0.51f, 0.67f, 1.0f));
+                    ImGui::PillText(typeStr, Colors::Gray);
 
                     std::string statusStr;
                     ImVec4 statusBgColor;
                     switch (base_station.powerState) {
                     case bluetooth::PowerState_Sleep:
                         statusStr = LOCALE_GET("base_stations_state_sleep");
-                        statusBgColor = ImVec4(0.82f, 0.53f, 0.44f, 1.0f); // Amber 
+                        statusBgColor = Colors::Amber;
                         break;
                     case bluetooth::PowerState_Standby:
                         statusStr = LOCALE_GET("base_stations_state_standby");
-                        statusBgColor = ImVec4(0.92f, 0.8f, 0.55f, 1.0f); // Yellow
+                        statusBgColor = Colors::Yellow;
                         break;
                     case bluetooth::PowerState_Awake_From_Sleep:
                     case bluetooth::PowerState_Awake_From_Standby:
                     case bluetooth::PowerState_Awake_TooOldFirmware:
                         statusStr = LOCALE_GET("base_stations_state_active");
-                        statusBgColor = ImVec4(0.64f, 0.75f, 0.55f, 1.0f); // Green
+                        statusBgColor = Colors::Green;
                         break;
                     default:
                         statusStr = LOCALE_GET("base_stations_state_unknown");
-                        statusBgColor = ImVec4(0.71f, 0.56f, 0.68f, 1.0f);
+                        statusBgColor = Colors::Purple;
                         break;
                     }
 
@@ -1010,13 +1018,13 @@ namespace spacecal {
 
     inline void debug_driver_pose_viewer(const char* label, const vr::DriverPose_t& pose) {
 
-#define SHOW_BOOL_STATUS(label, value)                                                  \
-    ImGui::Text(label ":");                                                             \
-    ImGui::SameLine();                                                                  \
-    if (value) {                                                                        \
-        ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "TRUE");                     \
-    } else {                                                                            \
-        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "FALSE");                    \
+#define SHOW_BOOL_STATUS(label, value)                  \
+    ImGui::Text(label ":");                             \
+    ImGui::SameLine();                                  \
+    if (value) {                                        \
+        ImGui::TextColored(Colors::Green, "TRUE");      \
+    } else {                                            \
+        ImGui::TextColored(Colors::Amber, "FALSE");     \
     }
 
         if (ImGui::CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)) {
