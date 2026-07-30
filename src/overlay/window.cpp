@@ -445,10 +445,6 @@ namespace spacecal {
 
                 spacecal::drawInterface(dashboardVisible, time);
 
-#ifdef _DEBUG
-                // ImGui::ShowDemoWindow();
-#endif
-
                 ImGui::EndFrame();
                 ImGui::Render();
 
