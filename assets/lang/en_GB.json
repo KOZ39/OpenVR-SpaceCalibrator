@@ -11,7 +11,7 @@
   "vr_troubleshooting_generic": "Please connect your VR headset and launch SteamVR first. ({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
 
   "calibration_title": "Calibration",
-  "calibration_none": "No Calibration. Please create a new calibration to get started.", // Shown when there are no calibrations active
+  "calibration_count_none": "No Calibration. Please create a new calibration to get started.", // Shown when there are no calibrations active
   "calibration_new": "New Calibration",
   "calibration_delete": "Delete Calibration",
   "calibration_next": "Next Calibration",
@@ -47,6 +47,8 @@
   "calibration_speed_very_slow": "Very Slow",
 
   "continuous_hide_tracker": "Hide reference tracker from apps",
+  "continuous_relative_calibration": "Enable relative calibration",
+  "continuous_relative_calibration_description": "Makes the calibration relative to the target device (typically your headset) so that it updates every frame without needing to re-calibrate. This REQUIRES continuous calibration.",
 
   /* HMD names for Virtual Desktop */
   /* Virtual desktop lies that it's a Quest 2/3 on most headsets, so we have to substitute the real HMD name ourselves. you generally should

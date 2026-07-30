@@ -309,8 +309,10 @@ namespace spacecal {
                 CalibrationManager::getInstance()->saveConfig();
             }
 
-            if (ImGui::Checkbox("DEBUG: relative transform. RECALIBRATE TO APPLY", &calibration.isRelativeCalibration)) {
-                calibration.forceNextCalibration();
+            if (g_state.bIsSettingsAdvanced) {
+                if (ImGui::CheckboxWithDescription(LOCALE_GET("continuous_relative_calibration").c_str(), &calibration.isRelativeCalibration, LOCALE_GET("continuous_relative_calibration_description").c_str())) {
+                    calibration.forceNextCalibration();
+                }
             }
         }
 
@@ -717,7 +719,7 @@ namespace spacecal {
 
             if (dwNumCalibrations == 0) {
                 // @TODO: no calibrations edge case handling
-                ImGui::TextTitle("%s", LOCALE_GET("calibration_none").c_str());
+                ImGui::TextTitle("%s", LOCALE_GET("calibration_count_none").c_str());
             }
 
             for (size_t i = 0; i < dwNumCalibrations; i++) {
@@ -787,9 +789,11 @@ namespace spacecal {
             }
 
             ImGui::Indent(fCheckboxTextIndent);
-            if (ImGui::RadioButtonWithDescription(LOCALE_GET("base_stations_power_mgmt_standby").c_str(), !g_state.bBaseStationPowerManagementOffModeIsSleep, LOCALE_GET("base_stations_power_mgmt_standby_description").c_str())) {
-                ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby = true;
-                ConfigurationManager::getInstance()->saveConfiguration();
+            if (g_state.bIsSettingsAdvanced) {
+                if (ImGui::RadioButtonWithDescription(LOCALE_GET("base_stations_power_mgmt_standby").c_str(), !g_state.bBaseStationPowerManagementOffModeIsSleep, LOCALE_GET("base_stations_power_mgmt_standby_description").c_str())) {
+                    ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby = true;
+                    ConfigurationManager::getInstance()->saveConfiguration();
+                }
             }
 
             if (ImGui::RadioButtonWithDescription(LOCALE_GET("base_stations_power_mgmt_sleep").c_str(), g_state.bBaseStationPowerManagementOffModeIsSleep, LOCALE_GET("base_stations_power_mgmt_sleep_description").c_str())) {
@@ -911,6 +915,7 @@ namespace spacecal {
                     ImGui::Spacing();
 
                     if (base_station.eType == bluetooth::BaseStationType_20) {
+                        // @TODO: channel picking should be gated by a button or something similar
                         ImGui::Text("%s", LOCALE_GET("base_stations_channel_select_label").c_str());
 
                         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 24.0f);
@@ -963,15 +968,17 @@ namespace spacecal {
                     if (ImGui::IconButton(ICON_MS_MODE_OFF_ON, LOCALE_GET("base_stations_btn_wake").c_str())) {
                         bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Awake_From_Standby);
                     }
-                    // standby is unsupported on 1.0s
-                    if (base_station.eType == bluetooth::BaseStationType_20) {
-                        ImGui::SameLine();
-                        // if we know the base station is on old firmware, disable standby, as it's an unsupported operation anyway
-                        ImGui::BeginDisabled(base_station.firmwareSupportsStandby == bluetooth::EBaseStation20_StandbySupport_t::StandbySupport_Unavailable);
-                        if (ImGui::IconButton(ICON_MS_ENERGY_SAVINGS_LEAF, LOCALE_GET("base_stations_btn_standby").c_str())) {
-                            bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Standby);
+                    if (g_state.bIsSettingsAdvanced) {
+                        // standby is unsupported on 1.0s
+                        if (base_station.eType == bluetooth::BaseStationType_20) {
+                            ImGui::SameLine();
+                            // if we know the base station is on old firmware, disable standby, as it's an unsupported operation anyway
+                            ImGui::BeginDisabled(base_station.firmwareSupportsStandby == bluetooth::EBaseStation20_StandbySupport_t::StandbySupport_Unavailable);
+                            if (ImGui::IconButton(ICON_MS_ENERGY_SAVINGS_LEAF, LOCALE_GET("base_stations_btn_standby").c_str())) {
+                                bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Standby);
+                            }
+                            ImGui::EndDisabled();
                         }
-                        ImGui::EndDisabled();
                     }
                     ImGui::SameLine();
                     if (ImGui::IconButton(ICON_MS_LIGHT_OFF, LOCALE_GET("base_stations_btn_sleep").c_str())) {
