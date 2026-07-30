@@ -182,7 +182,7 @@ namespace spacecal {
 
         ImGuiStyle& style = ImGui::GetStyle();
         ImVec2 paneSize(
-            (ImGui::GetContentRegionAvail().x - style.ItemSpacing.x - ImGui::k_BORDER_WIDTH * 4.0f) / 2.0f,
+            (ImGui::GetContentRegionAvail().x - style.ItemSpacing.x) / 2.0f,
             ImGui::GetTextLineHeightWithSpacing() * 5.0f + style.ItemSpacing.y * 8.0f + ImGui::GetTextLineHeight() * 3.0f + style.FramePadding.y * 2.0f
         );
 
