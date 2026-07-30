@@ -362,8 +362,6 @@ namespace spacecal {
 
             m_lastRmsError = rmsError;
 
-            LOG_CALIB_INFO("Finished calibration, profile saved");
-
             if (eCalibrationError == CalibrationError::None && isContinuousCalibration()) {
                 trackCollectedSamplesForErrorTracking();
                 m_lastSuccessfulCalibTime = currentTime;
@@ -857,7 +855,9 @@ namespace spacecal {
             case CalibrationState::SAMPLE:
             {
                 // force calibration in standard mode
-                computeCalibrationOneshot(currentTime, true);
+                if (computeCalibrationOneshot(currentTime, true) == CalibrationError::None) {
+                    LOG_CALIB_INFO("Finished calibration, profile saved");
+                }
 
                 LOG_CALIB_INFO("Finished standard calibration, profile saved");
 
