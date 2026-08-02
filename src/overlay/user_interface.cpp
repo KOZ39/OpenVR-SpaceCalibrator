@@ -370,6 +370,7 @@ namespace spacecal {
             ImGui::CheckboxWithDescription(LOCALE_GET("settings_enforce_minimum_rotation_variance").c_str(), &calibration.enforceMinimumRotationVariance, LOCALE_GET("settings_enforce_minimum_rotation_variance_description").c_str());
         }
 
+        // @TODO: move into status card??
         if (calibration.isCalibrating()) {
             ImGui::TextWrapped("%s", LOCALE_GET("calibration_info_move_around_insufficient_samples").c_str());
             ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeight() * 2));

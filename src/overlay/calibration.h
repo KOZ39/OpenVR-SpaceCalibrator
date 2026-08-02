@@ -290,7 +290,9 @@ namespace spacecal {
         Eigen::Vector3d     m_lastRefWorldFromDriverTrans = Eigen::Vector3d::Constant(NAN);
         Eigen::Vector3d     m_lastTargetWorldFromDriverTrans = Eigen::Vector3d::Constant(NAN);
 
+    public: // @HACK: i just want something in the ui for now
         std::vector<Sample_t> m_samples;
+    private:
         std::deque<Sample_t> m_sampleHistory; // used ONLY for RMS validation
 
         friend class CalibrationManager;
