@@ -26,6 +26,7 @@ namespace spacecal {
     constexpr double k_TRANSLATION_MIN_MOTION_THRESHOLD = 0.01; // @TODO: fine tune
     constexpr double k_TRANSLATION_MAX_AMPLIFIED_NOISE_FACTOR = 50.0; // @TODO: fine tune
     constexpr size_t k_MIN_DELTA_SAMPLE_COUNT = 200;
+    constexpr double k_ROTATION_VARIANCE_TARGET_DEGREES = 14.0; // how much rotation variance to enforce in degrees
 
     constexpr double k_METRIC_HISTORY_TIMESPAN = 60.0; // how much time in seconds we keep track of for the graphs
     constexpr double k_WARN_DEVICE_NOT_TRACKING_INTERVAL_SEC = 5.0; // time in seconds between "Device isnt tracking" log msgs
@@ -133,7 +134,12 @@ namespace spacecal {
         void start();
         void startContinuous();
         void reset();
-        inline void clearSamples() { m_samples.clear(); }
+
+        // clears samples and updates cosine threshold (for ill-varied sample rejection)
+        inline void clearSamples() {
+            m_samples.clear();
+            updateRotationVarianceCosineThreshold();
+        }
         void calibrationTick(const double currentTime);
         void resetCalibrationForDevice(const CalibrationDevice& device); // resets the given device's pose to the raw pose
         void apply(); // applies the calibration to the VR runtime
@@ -174,6 +180,7 @@ namespace spacecal {
         bool isRelativeCalibration = false; // whether the calibration is stored such that its coordinate system is relative to the reference device. this hides tracking anomalies from the reference device and keeps calibrations "valid" for longer
         bool hideContinuousTracker = false;
         bool calibrateMotionVectors = true; // if set to true, will apply calibrations to velocity and acceleration (and angular counterparts)
+        bool enforceMinimumRotationVariance = true;  // if set to true, enforces a minimum rotation variance threshold
         CalibrationError calibrationError = CalibrationError::Unknown; // error state of the last calibration, to be used by ui
         CalibrationState state = CalibrationState::NONE;
         CalibrationSpeed calibrationSpeed = CalibrationSpeed::FAST;
@@ -229,6 +236,9 @@ namespace spacecal {
         void trackCollectedSamplesForErrorTracking();
         bool detectCorrelatingDevices(double currentTime);
 
+        void updateRotationVarianceCosineThreshold();
+        bool isSampleVariedEnough(const Sample_t& newSample);
+
     private:
         double m_lastTick = 0.0;
         double m_lastScan = 0.0;
@@ -249,6 +259,10 @@ namespace spacecal {
         double m_lastNotTrackingTargetWarnTime = 0.0;
         double m_lastNotTrackingRefWarnTime = 0.0;
         double m_lastNoDevicesWarnTime = 0.0;
+
+        // for enforcing rot variance when collecting samples
+        // @NOTE: dynamically updated whenever sample count changes
+        double m_rotationVarianceCosineThreshold = 0.0;
 
         // for auto device detection
         int m_candidateScore = 0;

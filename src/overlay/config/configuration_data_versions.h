@@ -106,6 +106,7 @@ namespace spacecal {
                     ContinuousCalibrationData continuous;
 
                     bool calibrate_motion_vectors = false;
+                    bool enforce_minimum_rotation_variance = true;
                     uint64_t calibration_speed = 0;
 
                     TrackingDevice reference_device;

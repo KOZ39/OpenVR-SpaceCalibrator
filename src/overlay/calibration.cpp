@@ -626,6 +626,7 @@ namespace spacecal {
 
     void TrackingSystemCalibration::init() {
         m_samples.reserve((size_t) CalibrationSpeed::VERY_SLOW);
+        updateRotationVarianceCosineThreshold();
     }
     
     void TrackingSystemCalibration::reset() {
@@ -640,6 +641,8 @@ namespace spacecal {
         m_lastRmsError = INFINITY;
         m_lastAxisVariance = 0.0;
         m_lastSuccessfulCalibTime = 0.0;
+
+        updateRotationVarianceCosineThreshold();
     }
 
     void TrackingSystemCalibration::start() {
@@ -664,6 +667,27 @@ namespace spacecal {
         // update state
         const auto& hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
         hmdIsInReferenceTrackingSystem = hmdDevice.szTrackingSystemId == referenceDevice.trackingSystem;
+    }
+
+    void TrackingSystemCalibration::updateRotationVarianceCosineThreshold() {
+        const double range_rad = k_ROTATION_VARIANCE_TARGET_DEGREES * (M_PI / 180.0);
+        const double min_angle_rad = range_rad / (1.2 * cbrt((double) getSampleCount()));
+        m_rotationVarianceCosineThreshold = cos(min_angle_rad / 2.0);
+    }
+
+    bool TrackingSystemCalibration::isSampleVariedEnough(const Sample_t& newSample) {
+        if (!enforceMinimumRotationVariance || m_samples.empty()) return true;
+
+        const Eigen::Quaterniond new_rotation(newSample.reference.rot);
+
+        for (const auto& sample : m_samples) {
+            const Eigen::Quaterniond existing_rotation(sample.reference.rot);
+            if (std::abs(new_rotation.dot(existing_rotation)) >= m_rotationVarianceCosineThreshold) {
+                return false;
+            }
+        }
+
+        return true;
     }
     
     void TrackingSystemCalibration::calibrationTick(const double currentTime) {
@@ -822,7 +846,7 @@ namespace spacecal {
         // prevent overfitting with possibly poor data
         if (m_samples.size() < getSampleCount()) {
             auto sample = collectSample(currentTime);
-            if (sample.isPoseValid) {
+            if (sample.isPoseValid && isSampleVariedEnough(sample)) {
                 // we want to completely ignore poor samples during calibration
                 m_samples.push_back(sample);
 
