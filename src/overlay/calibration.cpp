@@ -129,9 +129,10 @@ namespace spacecal {
 
         // When stuck together, the two tracked objects rotate as a pair,
         // therefore their axes of rotation must be equal between any given pair of samples.
-        DeltaSample_t ds = {};
-        ds.reference = axisFromRotationMatrix3(dref);
-        ds.target = axisFromRotationMatrix3(dtarget);
+        DeltaSample_t ds = {
+            .reference = axisFromRotationMatrix3(dref),
+            .target = axisFromRotationMatrix3(dtarget),
+        };
 
         // Reject samples that were too close to each other.
         double refA = angleFromRotationMatrix3(dref);
@@ -161,29 +162,25 @@ namespace spacecal {
         }
 
         // Kabsch algorithm
+        // @NOTE: centroid translation is omitted as we're working on rotations ie unit vectors, meaning they're already centered and thus centroid handling is redundant
         Eigen::MatrixXd refPoints(deltas.size(), 3), targetPoints(deltas.size(), 3);
-        Eigen::Vector3d refCentroid(0, 0, 0), targetCentroid(0, 0, 0);
-
         for (size_t i = 0; i < deltas.size(); i++) {
             refPoints.row(i) = deltas[i].reference;
-            refCentroid += deltas[i].reference;
-
             targetPoints.row(i) = deltas[i].target;
-            targetCentroid += deltas[i].target;
-        }
-
-        refCentroid /= (double)deltas.size();
-        targetCentroid /= (double)deltas.size();
-
-        for (size_t i = 0; i < deltas.size(); i++) {
-            refPoints.row(i) -= refCentroid;
-            targetPoints.row(i) -= targetCentroid;
         }
 
         auto crossCV = refPoints.transpose() * targetPoints;
         auto svd = crossCV.bdcSvd<Eigen::ComputeThinU | Eigen::ComputeThinV>();
         if (svd.info() != Eigen::Success) {
             LOG_CALIB_WARN("Failed to compute rotational SVD! Aborting calibration...");
+            return Eigen::Quaterniond(0, 0, 0, 0);
+        }
+
+        Eigen::Vector3d singularValues = svd.singularValues();
+        double conditionNumber = singularValues(1) / singularValues(0);
+
+        if (conditionNumber < k_ROTATION_MIN_VARIANCE) {
+            LOG_CALIB_WARN("Not enough rotational variance in collected samples! Got {:.3f}, expected minimum {:.3f} variance. Aborting calibration...", conditionNumber, k_ROTATION_MIN_VARIANCE);
             return Eigen::Quaterniond(0, 0, 0, 0);
         }
 

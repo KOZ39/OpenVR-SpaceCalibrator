@@ -203,12 +203,14 @@ namespace spacecal {
         };
 
         // math funcs
-        inline Eigen::Vector3d axisFromRotationMatrix3(Eigen::Matrix3d rot) {
-            return Eigen::Vector3d(rot(2, 1) - rot(1, 2), rot(0, 2) - rot(2, 0), rot(1, 0) - rot(0, 1));
+        inline Eigen::Vector3d axisFromRotationMatrix3(const Eigen::Matrix3d& rot) {
+            Eigen::AngleAxisd angle_axis(rot);
+            return angle_axis.axis() * angle_axis.angle();
         }
 
-        inline double angleFromRotationMatrix3(Eigen::Matrix3d rot) {
-            return acos((rot(0, 0) + rot(1, 1) + rot(2, 2) - 1.0) / 2.0);
+        inline double angleFromRotationMatrix3(const Eigen::Matrix3d& rot) {
+            double trace_val = (rot.trace() - 1.0) / 2.0;
+            return acos(std::clamp(trace_val, -1.0, 1.0));
         }
 
         DeltaSample_t deltaRotationSamples(const Sample_t& s1, const Sample_t& s2);
