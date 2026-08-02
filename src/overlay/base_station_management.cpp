@@ -952,12 +952,21 @@ namespace spacecal {
         }
 
         bool set_base_station_channel(size_t index, uint8_t channel) {
-            std::lock_guard<std::mutex> lock(g_base_station_state.mutexBaseStationList);
-            if (g_base_station_state.aTrackedBaseStations.size() > 0 && index < g_base_station_state.aTrackedBaseStations.size()) {
-                if (g_base_station_state.aTrackedBaseStations[index].base_station.eType == BaseStationType_10) {
-                    LOG_BLUETOOTH_WARN("Attempted to assign channel {0} on Base Station 1.0 {1}, but the operation is unsupported as it's a 1.0 Base Station! Ignoring...",
-                        channel, g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber);
-                } else if (g_base_station_state.aTrackedBaseStations[index].base_station.eType == BaseStationType_20) {
+            size_t dwBaseStationCount = 0;
+            EBaseStationType_t eType;
+            std::string szSerialNumber;
+            {
+                std::lock_guard<std::mutex> lock(g_base_station_state.mutexBaseStationList);
+                dwBaseStationCount = g_base_station_state.aTrackedBaseStations.size();
+                if (dwBaseStationCount > 0 && index < dwBaseStationCount) {
+                    eType = g_base_station_state.aTrackedBaseStations[index].base_station.eType;
+                    szSerialNumber = g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber;
+                }
+            }
+            if (dwBaseStationCount > 0 && index < dwBaseStationCount) {
+                if (eType == BaseStationType_10) {
+                    LOG_BLUETOOTH_WARN("Attempted to assign channel {0} on Base Station 1.0 {1}, but the operation is unsupported as it's a 1.0 Base Station! Ignoring...", channel, szSerialNumber);
+                } else if (eType == BaseStationType_20) {
                     ble_worker_enqueue({ BleJob_SetChannel, index, channel });
                 }
             }
@@ -965,8 +974,12 @@ namespace spacecal {
         }
 
         bool set_base_station_power_state(size_t index, EPowerState_t state) {
-            std::lock_guard<std::mutex> lock(g_base_station_state.mutexBaseStationList);
-            if (g_base_station_state.aTrackedBaseStations.size() > 0 && index < g_base_station_state.aTrackedBaseStations.size()) {
+            size_t dwBaseStationCount = 0;
+            {
+                std::lock_guard<std::mutex> lock(g_base_station_state.mutexBaseStationList);
+                dwBaseStationCount = g_base_station_state.aTrackedBaseStations.size();
+            }
+            if (dwBaseStationCount > 0 && index < dwBaseStationCount) {
                 ble_worker_enqueue({ BleJob_SetPower, index, (uint8_t)state });
             }
             return true;
