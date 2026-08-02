@@ -152,9 +152,7 @@ bool ImGui::CheckboxWithDescription(const char* title, bool* v, const char* desc
     ImGui::EndGroup();
     ImGui::EndGroup();
 
-    ImVec2 minPos = ImGui::GetItemRectMin();
-    ImVec2 maxPos = ImGui::GetItemRectMax();
-    ImVec2 size = ImVec2(maxPos.x - minPos.x, maxPos.y - minPos.y);
+    ImVec2 size = ImGui::GetItemRectSize();
     ImVec2 endPos = ImGui::GetCursorPos();
     float height = endPos.y - startPos.y;
     ImGui::SetCursorPos(startPos);
@@ -187,9 +185,7 @@ bool ImGui::RadioButtonWithDescription(const char* title, bool v, const char* de
     ImGui::EndGroup();
     ImGui::EndGroup();
 
-    ImVec2 minPos = ImGui::GetItemRectMin();
-    ImVec2 maxPos = ImGui::GetItemRectMax();
-    ImVec2 size = ImVec2(maxPos.x - minPos.x, maxPos.y - minPos.y);
+    ImVec2 size = ImGui::GetItemRectSize();
     ImVec2 endPos = ImGui::GetCursorPos();
     float height = endPos.y - startPos.y;
     ImGui::SetCursorPos(startPos);
