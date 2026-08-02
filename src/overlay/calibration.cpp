@@ -624,6 +624,71 @@ namespace spacecal {
         };
     }
 
+    bool TrackingSystemCalibration::checkAndUpdateWorldFromDriver(const CalibrationDevice& device, Eigen::Quaterniond& lastRot, Eigen::Vector3d& lastTrans, Eigen::AffineCompact3d& outDelta) const {
+        if (device.deviceId >= vr::k_unMaxTrackedDeviceCount) return false;
+
+        const auto& pose = CalibrationManager::getInstance()->m_poses[device.deviceId];
+        if (!pose.deviceIsConnected || !pose.poseIsValid) return false;
+
+        Eigen::Quaterniond curRot(pose.qWorldFromDriverRotation.w, pose.qWorldFromDriverRotation.x, pose.qWorldFromDriverRotation.y, pose.qWorldFromDriverRotation.z);
+        Eigen::Vector3d curTrans(pose.vecWorldFromDriverTranslation[0], pose.vecWorldFromDriverTranslation[1], pose.vecWorldFromDriverTranslation[2]);
+
+        if (lastTrans.hasNaN()) {
+            lastRot = curRot;
+            lastTrans = curTrans;
+            return false;
+        }
+
+        double angleDelta = curRot.angularDistance(lastRot);
+        double posDelta = (curTrans - lastTrans).norm();
+        bool changed = (angleDelta > k_PLAYSPACE_JUMP_WORLD_FROM_DRIVER_ANGLE_THRESHOLD_RAD) ||
+            (posDelta > k_PLAYSPACE_JUMP_WORLD_FROM_DRIVER_POS_THRESHOLD_METERS);
+
+        if (changed) {
+            Eigen::AffineCompact3d oldWFD = Eigen::Translation3d(lastTrans) * lastRot;
+            Eigen::AffineCompact3d newWFD = Eigen::Translation3d(curTrans) * curRot;
+            outDelta = newWFD * oldWFD.inverse();
+        }
+
+        lastRot = curRot;
+        lastTrans = curTrans;
+        return changed;
+    }
+
+    bool TrackingSystemCalibration::checkWorldFromDriverJump(double currentTime) {
+        Eigen::AffineCompact3d deltaRef = Eigen::AffineCompact3d::Identity();
+        Eigen::AffineCompact3d deltaTarget = Eigen::AffineCompact3d::Identity();
+
+        bool refChanged = checkAndUpdateWorldFromDriver(referenceDevice, m_lastRefWorldFromDriverRot, m_lastRefWorldFromDriverTrans, deltaRef);
+        bool targetChanged = checkAndUpdateWorldFromDriver(targetDevice, m_lastTargetWorldFromDriverRot, m_lastTargetWorldFromDriverTrans, deltaTarget);
+        
+        if (!refChanged && !targetChanged) {
+            return false;
+        }
+
+        LOG_CALIB_WARN("Detected tracking discontinuity (ref={} target={}), attempting to recover calibration...", refChanged, targetChanged);
+
+        // clear sample data as it'll have invalid data since we detected this discontinuity
+        m_sampleHistory.clear();
+        m_samples.clear();
+        m_lastRmsError = INFINITY;
+        m_lastAxisVariance = 0.0;
+
+        // attempt to recover the calibration so that the user doesn't notice
+        Eigen::AffineCompact3d calib = Eigen::Translation3d(calibratedTranslation) * calibratedRotation;
+        if (targetChanged) {
+            calib = deltaTarget.inverse() * calib;
+        }
+        if (refChanged) {
+            calib = deltaRef * calib;
+        }
+
+        calibratedRotation = Eigen::Quaterniond(calib.rotation()).normalized();
+        calibratedTranslation = calib.translation();
+
+        return true;
+    }
+
     void TrackingSystemCalibration::init() {
         m_samples.reserve((size_t) CalibrationSpeed::VERY_SLOW);
         updateRotationVarianceCosineThreshold();
@@ -641,6 +706,9 @@ namespace spacecal {
         m_lastRmsError = INFINITY;
         m_lastAxisVariance = 0.0;
         m_lastSuccessfulCalibTime = 0.0;
+
+        m_lastRefWorldFromDriverTrans = Eigen::Vector3d::Constant(NAN);
+        m_lastTargetWorldFromDriverTrans = Eigen::Vector3d::Constant(NAN);
 
         updateRotationVarianceCosineThreshold();
     }
@@ -725,6 +793,13 @@ namespace spacecal {
         }
         
         m_lastTick = currentTime;
+
+        // detect playspace jumps and try auto-correcting for it.
+        if (autoFixPlayspaceJumps) {
+            if (checkWorldFromDriverJump(currentTime)) {
+                apply();
+            }
+        }
 
         if (hmdIsInReferenceTrackingSystem) {
             if (targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {

@@ -17,6 +17,8 @@ namespace spacecal {
     constexpr int k_AUTO_DETECT_MINIMUM_SCORE = 40;
     constexpr float k_AUTO_DETECT_MIN_VELOCITY_THRESHOLD = 0.2f; // devices need to be moving enough for us to consider them
     constexpr float k_AUTO_DETECT_MAX_VELOCITY_DIFF = 0.15f;     // speed tolerance between devices, we only allow for up to this much variance in speed due to hardware differences and unit to unit variance
+    constexpr double k_PLAYSPACE_JUMP_WORLD_FROM_DRIVER_ANGLE_THRESHOLD_RAD = 1.0 * (EIGEN_PI / 180.0);     // the angular threshold of movement for detecting sudden playspace jumps from a device
+    constexpr double k_PLAYSPACE_JUMP_WORLD_FROM_DRIVER_POS_THRESHOLD_METERS = 0.005;                       // the threshold in metres for detecting sudden playspace jumps from a device
 
     // thresholds and bounds to ensure the underlying mathematical algorithms maintain a high enough accuracy to be useful for real-world use.
     constexpr double k_MAX_RETARGETING_RMS_ERROR_THRESHOLD = 0.1;
@@ -188,6 +190,7 @@ namespace spacecal {
         bool isRelativeCalibration = false; // whether the calibration is stored such that its coordinate system is relative to the reference device. this hides tracking anomalies from the reference device and keeps calibrations "valid" for longer
         bool hideContinuousTracker = false;
         bool calibrateMotionVectors = true; // if set to true, will apply calibrations to velocity and acceleration (and angular counterparts)
+        bool autoFixPlayspaceJumps = true;  // if set to true, attempts to auto-correct playspace jumps that occur
         bool enforceMinimumRotationVariance = true;  // if set to true, enforces a minimum rotation variance threshold
         CalibrationError calibrationError = CalibrationError::Unknown; // error state of the last calibration, to be used by ui
         CalibrationState state = CalibrationState::NONE;
@@ -240,6 +243,9 @@ namespace spacecal {
         Eigen::Vector4d computeAxisVariance(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation) const;
         bool validateCalibration(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation, double& rmsError, Eigen::Vector3d& posOffset, bool isRelative);
 
+        bool checkAndUpdateWorldFromDriver(const CalibrationDevice& device, Eigen::Quaterniond& lastRot, Eigen::Vector3d& lastTrans, Eigen::AffineCompact3d& outDelta) const;
+        bool checkWorldFromDriverJump(double currentTime);
+
         // we collect a series of **VALID** calibrations' worth of samples to improve RMS error accuracy
         void trackCollectedSamplesForErrorTracking();
         bool detectCorrelatingDevices(double currentTime);
@@ -277,6 +283,12 @@ namespace spacecal {
         float m_autoDetectStartTime = NAN;
         vr::TrackedDeviceIndex_t m_candidateRefId = vr::k_unTrackedDeviceIndexInvalid;
         vr::TrackedDeviceIndex_t m_candidateTargetId = vr::k_unTrackedDeviceIndexInvalid;
+
+        // for detecting if a device jumps from one playspace to another
+        Eigen::Quaterniond  m_lastRefWorldFromDriverRot = Eigen::Quaterniond::Identity();
+        Eigen::Quaterniond  m_lastTargetWorldFromDriverRot = Eigen::Quaterniond::Identity();
+        Eigen::Vector3d     m_lastRefWorldFromDriverTrans = Eigen::Vector3d::Constant(NAN);
+        Eigen::Vector3d     m_lastTargetWorldFromDriverTrans = Eigen::Vector3d::Constant(NAN);
 
         std::vector<Sample_t> m_samples;
         std::deque<Sample_t> m_sampleHistory; // used ONLY for RMS validation
