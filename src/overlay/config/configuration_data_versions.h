@@ -101,11 +101,13 @@ namespace spacecal {
                     bool is_active = false;
 
                     Transform calibrated_transform;
+                    float scale = 1.0f;
 
                     AnchorMode anchor_mode = AnchorMode::FixedWorld;
                     ContinuousCalibrationData continuous;
 
-                    bool calibrate_motion_vectors = false;
+                    bool calibrate_motion_vectors = true;
+                    bool attempt_auto_fix_playspace_jumps = true;
                     bool enforce_minimum_rotation_variance = true;
                     uint64_t calibration_speed = 0;
 

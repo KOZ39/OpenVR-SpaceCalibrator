@@ -369,7 +369,7 @@ namespace spacecal {
         } else {
             // @TODO: propagate rejection reason to UI to provide user with feedback on how to improve calibration
             std::string calibErrString = getCalibrationErrorMapping(eCalibrationError).szLogString;
-            LOG_CALIB_INFO("Rejecting calibration due to {}; RMS: {}", calibErrString, rmsError);
+            LOG_CALIB_WARN("Rejecting calibration due to {}; RMS: {}", calibErrString, rmsError);
         }
 
         return eCalibrationError;
@@ -1344,15 +1344,20 @@ namespace spacecal {
             double pitchRad = pConfig->calibrations[i].calibrated_transform.pitch * (EIGEN_PI / 180.0);
             double yawRad   = pConfig->calibrations[i].calibrated_transform.yaw   * (EIGEN_PI / 180.0);
 
-            this->m_calibrations[i].calibratedRotation =
-                Eigen::AngleAxisd(yawRad, Eigen::Vector3d::UnitZ()) *
+            this->m_calibrations[i].calibratedRotation = (Eigen::AngleAxisd(yawRad, Eigen::Vector3d::UnitZ()) *
                 Eigen::AngleAxisd(pitchRad, Eigen::Vector3d::UnitY()) *
-                Eigen::AngleAxisd(rollRad, Eigen::Vector3d::UnitX());
+                Eigen::AngleAxisd(rollRad, Eigen::Vector3d::UnitX())).normalized();
+
+            this->m_calibrations[i].calibratedScale                     = pConfig->calibrations[i].scale;
 
             if (pConfig->calibrations[i].continuous.is_active) {
                 this->m_calibrations[i].state                           = CalibrationState::CONTINUOUS_IDLE;
             }
             this->m_calibrations[i].hideContinuousTracker               = pConfig->calibrations[i].continuous.hide_reference_tracker;
+
+            this->m_calibrations[i].calibrateMotionVectors              = pConfig->calibrations[i].calibrate_motion_vectors;
+            this->m_calibrations[i].autoFixPlayspaceJumps               = pConfig->calibrations[i].attempt_auto_fix_playspace_jumps;
+            this->m_calibrations[i].enforceMinimumRotationVariance      = pConfig->calibrations[i].enforce_minimum_rotation_variance;
         }
 
         return true;
@@ -1394,8 +1399,14 @@ namespace spacecal {
             pConfig->calibrations[i].calibrated_transform.pitch         = static_cast<float>(euler[1] * 180.0 / EIGEN_PI);
             pConfig->calibrations[i].calibrated_transform.roll          = static_cast<float>(euler[2] * 180.0 / EIGEN_PI);
 
+            pConfig->calibrations[i].scale                              = (float)this->m_calibrations[i].calibratedScale;
+
             pConfig->calibrations[i].continuous.is_active               = this->m_calibrations[i].isContinuousCalibration();
             pConfig->calibrations[i].continuous.hide_reference_tracker  = this->m_calibrations[i].hideContinuousTracker;
+            
+            pConfig->calibrations[i].calibrate_motion_vectors           = this->m_calibrations[i].calibrateMotionVectors;
+            pConfig->calibrations[i].attempt_auto_fix_playspace_jumps   = this->m_calibrations[i].autoFixPlayspaceJumps;
+            pConfig->calibrations[i].enforce_minimum_rotation_variance  = this->m_calibrations[i].enforceMinimumRotationVariance;
         }
 
         ConfigurationError err = spacecal::ConfigurationManager::getInstance()->saveConfiguration();
