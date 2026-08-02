@@ -877,19 +877,56 @@ namespace spacecal {
                     ImGui::TableNextColumn();
                     ImGui::BeginCard(fmt::format("card_base_station__{}", i).c_str());
 
+                    int baseStationIdx = -1;
+                    for (size_t i = 0; i < g_state.aBaseStations.size(); i++) {
+                        if (g_state.aBaseStations[i].szBaseStationId == base_station.szSerialNumber) {
+                            baseStationIdx = (int)i;
+                            break;
+                        }
+                    }
+
+                    if (baseStationIdx == -1) {
+                        // new entry; add and reserve 512 bytes for nickname
+                        UserInterface_BaseStationState_t& entry = g_state.aBaseStations.emplace_back(UserInterface_BaseStationState_t{
+                            .bIsEditing = false,
+                            .szBaseStationId = base_station.szSerialNumber,
+                            .szNickname = "",
+                        });
+                        baseStationIdx = (int)g_state.aBaseStations.size() - 1;
+                        g_state.aBaseStations[baseStationIdx].szNickname.resize(512, '\0');
+                    }
+
                     // @TODO: somehow nickname
                     const char* typeStr = (base_station.eType == bluetooth::BaseStationType_10) ? "1.0" : "2.0";
-                    std::string szBaseStationName = base_station.szSerialNumber;
+                    bool hasNickname = g_state.aBaseStations[baseStationIdx].szNickname[0] != '\0';
+                    std::string szBaseStationName = hasNickname ? g_state.aBaseStations[baseStationIdx].szNickname.c_str() : base_station.szSerialNumber;
                     std::string headerText = LOCALE_FORMAT("base_stations_header_info", szBaseStationName);
 
-                    const float lineStartY = ImGui::GetCursorPosY();
-                    const float pillHeight = ImGui::GetFontSize() + (ImGui::k_PILL_PADDING_Y * 2.0f);
-                    const float textOffsetY = (pillHeight - ImGui::GetFontSize()) * 0.5f;
-                    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + textOffsetY);
-                    ImGui::TextHeading("%s", headerText.c_str());
-                    ImGui::SameLine();
-                    ImGui::SetCursorPosY(lineStartY);
-                    ImGui::PillText(typeStr, Colors::Gray);
+                    if (g_state.aBaseStations[baseStationIdx].bIsEditing) {
+                        const float lineStartY = ImGui::GetCursorPosY();
+                        const float pillHeight = ImGui::GetFontSize() + (ImGui::k_PILL_PADDING_Y * 2.0f);
+                        const float textOffsetY = (pillHeight - ImGui::GetFontSize()) * 0.5f;
+                        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + textOffsetY);
+                        ImGui::TextHeading(LOCALE_GET("base_stations_nickname").c_str());
+                        ImGui::SameLine();
+                        ImGui::InputTextEx(
+                            fmt::format("##Heading__{}", base_station.szSerialNumber).c_str(),
+                            base_station.szSerialNumber.c_str(),
+                            g_state.aBaseStations[baseStationIdx].szNickname.data(), (int)g_state.aBaseStations[baseStationIdx].szNickname.size(),
+                            ImVec2(0, 0),
+                            ImGuiInputTextFlags_None
+                        );
+                        ImGui::SetCursorPosY(lineStartY);
+                    } else {
+                        const float lineStartY = ImGui::GetCursorPosY();
+                        const float pillHeight = ImGui::GetFontSize() + (ImGui::k_PILL_PADDING_Y * 2.0f);
+                        const float textOffsetY = (pillHeight - ImGui::GetFontSize()) * 0.5f;
+                        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + textOffsetY);
+                        ImGui::TextHeading("%s", headerText.c_str());
+                        ImGui::SameLine();
+                        ImGui::SetCursorPosY(lineStartY);
+                        ImGui::PillText(typeStr, Colors::Gray);
+                    }
 
                     std::string statusStr;
                     ImVec4 statusBgColor;
@@ -921,9 +958,8 @@ namespace spacecal {
                     ImGui::PopFont();
 
                     ImGui::Spacing();
-
-                    if (base_station.eType == bluetooth::BaseStationType_20) {
-                        // @TODO: channel picking should be gated by a button or something similar
+                    
+                    if (g_state.aBaseStations[baseStationIdx].bIsEditing && base_station.eType == bluetooth::BaseStationType_20) {
                         ImGui::Text("%s", LOCALE_GET("base_stations_channel_select_label").c_str());
 
                         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 24.0f);
@@ -953,13 +989,15 @@ namespace spacecal {
                                 }
 
                                 if (!isCurrent && !isOccupied) {
-                                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+                                    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.30f, 0.33f, 0.42f, 0.40f));
+                                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, ImGui::k_BORDER_WIDTH);
                                 }
                                 if (ImGui::Button(channelBtnLabel.c_str(), buttonSize)) {
                                     bluetooth::set_base_station_channel(i, targetChannel);
                                 }
                                 if (!isCurrent && !isOccupied) {
                                     ImGui::PopStyleVar();
+                                    ImGui::PopStyleColor();
                                 }
 
                                 ImGui::PopStyleColor(2);
@@ -973,24 +1011,45 @@ namespace spacecal {
                         ImGui::Spacing();
                     }
 
-                    if (ImGui::IconButton(ICON_MS_MODE_OFF_ON, LOCALE_GET("base_stations_btn_wake").c_str())) {
-                        bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Awake_From_Standby);
-                    }
-                    if (g_state.bIsSettingsAdvanced) {
-                        // standby is unsupported on 1.0s
-                        if (base_station.eType == bluetooth::BaseStationType_20) {
-                            ImGui::SameLine();
-                            // if we know the base station is on old firmware, disable standby, as it's an unsupported operation anyway
-                            ImGui::BeginDisabled(base_station.firmwareSupportsStandby == bluetooth::EBaseStation20_StandbySupport_t::StandbySupport_Unavailable);
-                            if (ImGui::IconButton(ICON_MS_ENERGY_SAVINGS_LEAF, LOCALE_GET("base_stations_btn_standby").c_str())) {
-                                bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Standby);
+                    if (!g_state.aBaseStations[baseStationIdx].bIsEditing) {
+                        if (ImGui::IconButton(ICON_MS_MODE_OFF_ON, LOCALE_GET("base_stations_btn_wake").c_str())) {
+                            bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Awake_From_Standby);
+                        }
+                        if (g_state.bIsSettingsAdvanced) {
+                            // standby is unsupported on 1.0s
+                            if (base_station.eType == bluetooth::BaseStationType_20) {
+                                ImGui::SameLine();
+                                // if we know the base station is on old firmware, disable standby, as it's an unsupported operation anyway
+                                ImGui::BeginDisabled(base_station.firmwareSupportsStandby == bluetooth::EBaseStation20_StandbySupport_t::StandbySupport_Unavailable);
+                                if (ImGui::IconButton(ICON_MS_ENERGY_SAVINGS_LEAF, LOCALE_GET("base_stations_btn_standby").c_str())) {
+                                    bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Standby);
+                                }
+                                ImGui::EndDisabled();
                             }
-                            ImGui::EndDisabled();
+                        }
+                        ImGui::SameLine();
+                        if (ImGui::IconButton(ICON_MS_LIGHT_OFF, LOCALE_GET("base_stations_btn_sleep").c_str())) {
+                            bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Sleep);
                         }
                     }
-                    ImGui::SameLine();
-                    if (ImGui::IconButton(ICON_MS_LIGHT_OFF, LOCALE_GET("base_stations_btn_sleep").c_str())) {
-                        bluetooth::set_base_station_power_state(i, bluetooth::PowerState_Sleep);
+
+                    if (g_state.aBaseStations[baseStationIdx].bIsEditing) {
+                        if (ImGui::IconButton(ICON_MS_SAVE, LOCALE_GET("base_stations_btn_save").c_str())) {
+                            // @HACK: remove null bytes from nickname before writing to disk; should we use strlen or something similar?
+                            std::string cleanedNickname = g_state.aBaseStations[baseStationIdx].szNickname.c_str();
+                            ConfigurationManager::getInstance()->getConfiguration()->base_stations.nicknames[base_station.szSerialNumber] = cleanedNickname;
+                            ConfigurationManager::getInstance()->saveConfiguration();
+
+                            g_state.aBaseStations[baseStationIdx].bIsEditing = false;
+                        }
+                    } else {
+                        std::string editButtonTxt = LOCALE_GET("base_stations_btn_edit");
+                        float editBtnWidth = ImGui::CalcTextSize(editButtonTxt.c_str()).x + ImGui::GetStyle().FramePadding.x * 2.0f + ImGui::CalcTextSize(ICON_MS_EDIT).x;
+
+                        ImGui::SameLine(ImGui::GetContentRegionAvail().x - editBtnWidth);
+                        if (ImGui::IconButton(ICON_MS_EDIT, editButtonTxt.c_str())) {
+                            g_state.aBaseStations[baseStationIdx].bIsEditing = true;
+                        }
                     }
 
                     ImGui::EndCard();
@@ -1293,6 +1352,46 @@ namespace spacecal {
         g_state.bBaseStationPowerManagementOnStartup = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_on_during_startup;
         g_state.bBaseStationPowerManagementOnShutdown = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_off_during_shutdown;
         g_state.bBaseStationPowerManagementOffModeIsSleep = !ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby;
+
+        // load base station nicknames from config
+        if (!g_state.bNicknamesLoaded) {
+            if (g_state.aBaseStations.capacity() == 0) {
+                g_state.aBaseStations.reserve(64);
+            }
+
+            const auto& nicknames = ConfigurationManager::getInstance()->getConfiguration()->base_stations.nicknames;
+            for (const auto& pair : nicknames) {
+                const std::string& serial = pair.first;
+                const std::string& nickname = pair.second;
+
+                int baseStationIdx = -1;
+                for (size_t i = 0; i < g_state.aBaseStations.size(); i++) {
+                    if (g_state.aBaseStations[i].szBaseStationId == serial) {
+                        baseStationIdx = (int)i;
+                        break;
+                    }
+                }
+
+                // station somehow exists already on frame one
+                if (baseStationIdx != -1) {
+                    g_state.aBaseStations[baseStationIdx].szNickname = nickname;
+                    if (g_state.aBaseStations[baseStationIdx].szNickname.size() < 512) {
+                        g_state.aBaseStations[baseStationIdx].szNickname.resize(512, '\0');
+                    }
+                } else {
+                    // add new entry
+                    UserInterface_BaseStationState_t& entry = g_state.aBaseStations.emplace_back(UserInterface_BaseStationState_t{
+                        .bIsEditing = false,
+                        .szBaseStationId = serial,
+                        .szNickname = nickname,
+                    });
+                    entry.szNickname.resize(512, '\0');
+                }
+            }
+
+            g_state.bNicknamesLoaded = true;
+        }
+
         auto& io = ImGui::GetIO();
 
 #if _DEBUG

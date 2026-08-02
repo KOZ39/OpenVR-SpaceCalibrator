@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+#include <string>
 #include <imgui.h>
 #include <implot.h>
 #include <IconsMaterialSymbols.h>
@@ -14,6 +16,12 @@ namespace spacecal {
         extern ImVec4 Gray;
     }
 
+    struct UserInterface_BaseStationState_t {
+        bool bIsEditing = false;
+        std::string szBaseStationId; // HTC BS XXXXXX or LHB-XXXXXXXX
+        std::string szNickname; // user string or empty
+    };
+
     // state for the UI
     struct UserInterfaceState_t {
         bool bIsRunningInOverlay = false;
@@ -26,8 +34,9 @@ namespace spacecal {
         size_t dwSelectedCalibrationIndex = 0; // selected calibration in the ui
         size_t dwSelectedUiPage = 0; // selected vertical tab
 
-        // @TODO: remove
-        char fooText[512] = {};
+        // flat list cuz realistically we won't have enough elements to warrant the overhead of a hashmap
+        std::vector<UserInterface_BaseStationState_t> aBaseStations;
+        bool bNicknamesLoaded = false;
     };
 
     struct SpaceCalibratorVerticalTab_t {
