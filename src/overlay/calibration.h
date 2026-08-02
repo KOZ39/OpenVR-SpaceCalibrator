@@ -141,6 +141,13 @@ namespace spacecal {
             m_samples.clear();
             updateRotationVarianceCosineThreshold();
         }
+        // clears metrics data to account for tracking data shifts; should allow the system to escpae from a local minima when a tracking jump occurs to then find the new local minima
+        inline void invalidateMetrics() {
+            m_sampleHistory.clear();
+            m_lastRmsError = INFINITY;
+            m_lastAxisVariance = 0.0;
+        }
+
         void calibrationTick(const double currentTime);
         void resetCalibrationForDevice(const CalibrationDevice& device); // resets the given device's pose to the raw pose
         void apply(); // applies the calibration to the VR runtime

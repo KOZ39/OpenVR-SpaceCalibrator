@@ -471,6 +471,7 @@ namespace spacecal {
     void VRState::invalidateAllSamples() {
         for (size_t i = 0; i < CalibrationManager::getInstance()->getCalibrationCount(); i++) {
             CalibrationManager::getInstance()->getCalibration(i).clearSamples();
+            CalibrationManager::getInstance()->getCalibration(i).invalidateMetrics();
         }
     }
 
