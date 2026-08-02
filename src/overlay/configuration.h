@@ -16,6 +16,7 @@ namespace spacecal {
         FileNotExist,
         JsonCorrupt,
         SerialiseFail,
+        SingletonExists,
         Count,
     };
 
@@ -23,7 +24,7 @@ namespace spacecal {
 
     class ConfigurationManager {
     public:
-        void init();
+        ConfigurationError init();
 
         ConfigurationError loadConfiguration();
         ConfigurationError saveConfiguration() const;

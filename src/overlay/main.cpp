@@ -71,8 +71,11 @@ int entry_point(int argc, char* argv[]) {
     logging::Init(/* isOverlay */ true);
 
     // Setup config manager
+    bool bInitConfigSettings = false;
     spacecal::ConfigurationManager configManager;
-    configManager.init();
+    if (configManager.init() == spacecal::ConfigurationError::FileNotExist) {
+        bInitConfigSettings = true;
+    }
 
     // Load locale strings
     spacecal::LocalisationManager localisationManager;
@@ -83,6 +86,11 @@ int entry_point(int argc, char* argv[]) {
     if (!vrState.init()) {
         // @TODO: Present error to user in friendly way
         LOG_CRITICAL("Failed to initialise VRState D:");
+    } else {
+        if (bInitConfigSettings) {
+            vr::EVRSettingsError vrErr = vr::EVRSettingsError::VRSettingsError_None;
+            bool bEnableBaseStationMgmt = vr::VRSettings()->GetBool(vr::k_pch_Lighthouse_Section, vr::k_pch_Lighthouse_EnableBluetooth_Bool, &vrErr);
+        }
     }
 
     spacecal::Window* theWindow = new spacecal::Window;

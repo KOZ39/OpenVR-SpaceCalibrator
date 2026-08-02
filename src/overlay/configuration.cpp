@@ -46,19 +46,20 @@ namespace spacecal {
     }
 #endif
 
-    void ConfigurationManager::init() {
+    ConfigurationError ConfigurationManager::init() {
         if (s_instance != nullptr) {
             LOG_FATAL("Tried creating ConfigurationManager more than once! Breaking singleton. Aborting...");
-            return;
+            return ConfigurationError::SingletonExists;
         }
         s_instance = this;
         m_configPath = util::getSpaceCalibratorConfigPath().string();
 
         // Load config from disk. If it does not exist, create a new config
-        if (loadConfiguration() != ConfigurationError::Ok) {
-            // @TODO: need to return if a config didn't exist so that we can set initial values according to SteamVR settings
+        ConfigurationError err = loadConfiguration();
+        if (err != ConfigurationError::Ok) {
             saveConfiguration();
         }
+        return err;
     }
 
     ConfigurationError ConfigurationManager::loadConfiguration() {
