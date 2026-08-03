@@ -288,13 +288,6 @@ namespace spacecal {
         ImGuiStyle& style = ImGui::GetStyle();
         ImGui::NewLine();
 
-        if (calibration.isValidCalibration() && !calibration.isActive)
-        {
-            std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
-            ImGui::TextColored(Colors::Amber, "%s", LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
-            ImGui::NewLine();
-        }
-
         float width = ImGui::GetContentRegionAvail().x - style.FramePadding.x * 2.0f;
         float scale = 1.0f / 2.0f;
         if (calibration.isValidCalibration()) {
@@ -848,6 +841,14 @@ namespace spacecal {
                         ConfigurationManager::getInstance()->saveConfiguration();
                     }
                 } else {
+
+                    if (calibration.isValidCalibration() && !calibration.isActive) {
+                        ImGui::BeginCardDanger("calibration_invalid");
+                        std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
+                        ImGui::TextUnformatted(LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
+                        ImGui::EndCardDanger();
+                    }
+
                     buildDeviceSelection(calibration);
                     buildCalibrationCommonControls(calibration);
                 }
