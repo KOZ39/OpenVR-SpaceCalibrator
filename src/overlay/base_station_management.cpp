@@ -255,6 +255,10 @@ namespace spacecal {
                         return false;
                     }
                 }
+                // @NOTE: given 2.0s may enumerate as LHB-00000000 ; im going to assume 1.0s MAY do the same
+                if (strncmp(identifier, "HTC BS 000000", 13) == 0) {
+                    return false;
+                }
                 return true;
             }
             return false;
@@ -271,6 +275,10 @@ namespace spacecal {
                     if (!isxdigit(identifier[i])) {
                         return false;
                     }
+                }
+                // @NOTE: we INTENTIONALLY check if the base station ID is LHB-00000000 ; a Base Station 2.0 may appear under that name during startup and mislead the user!
+                if (strncmp(identifier, "LHB-00000000", 12) == 0) {
+                    return false;
                 }
                 return true;
             }
