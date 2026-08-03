@@ -942,7 +942,13 @@ namespace spacecal {
         if (dwBaseStationCount > 0) {
             // @TODO: warning card with fix button?
             if (bluetooth::do_base_station_channels_collide()) {
-                ImGui::TextWrappedColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), LOCALE_GET("base_stations_warning_collision").c_str());
+                ImGui::BeginCardDanger("base_station_collision");
+                ImGui::TextWrapped(LOCALE_GET("base_stations_warning_collision").c_str());
+
+                if (ImGui::IconButton(ICON_MS_HANDYMAN, LOCALE_GET("base_stations_action_fix_collisions").c_str())) {
+                    bluetooth::auto_assign_base_station_channels();
+                }
+                ImGui::EndCardDanger();
             }
 
             if (ImGui::IconButton(ICON_MS_MODE_OFF_ON, LOCALE_GET("base_stations_action_wake_all").c_str())) {
@@ -951,10 +957,6 @@ namespace spacecal {
             ImGui::SameLine();
             if (ImGui::IconButton(ICON_MS_LIGHT_OFF, LOCALE_GET("base_stations_action_sleep_all").c_str())) {
                 bluetooth::set_all_base_station_power_state(bluetooth::PowerState_Sleep);
-            }
-            ImGui::SameLine();
-            if (ImGui::IconButton(ICON_MS_WIFI_CHANNEL, LOCALE_GET("base_stations_action_fix_collisions").c_str())) {
-                bluetooth::auto_assign_base_station_channels();
             }
 
             ImGui::Spacing();
