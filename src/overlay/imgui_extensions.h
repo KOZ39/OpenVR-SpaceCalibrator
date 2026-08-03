@@ -133,7 +133,25 @@ namespace ImGui
 	inline void EndCard() {
 		ImGui::EndChild();
 		ImGui::PopStyleVar(2);
-		ImGui::PopStyleColor(2);;
+		ImGui::PopStyleColor(2);
+	}
+
+	inline bool BeginCardDanger(const char* str_id, const ImVec2& size_arg = ImVec2(0.0f, 0.0f), ImGuiChildFlags child_flags = ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY) {
+		ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.75f, 0.38f, 0.42f, 0.20f));
+		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.75f, 0.38f, 0.42f, 1.0f));
+		// text will affect normal text too...
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.68f, 0.28f, 0.32f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.75f, 0.38f, 0.42f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.72f, 0.32f, 0.36f, 1.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 6.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, k_BORDER_WIDTH);
+		return ImGui::BeginChild(str_id, size_arg, child_flags);
+	}
+
+	inline void EndCardDanger() {
+		ImGui::EndChild();
+		ImGui::PopStyleVar(2);
+		ImGui::PopStyleColor(5);
 	}
 
 	bool CheckboxWithDescription(const char* title, bool* v, const char* desc);
