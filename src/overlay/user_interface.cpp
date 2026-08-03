@@ -1318,14 +1318,12 @@ namespace spacecal {
     // UI CORE LAYOUT
 
     SpaceCalibratorVerticalTab_t g_spaceCalUiTabs[] = {
-        { .szLocaleKey = "tab_page_calibration", .szIcon = ICON_MS_TARGET, .fnDrawTab = page_calibration, },
-        { .szLocaleKey = "tab_page_graphs", .szIcon = ICON_MS_STACKED_LINE_CHART, .fnDrawTab = page_graphs, },
-        { .szLocaleKey = "tab_page_base_station_management", .szIcon = ICON_MS_SENSORS, .fnDrawTab = page_base_station_management, }, // ICON_MS_CELL_TOWER
-        { .szLocaleKey = "tab_page_settings", .szIcon = ICON_MS_SETTINGS, .fnDrawTab = page_settings, },
-#if _DEBUG || 1 // @TODO: reserved exclusively for debug mode, may make sense to enable with a flag?
-        { .szLocaleKey = "tab_page_debug", .szIcon = ICON_MS_TERMINAL, .fnDrawTab = page_debug, },
-#endif
-        { .szLocaleKey = "tab_page_about", .szIcon = ICON_MS_INFO, .fnDrawTab = page_about, },
+        { .szLocaleKey = "tab_page_calibration", .szIcon = ICON_MS_TARGET, .fnDrawTab = page_calibration, .bIsAdvancedTab = false, },
+        { .szLocaleKey = "tab_page_graphs", .szIcon = ICON_MS_STACKED_LINE_CHART, .fnDrawTab = page_graphs, .bIsAdvancedTab = true,  },
+        { .szLocaleKey = "tab_page_base_station_management", .szIcon = ICON_MS_SENSORS, .fnDrawTab = page_base_station_management, .bIsAdvancedTab = false,  }, // ICON_MS_CELL_TOWER
+        { .szLocaleKey = "tab_page_settings", .szIcon = ICON_MS_SETTINGS, .fnDrawTab = page_settings, .bIsAdvancedTab = false,  },
+        { .szLocaleKey = "tab_page_debug", .szIcon = ICON_MS_TERMINAL, .fnDrawTab = page_debug, .bIsAdvancedTab = true,  },
+        { .szLocaleKey = "tab_page_about", .szIcon = ICON_MS_INFO, .fnDrawTab = page_about, .bIsAdvancedTab = false,  },
     };
     constexpr size_t k_SIZE_SPACECAL_UI_TABS = sizeof(g_spaceCalUiTabs) / sizeof(g_spaceCalUiTabs[0]);
 
@@ -1417,6 +1415,9 @@ namespace spacecal {
         ImGui::Spacing(); 
 
         for (size_t i = 0; i < k_SIZE_SPACECAL_UI_TABS; ++i) {
+            if (g_spaceCalUiTabs[i].bIsAdvancedTab && !g_state.bIsSettingsAdvanced) {
+                continue;
+            }
             ImGui::PushID((int)i);
 
             float itemWidth = ImGui::GetContentRegionAvail().x - ImGui::GetStyle().FramePadding.x;

@@ -44,6 +44,7 @@ namespace spacecal {
         const char* szLocaleKey = nullptr;
         const char* szIcon = nullptr;
         void (*fnDrawTab)(double currentTime) = nullptr;
+        bool bIsAdvancedTab = false;
     };
 
     // Draws the user interface with ImGUI
