@@ -61,6 +61,10 @@ struct LE_SCAN_REQUEST_WIN11 {
 namespace spacecal {
     namespace bluetooth {
 
+        // how many times a job should be attempted for
+        constexpr size_t k_MAX_OPERATION_ATTEMPTS = 8;
+        constexpr size_t k_RETRY_DELAY_MS = 1000;
+
         enum EBleJobType_t : uint8_t {
             BleJob_SetChannel,
             BleJob_SetPower,
@@ -162,9 +166,9 @@ namespace spacecal {
             uint8_t _tail[12];
         };
 
-        void async_set_base_station_10_power_state(size_t index, EPowerState_t target_state);
-        void async_set_base_station_20_channel_state(size_t index, uint8_t target_channel);
-        void async_set_base_station_20_power_state(size_t index, EPowerState_t target_state);
+        void async_set_base_station_10_power_state(size_t index, EPowerState_t target_state, int retry_count = 0);
+        void async_set_base_station_20_channel_state(size_t index, uint8_t target_channel, int retry_count = 0);
+        void async_set_base_station_20_power_state(size_t index, EPowerState_t target_state, int retry_count = 0);
 
         void _ble_worker_run_job(const BleJob_t& job) {
             switch (job.type) {
@@ -446,7 +450,7 @@ namespace spacecal {
             simpleble_free(devAddr);
         }
 
-        void async_set_base_station_10_power_state(size_t index, EPowerState_t target_state) {
+        void async_set_base_station_10_power_state(size_t index, EPowerState_t target_state, int retry_count) {
             g_base_station_state.mutexBaseStationList.lock();
 
             if (index >= g_base_station_state.aTrackedBaseStations.size()) {
@@ -509,12 +513,18 @@ namespace spacecal {
             g_base_station_state.mutexBaseStationList.unlock();
 
             // re-attempt
-            if (!success) {
-                std::thread(async_set_base_station_10_power_state, index, target_state).detach();
+            if (!success && retry_count < k_MAX_OPERATION_ATTEMPTS) {
+                std::thread([index, target_state, retry_count]() {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(k_RETRY_DELAY_MS));
+                    async_set_base_station_10_power_state(index, target_state, retry_count + 1);
+                }).detach();
+            }
+            else if (!success) {
+                LOG_BLUETOOTH_ERROR("Max retries reached ({} attempts) for base station on op 1.0 SET_POWER {}, giving up.", k_MAX_OPERATION_ATTEMPTS, szSerialNumber);
             }
         }
 
-        void async_set_base_station_20_channel_state(size_t index, uint8_t target_channel) {
+        void async_set_base_station_20_channel_state(size_t index, uint8_t target_channel, int retry_count) {
             g_base_station_state.mutexBaseStationList.lock();
 
             if (index >= g_base_station_state.aTrackedBaseStations.size()) {
@@ -599,12 +609,18 @@ namespace spacecal {
             g_base_station_state.mutexBaseStationList.unlock();
 
             // re-attempt
-            if (!success) {
-                std::thread(async_set_base_station_20_channel_state, index, target_channel).detach();
+            if (!success && retry_count < k_MAX_OPERATION_ATTEMPTS) {
+                std::thread([index, target_channel, retry_count]() {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(k_RETRY_DELAY_MS));
+                    async_set_base_station_20_channel_state(index, target_channel, retry_count + 1);
+                }).detach();
+            }
+            else if (!success) {
+                LOG_BLUETOOTH_ERROR("Max retries reached ({} attempts) for base station on op 2.0 SET_CHANNEL {}, giving up.", k_MAX_OPERATION_ATTEMPTS, szSerialNumber);
             }
         }
 
-        void async_set_base_station_20_power_state(size_t index, EPowerState_t target_state) {
+        void async_set_base_station_20_power_state(size_t index, EPowerState_t target_state, int retry_count) {
             g_base_station_state.mutexBaseStationList.lock();
 
             if (index >= g_base_station_state.aTrackedBaseStations.size()) {
@@ -693,6 +709,8 @@ namespace spacecal {
                 // we can tell if we're on new or old FW
                 if (!bIsOldFirmware) {
                     switch (target_state) {
+                    case PowerState_Awake_TooOldFirmware:
+                    case PowerState_Awake_From_Standby:
                     case PowerState_Awake_From_Sleep:
                         writeData[0] = 0x01;
                         break;
@@ -775,8 +793,13 @@ namespace spacecal {
             g_base_station_state.mutexBaseStationList.unlock();
 
             // re-attempt
-            if (!success) {
-                std::thread(async_set_base_station_20_power_state, index, target_state).detach();
+            if (!success && retry_count < k_MAX_OPERATION_ATTEMPTS) {
+                std::thread([index, target_state, retry_count]() {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(k_RETRY_DELAY_MS));
+                    async_set_base_station_20_power_state(index, target_state, retry_count + 1);
+                }).detach();
+            } else if (!success) {
+                LOG_BLUETOOTH_ERROR("Max retries reached ({} attempts) for base station on op 2.0 SET_POWER {}, giving up.", k_MAX_OPERATION_ATTEMPTS, szSerialNumber);
             }
         }
 
