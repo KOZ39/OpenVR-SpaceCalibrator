@@ -36,7 +36,7 @@
 
   "identify_selected_devices": "Identify selected devices (blinks LED or vibrates)",
   "identify_auto_detect_devices": "Auto-detect devices",
-  "calibration_error_reference_hmd_missing": "Reference ({0}) HMD not detected, profile disabled", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "calibration_error_reference_hmd_missing": "Unable to find target device from tracking system \"{0}\". You may need to re-calibrate.", /* 0 : tracking system name, eg SteamVR Tracking*/
 
   "calibration_action_start": "Standard Calibration",
   "calibration_action_clear": "Clear Calibration",
@@ -45,9 +45,7 @@
   "save_calibration_profile": "Save Profile",
 
   "calibration_progress": "Calibration Progress",
-  "calibration_progress_placeholder": "Calibration in progress...",
   "calibration_info_move_around_insufficient_samples": "Move your selected devices together in your playspace, and walk around your room while doing so. Rotate the devices as well!",
-  "calibration_info_continuous_progress": "Continuous calibration active. Progress represents how close to attempting a calibration we are. Calibrations tend to be rejected due to worse error.", /* this is worded like absolute shit holy fuck */
 
   "calibration_speed": "Calibration Speed",
   "calibration_speed_description": "How long it takes to calibrate. Slower calibrations tend to be more accurate.",
@@ -92,6 +90,7 @@
   "tab_page_base_station_management": "Base Stations",
   "tab_page_settings": "Settings",
   "tab_page_debug": "Debug",
+  "tab_page_learn": "Learn",
   "tab_page_about": "About",
   
   /* graphs */
@@ -171,6 +170,10 @@
   "troubleshoot_action_yes": "Yes",
   "troubleshoot_action_no": "No",
   "troubleshoot_action_quit": "Quit",
+
+  /* tutorial */
+  "learn_title": "Learn",
+  "learn_idfk": "Learn",
 
   /* Names of the various languages one may select. Shown in settings */
   "languages_en_GB": "English (UK)",

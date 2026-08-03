@@ -1418,6 +1418,14 @@ namespace spacecal {
             ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_WordWrap);
     }
 
+    // tutorial page
+    void page_tutorial(double currentTime) {
+        ImGui::TextTitle("%s", LOCALE_GET("learn_title").c_str());
+
+        // fuck me
+
+    }
+
     // UI CORE LAYOUT
 
     SpaceCalibratorVerticalTab_t g_spaceCalUiTabs[] = {
@@ -1426,6 +1434,7 @@ namespace spacecal {
         { .szLocaleKey = "tab_page_base_station_management", .szIcon = ICON_MS_SENSORS, .fnDrawTab = page_base_station_management, .bIsAdvancedTab = false,  }, // ICON_MS_CELL_TOWER
         { .szLocaleKey = "tab_page_settings", .szIcon = ICON_MS_SETTINGS, .fnDrawTab = page_settings, .bIsAdvancedTab = false,  },
         { .szLocaleKey = "tab_page_debug", .szIcon = ICON_MS_TERMINAL, .fnDrawTab = page_debug, .bIsAdvancedTab = true,  },
+        { .szLocaleKey = "tab_page_learn", .szIcon = ICON_MS_SCHOOL, .fnDrawTab = page_tutorial, .bIsAdvancedTab = false,  },
         { .szLocaleKey = "tab_page_about", .szIcon = ICON_MS_INFO, .fnDrawTab = page_about, .bIsAdvancedTab = false,  },
     };
     constexpr size_t k_SIZE_SPACECAL_UI_TABS = sizeof(g_spaceCalUiTabs) / sizeof(g_spaceCalUiTabs[0]);
