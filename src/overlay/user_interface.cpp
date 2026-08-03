@@ -185,11 +185,20 @@ namespace spacecal {
             (ImGui::GetContentRegionAvail().x - style.ItemSpacing.x) / 2.0f,
             ImGui::GetTextLineHeightWithSpacing() * 5.0f + style.ItemSpacing.y * 8.0f + ImGui::GetTextLineHeight() * 3.0f + style.FramePadding.y * 2.0f
         );
+        float textWrapWidth = paneSize.x - (style.WindowPadding.x * 2.0f);
+        std::string refDesc = LOCALE_GET("reference_device_description");
+        std::string targetDesc = LOCALE_GET("target_device_description");
+
+        float refDescHeight = ImGui::CalcTextSize(refDesc.c_str(), nullptr, false, textWrapWidth).y;
+        float targetDescHeight = ImGui::CalcTextSize(targetDesc.c_str(), nullptr, false, textWrapWidth).y;
+        float maxDescHeight = std::max(refDescHeight, targetDescHeight);
 
         ImGui::BeginCard("left device pane", paneSize, ImGuiChildFlags_Borders);
         {
             ImGui::TextHeading(LOCALE_GET("reference_device").c_str());
-            ImGui::TextWrappedDisabled(LOCALE_GET("reference_device_description").c_str());
+            float descStartY = ImGui::GetCursorPosY();
+            ImGui::TextWrappedDisabled(refDesc.c_str());
+            ImGui::SetCursorPosY(descStartY + maxDescHeight + style.ItemSpacing.y);
 
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             std::string refPreview = calibration.referenceDevice.trackingSystem.empty() ? LOCALE_GET("select_reference_device") : getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
@@ -222,7 +231,9 @@ namespace spacecal {
         ImGui::BeginCard("right device pane", paneSize, ImGuiChildFlags_Borders);
         {
             ImGui::TextHeading(LOCALE_GET("target_device").c_str());
-            ImGui::TextWrappedDisabled(LOCALE_GET("target_device_description").c_str());
+            float descStartY = ImGui::GetCursorPosY();
+            ImGui::TextWrappedDisabled(targetDesc.c_str());
+            ImGui::SetCursorPosY(descStartY + maxDescHeight + style.ItemSpacing.y);
 
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             // target tracking system list is tracking system list EXCLUDING reference tracking system. one may NOT calibrate two devices of the same tracking system!
@@ -1001,6 +1012,7 @@ namespace spacecal {
                         const float pillHeight = ImGui::GetFontSize() + (ImGui::k_PILL_PADDING_Y * 2.0f);
                         const float textOffsetY = (pillHeight - ImGui::GetFontSize()) * 0.5f;
                         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + textOffsetY);
+                        ImGui::AlignTextToFramePadding();
                         ImGui::TextHeading(LOCALE_GET("base_stations_nickname").c_str());
                         ImGui::SameLine();
                         ImGui::InputTextEx(
