@@ -940,7 +940,6 @@ namespace spacecal {
         size_t dwBaseStationCount = bluetooth::get_base_station_count();
 
         if (dwBaseStationCount > 0) {
-            // @TODO: warning card with fix button?
             if (bluetooth::do_base_station_channels_collide()) {
                 ImGui::BeginCardDanger("base_station_collision");
                 ImGui::TextWrapped(LOCALE_GET("base_stations_warning_collision").c_str());
@@ -1007,7 +1006,6 @@ namespace spacecal {
                         g_state.aBaseStations[baseStationIdx].szNickname.resize(512, '\0');
                     }
 
-                    // @TODO: somehow nickname
                     const char* typeStr = (base_station.eType == bluetooth::BaseStationType_10) ? "1.0" : "2.0";
                     bool hasNickname = g_state.aBaseStations[baseStationIdx].szNickname[0] != '\0';
                     std::string szBaseStationName = hasNickname ? g_state.aBaseStations[baseStationIdx].szNickname.c_str() : base_station.szSerialNumber;
@@ -1070,57 +1068,77 @@ namespace spacecal {
                     ImGui::PopFont();
 
                     ImGui::Spacing();
-                    
-                    if (g_state.aBaseStations[baseStationIdx].bIsEditing && base_station.eType == bluetooth::BaseStationType_20) {
-                        ImGui::Text("%s", LOCALE_GET("base_stations_channel_select_label").c_str());
 
-                        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 24.0f);
-                        ImVec2 buttonSize = ImVec2(48.0f, 48.0f);
-                        for (int row = 0; row < 2; ++row) {
-                            for (int col = 0; col < 8; ++col) {
-                                uint8_t targetChannel = static_cast<uint8_t>((row * 8) + col + 1);
+                    // channels are only know on 2.0s
+                    if (base_station.eType == bluetooth::BaseStationType_20) {
+                        if (!g_state.aBaseStations[baseStationIdx].bIsEditing) {
+                            // show channel
+                            if (g_state.bIsSettingsAdvanced) {
+                                ImGui::Text("%s", LOCALE_FORMAT("base_stations_active_channel", base_station.channel).c_str());
+                            }
+                        } else {
+                            // edit channels view
+                            ImGui::Text("%s", LOCALE_GET("base_stations_channel_select_label").c_str());
 
-                                std::string channelBtnLabel = fmt::format("{}", targetChannel);
+                            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 24.0f);
+                            ImVec2 buttonSize = ImVec2(48.0f, 48.0f);
 
-                                uint16_t channelBit = (1U << (targetChannel - 1));
-                                bool isOccupied = (activeChannelsMask & channelBit) == channelBit;
-                                bool isCurrent = (base_station.channel == targetChannel);
+                            const float itemSpacingX = ImGui::GetStyle().ItemSpacing.x;
+                            float totalGridWidth = (buttonSize.x * 8) + (itemSpacingX * 7);
 
-                                if (isCurrent) {
-                                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.66f, 0.46f, 1.0f));
-                                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.64f, 0.75f, 0.55f, 1.0f));
-                                }
-                                else if (isOccupied) {
-                                    // if the channel is used by another station make it appear disabled!
-                                    ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button] * ImGui::GetStyle().DisabledAlpha);
-                                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered] * ImGui::GetStyle().DisabledAlpha);
-                                }
-                                else {
-                                    ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
-                                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
-                                }
+                            float startX = (ImGui::GetContentRegionAvail().x - totalGridWidth) * 0.5f;
+                            if (startX < ImGui::GetCursorPosX()) {
+                                startX = ImGui::GetCursorPosX();
+                            }
 
-                                if (!isCurrent && !isOccupied) {
-                                    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.30f, 0.33f, 0.42f, 0.40f));
-                                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, ImGui::k_BORDER_WIDTH);
-                                }
-                                if (ImGui::Button(channelBtnLabel.c_str(), buttonSize)) {
-                                    bluetooth::set_base_station_channel(i, targetChannel);
-                                }
-                                if (!isCurrent && !isOccupied) {
-                                    ImGui::PopStyleVar();
-                                    ImGui::PopStyleColor();
-                                }
+                            for (int row = 0; row < 2; ++row) {
+                                ImGui::SetCursorPosX(startX);
 
-                                ImGui::PopStyleColor(2);
+                                for (int col = 0; col < 8; ++col) {
+                                    uint8_t targetChannel = static_cast<uint8_t>((row * 8) + col + 1);
 
-                                if (col < 7) {
-                                    ImGui::SameLine();
+                                    std::string channelBtnLabel = fmt::format("{}", targetChannel);
+
+                                    uint16_t channelBit = (1U << (targetChannel - 1));
+                                    bool isOccupied = (activeChannelsMask & channelBit) == channelBit;
+                                    bool isCurrent = (base_station.channel == targetChannel);
+
+                                    if (isCurrent) {
+                                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.66f, 0.46f, 1.0f));
+                                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.64f, 0.75f, 0.55f, 1.0f));
+                                    }
+                                    else if (isOccupied) {
+                                        // if the channel is used by another station make it appear disabled!
+                                        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button] * ImGui::GetStyle().DisabledAlpha);
+                                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered] * ImGui::GetStyle().DisabledAlpha);
+                                    }
+                                    else {
+                                        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+                                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
+                                    }
+
+                                    if (!isCurrent && !isOccupied) {
+                                        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.30f, 0.33f, 0.42f, 0.40f));
+                                        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, ImGui::k_BORDER_WIDTH);
+                                    }
+                                    if (ImGui::Button(channelBtnLabel.c_str(), buttonSize)) {
+                                        bluetooth::set_base_station_channel(i, targetChannel);
+                                    }
+                                    if (!isCurrent && !isOccupied) {
+                                        ImGui::PopStyleVar();
+                                        ImGui::PopStyleColor();
+                                    }
+
+                                    ImGui::PopStyleColor(2);
+
+                                    if (col < 7) {
+                                        ImGui::SameLine();
+                                    }
                                 }
                             }
+                            ImGui::PopStyleVar();
+                            ImGui::Spacing();
                         }
-                        ImGui::PopStyleVar();
-                        ImGui::Spacing();
                     }
 
                     if (!g_state.aBaseStations[baseStationIdx].bIsEditing) {
