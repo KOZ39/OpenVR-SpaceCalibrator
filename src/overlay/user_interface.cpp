@@ -373,19 +373,6 @@ namespace spacecal {
             ImGui::CheckboxWithDescription(LOCALE_GET("settings_autofix_playspace_jumps").c_str(), &calibration.autoFixPlayspaceJumps, LOCALE_GET("settings_autofix_playspace_jumps_description").c_str());
             ImGui::CheckboxWithDescription(LOCALE_GET("settings_enforce_minimum_rotation_variance").c_str(), &calibration.enforceMinimumRotationVariance, LOCALE_GET("settings_enforce_minimum_rotation_variance_description").c_str());
         }
-
-        // @TODO: move into status card??
-        if (calibration.isCalibrating()) {
-            ImGui::TextWrapped("%s", LOCALE_GET("calibration_info_move_around_insufficient_samples").c_str());
-            ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeight() * 2));
-            float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
-            ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
-        } else if (calibration.isContinuousCalibration()) {
-            ImGui::TextWrapped("%s", LOCALE_GET("calibration_info_continuous_progress").c_str());
-            ImGui::Button(LOCALE_GET("calibration_progress_placeholder").c_str(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeight() * 2));
-            float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
-            ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
-        }
     }
 
     inline void drawTroubleshootView() {
@@ -748,9 +735,15 @@ namespace spacecal {
                 switch (calibration.state) {
                 default:
                 case CalibrationState::NONE:
-                    szCalibrationStatusIcon = ICON_MS_HELP;
-                    szCalibrationStatusMessage = "calibration_status_none";
-                    szCalibrationStatusDescription = "calibration_status_none_description";
+                    if (calibration.isValidCalibration()) {
+                        szCalibrationStatusIcon = ICON_MS_TASK_ALT;
+                        szCalibrationStatusMessage = "calibration_status_standard";
+                        szCalibrationStatusDescription = "calibration_status_standard_description";
+                    } else {
+                        szCalibrationStatusIcon = ICON_MS_HELP;
+                        szCalibrationStatusMessage = "calibration_status_none";
+                        szCalibrationStatusDescription = "calibration_status_none_description";
+                    }
                     break;
                 case CalibrationState::EDITING:
                     szCalibrationStatusIcon = ICON_MS_EDIT;
@@ -779,6 +772,16 @@ namespace spacecal {
 
                     ImGui::TextHeading(fmt::format("{} {}", szCalibrationStatusIcon, LOCALE_GET(szCalibrationStatusMessage)).c_str());
                     ImGui::TextWrappedDisabled(LOCALE_GET(szCalibrationStatusDescription).c_str());
+
+                    if (calibration.isCalibrating()) {
+                        // standard calibration
+                        ImGui::TextWrappedDisabled(LOCALE_GET("calibration_info_move_around_insufficient_samples").c_str());
+                        float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::TextHeading("%s", LOCALE_GET("calibration_progress").c_str());
+                        ImGui::SameLine();
+                        ImGui::ProgressBar(calibration.getCalibrationProgress(), ImVec2(-FLT_MIN, 0), fmt::format("{:.2f}%", fCalibrationProgressPercent).c_str());
+                    }
 
                     ImGui::EndCard();
                 }
