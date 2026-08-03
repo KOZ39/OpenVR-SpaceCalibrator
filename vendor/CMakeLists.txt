@@ -50,6 +50,19 @@ target_include_directories(implot
 target_compile_definitions(implot PRIVATE IMGUI_DEFINE_MATH_OPERATORS)
 target_link_libraries(implot PRIVATE imgui)
 
+# ImPlot3D
+message("Adding ImPlot3D...")
+add_library(implot3d STATIC
+	${CMAKE_SOURCE_DIR}/vendor/implot3d/implot3d.cpp
+	${CMAKE_SOURCE_DIR}/vendor/implot3d/implot3d_items.cpp
+	${CMAKE_SOURCE_DIR}/vendor/implot3d/implot3d_demo.cpp
+	${CMAKE_SOURCE_DIR}/vendor/implot3d/implot3d_meshes.cpp)
+target_include_directories(implot3d
+	PUBLIC ${CMAKE_SOURCE_DIR}/vendor/imgui
+	PUBLIC ${CMAKE_SOURCE_DIR}/vendor/implot3d)
+target_compile_definitions(implot3d PRIVATE IMGUI_DEFINE_MATH_OPERATORS)
+target_link_libraries(implot3d PRIVATE imgui)
+
 # fmt
 message("Adding fmt...")
 set(BUILD_SHARED_LIBS FALSE)

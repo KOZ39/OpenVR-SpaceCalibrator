@@ -150,6 +150,7 @@ target_link_libraries(SpaceCalibratorOverlay
     PRIVATE SpaceCalibratorCommon
     PRIVATE imgui
     PRIVATE implot
+    PRIVATE implot3d
     PRIVATE glad
     PRIVATE glfw
     PRIVATE fmt

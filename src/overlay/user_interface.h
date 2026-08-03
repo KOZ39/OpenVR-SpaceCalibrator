@@ -4,6 +4,7 @@
 #include <string>
 #include <imgui.h>
 #include <implot.h>
+#include <implot3d.h>
 #include <IconsMaterialSymbols.h>
 
 namespace spacecal {
