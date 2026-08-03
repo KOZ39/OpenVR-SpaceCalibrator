@@ -1263,6 +1263,83 @@ namespace spacecal {
 #undef SHOW_BOOL_STATUS
     }
     
+    void plot_sample_rotations_on_unit_sphere(const std::vector<Sample_t>& samples) {
+        if (samples.empty()) return;
+
+        constexpr int kRingSegments = 32;
+        constexpr int kRingPoints = kRingSegments + 1;
+
+        const size_t ring_offset_x = 0;
+        const size_t ring_offset_y = ring_offset_x + kRingPoints;
+        const size_t ring_offset_z = ring_offset_y + kRingPoints;
+
+        const size_t ref_offset_x = ring_offset_z + kRingPoints;
+        const size_t ref_offset_y = ref_offset_x + samples.size();
+        const size_t ref_offset_z = ref_offset_y + samples.size();
+
+        const size_t tgt_offset_x = ref_offset_z + samples.size();
+        const size_t tgt_offset_y = tgt_offset_x + samples.size();
+        const size_t tgt_offset_z = tgt_offset_y + samples.size();
+
+        const size_t total_floats = tgt_offset_z + samples.size();
+
+        std::vector<float> buffer(total_floats, 0.0f);
+
+        for (int i = 0; i <= kRingSegments; ++i) {
+            float theta = (2.0f * static_cast<float>(M_PI) * i) / kRingSegments;
+            buffer[ring_offset_x + i] = cos(theta);
+            buffer[ring_offset_y + i] = sin(theta);
+            buffer[ring_offset_z + i] = 0.0f;
+        }
+
+        int valid_sample_count = 0;
+        for (const auto& sample : samples) {
+            if (!sample.isPoseValid)
+                continue; // should be a no-op
+
+            Eigen::Vector3d ref_fwd = -sample.reference.rot.col(2);
+            Eigen::Vector3d tgt_fwd = -sample.target.rot.col(2);
+
+            buffer[ref_offset_x + valid_sample_count] = (float) ref_fwd.x();
+            buffer[ref_offset_y + valid_sample_count] = (float) -ref_fwd.z();
+            buffer[ref_offset_z + valid_sample_count] = (float) ref_fwd.y();
+
+            buffer[tgt_offset_x + valid_sample_count] = (float) tgt_fwd.x();
+            buffer[tgt_offset_y + valid_sample_count] = (float) -tgt_fwd.z();
+            buffer[tgt_offset_z + valid_sample_count] = (float) tgt_fwd.y();
+
+            valid_sample_count++;
+        }
+
+        if (valid_sample_count == 0) return;
+
+        if (ImPlot3D::BeginPlot("Sampled Rotations", ImVec2(-1, 500))) {
+            ImPlot3D::SetupAxesLimits(-1.1f, 1.1f, -1.1f, 1.1f, -1.1f, 1.1f, ImPlot3DCond_Always);
+            ImPlot3D::SetupAxes("X", "Z", "Y");
+
+            ImPlot3DSpec ringSpec;
+            ringSpec.LineColor = ImVec4(0.3f, 0.3f, 0.3f, 0.5f);
+            ringSpec.LineWeight = 1.0f;
+            ImPlot3D::PlotLine("Equator Ring", buffer.data() + ring_offset_x, buffer.data() + ring_offset_y, buffer.data() + ring_offset_z, kRingPoints, ringSpec);
+
+            ImPlot3DSpec refSpec;
+            refSpec.Marker = ImPlot3DMarker_Circle;
+            refSpec.MarkerSize = 4.0f;
+            refSpec.MarkerFillColor = ImVec4(0.0f, 1.0f, 0.2f, 0.8f);
+            refSpec.MarkerLineColor = ImVec4(0.0f, 1.0f, 0.2f, 0.8f);
+            ImPlot3D::PlotScatter("Reference Forward", buffer.data() + ref_offset_x, buffer.data() + ref_offset_y, buffer.data() + ref_offset_z, valid_sample_count, refSpec);
+
+            ImPlot3DSpec tgtSpec;
+            tgtSpec.Marker = ImPlot3DMarker_Circle;
+            tgtSpec.MarkerSize = 4.0f;
+            tgtSpec.MarkerFillColor = ImVec4(1.0f, 0.2f, 0.2f, 0.8f);
+            tgtSpec.MarkerLineColor = ImVec4(1.0f, 0.2f, 0.2f, 0.8f);
+            ImPlot3D::PlotScatter("Target Forward", buffer.data() + tgt_offset_x, buffer.data() + tgt_offset_y, buffer.data() + tgt_offset_z, valid_sample_count, tgtSpec);
+
+            ImPlot3D::EndPlot();
+        }
+    }
+
     void page_debug(double currentTime) {
         ImGui::TextTitle("%s", LOCALE_GET("tab_page_debug").c_str());
 
@@ -1274,6 +1351,8 @@ namespace spacecal {
             debug_driver_pose_viewer("Target device DriverPose_t", CalibrationManager::getInstance()->m_poses[calibration.targetDevice.deviceId]);
         }
 
+        // @HACK: purely for visualisation to see if this shit even works
+        plot_sample_rotations_on_unit_sphere(calibration.m_samples);
     }
 
     void page_about(double currentTime) {
