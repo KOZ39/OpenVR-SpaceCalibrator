@@ -121,21 +121,21 @@ namespace spacecal {
         static const ImWchar k_RANGE_ICONS[] = { ICON_MIN_MS, ICON_MAX_16_MS, 0, };
 
         // default font
-        std::string fontPath = (platform::getExeDir() / "assets" / "fonts" / "Poppins-Regular.ttf").string();
+        std::string fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "Poppins-Regular.ttf").string();
         cfg.GlyphExcludeRanges = NULL;
         cfg.GlyphOffset.y = 0.0f;
         cfg.MergeMode = false;
         cfg.PixelSnapH = false;
         ImGui::fonts::pDefault = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
-        fontPath = (platform::getExeDir() / "assets" / "fonts" / "MPLUS1p-Regular.ttf").string();
+        fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "MPLUS1p-Regular.ttf").string();
         cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
         cfg.GlyphOffset.y = 0.0f;
         cfg.MergeMode = true;
         cfg.PixelSnapH = false;
         io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
-        fontPath = (platform::getExeDir() / "assets" / "fonts" / "MaterialSymbolsSharp_FILL.ttf").string();
+        fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "MaterialSymbolsSharp_FILL.ttf").string();
         cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
         cfg.GlyphOffset.y = 4.0f;
         cfg.MergeMode = true;
@@ -143,21 +143,21 @@ namespace spacecal {
         io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
         // bold font
-        fontPath = (platform::getExeDir() / "assets" / "fonts" / "Poppins-Bold.ttf").string();
+        fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "Poppins-Bold.ttf").string();
         cfg.GlyphExcludeRanges = NULL;
         cfg.GlyphOffset.y = 0.0f;
         cfg.MergeMode = false;
         cfg.PixelSnapH = false;
         ImGui::fonts::pHeading = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
-        fontPath = (platform::getExeDir() / "assets" / "fonts" / "MPLUS1p-Bold.ttf").string();
+        fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "MPLUS1p-Bold.ttf").string();
         cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
         cfg.GlyphOffset.y = 0.0f;
         cfg.MergeMode = true;
         cfg.PixelSnapH = false;
         io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
-        fontPath = (platform::getExeDir() / "assets" / "fonts" / "MaterialSymbolsSharp_FILL.ttf").string();
+        fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "MaterialSymbolsSharp_FILL.ttf").string();
         cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
         cfg.GlyphOffset.y = 4.0f;
         cfg.MergeMode = true;
