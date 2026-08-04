@@ -1031,7 +1031,7 @@ namespace spacecal {
                         const float lineStartY = ImGui::GetCursorPosY();
                         const float pillHeight = ImGui::GetFontSize() + (ImGui::k_PILL_PADDING_Y * 2.0f);
                         const float textOffsetY = (pillHeight - ImGui::GetFontSize()) * 0.5f;
-                        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + textOffsetY);
+                        ImGui::SetCursorPosY(lineStartY + textOffsetY);
                         ImGui::TextHeading("%s", headerText.c_str());
                         ImGui::SameLine();
                         ImGui::SetCursorPosY(lineStartY);
@@ -1074,6 +1074,8 @@ namespace spacecal {
                         if (!g_state.aBaseStations[baseStationIdx].bIsEditing) {
                             // show channel
                             if (g_state.bIsSettingsAdvanced) {
+                                float currY = ImGui::GetCursorPosY();
+                                ImGui::SetCursorPosY(currY - ImGui::GetStyle().ItemSpacing.y - ImGui::GetStyle().FramePadding.y - ImGui::k_PILL_PADDING_Y * 1.5f);
                                 ImGui::Text("%s", LOCALE_FORMAT("base_stations_active_channel", base_station.channel).c_str());
                             }
                         } else {
