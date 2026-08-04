@@ -313,6 +313,15 @@ namespace spacecal {
 
             if (!foundStation) {
                 g_base_station_state.aTrackedBaseStations.push_back(baseStation);
+
+                // sort them by serial number so that they appear in the same order in the UI every time
+                std::sort(
+                    g_base_station_state.aTrackedBaseStations.begin(),
+                    g_base_station_state.aTrackedBaseStations.end(),
+                    [](const BaseStationInternal_t& a, const BaseStationInternal_t& b) {
+                        return a.base_station.szSerialNumber < b.base_station.szSerialNumber;
+                    }
+                );
             }
 
             // channels are unknown with 1.0 base stations, so this only matters for 2.0s
