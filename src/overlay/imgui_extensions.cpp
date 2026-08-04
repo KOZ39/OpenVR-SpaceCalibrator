@@ -202,18 +202,16 @@ void ImGui::PillText(const char* text, const ImVec4& bgColor, const ImVec4& text
     ImGuiWindow* window = ImGui::GetCurrentWindow();
     if (window->SkipItems) return;
 
-    ImGuiContext& g = *GImGui;
-    const ImGuiStyle& style = g.Style;
     const ImGuiID id = window->GetID(text);
 
     const ImVec2 padding = ImVec2(k_PILL_PADDING_X, k_PILL_PADDING_Y);
     const ImVec2 textSize = ImGui::CalcTextSize(text, NULL, true);
 
-    const ImVec2 pos = window->DC.CursorPos;
+    const ImVec2 pos = ImGui::GetCursorScreenPos();
     const ImVec2 size = ImVec2(textSize.x + padding.x * 2.0f, textSize.y + padding.y * 2.0f);
     const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
 
-    ImGui::ItemSize(size, style.FramePadding.y);
+    ImGui::ItemSize(size, ImGui::GetStyle().FramePadding.y);
     if (!ImGui::ItemAdd(bb, id)) return;
 
     const float rounding = size.y * 0.5f;
