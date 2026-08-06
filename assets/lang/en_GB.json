@@ -37,6 +37,8 @@
   "identify_selected_devices": "Identify selected devices (blinks LED or vibrates)",
   "identify_auto_detect_devices": "Auto-detect devices",
   "calibration_error_reference_hmd_missing": "Unable to find target device from tracking system \"{0}\". You may need to re-calibrate.", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "calibration_warning_stage_tracking_disabled": "Stage tracking is disabled! For a better experience, on your Quest open the Virtual Desktop menu, go to the Streaming tab and enable \"Center to play area (Stage Tracking)\".",
+  "calibration_warning_stage_tracking_disabled_ignore_button": "Do not show this again",
 
   "calibration_action_start": "Standard Calibration",
   "calibration_action_clear": "Clear Calibration",

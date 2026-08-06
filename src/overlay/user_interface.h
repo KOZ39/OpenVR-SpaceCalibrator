@@ -27,6 +27,7 @@ namespace spacecal {
     struct UserInterfaceState_t {
         bool bIsRunningInOverlay = false;
         bool bIsSettingsAdvanced = false;
+        bool bIgnoreStageTrackingWarning = false;
         bool bCursorOverriddenThisFrame = false;
         bool bBaseStationPowerManagementEnabled = false;
         bool bBaseStationPowerManagementOnStartup = false;
@@ -36,8 +37,8 @@ namespace spacecal {
         size_t dwSelectedUiPage = 0; // selected vertical tab
 
         // flat list cuz realistically we won't have enough elements to warrant the overhead of a hashmap
-        std::vector<UserInterface_BaseStationState_t> aBaseStations;
         bool bNicknamesLoaded = false;
+        std::vector<UserInterface_BaseStationState_t> aBaseStations;
     };
 
     struct SpaceCalibratorVerticalTab_t {

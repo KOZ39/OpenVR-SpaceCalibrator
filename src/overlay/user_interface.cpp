@@ -176,7 +176,7 @@ namespace spacecal {
 
     inline void buildDeviceSelection(spacecal::TrackingSystemCalibration& calibration) {
         if (VRState::getInstance()->getTrackingSystemCount() == 0) {
-            ImGui::TextUnformatted(LOCALE_GET("tracking_system_no_systems").c_str()); // No tracked devices present. Please turn on a device to continue.
+            ImGui::TextWrapped(LOCALE_GET("tracking_system_no_systems").c_str()); // No tracked devices present. Please turn on a device to continue.
             return;
         }
 
@@ -389,7 +389,7 @@ namespace spacecal {
             default:
                 // need to pass by ref, cant pass as literal value
                 uint32_t dwVrErr = (uint32_t)eVrErr;
-                ImGui::TextUnformatted(LOCALE_FORMAT("vr_troubleshooting_generic", dwVrErr, eVrErr).c_str());
+                ImGui::TextWrapped(LOCALE_FORMAT("vr_troubleshooting_generic", dwVrErr, eVrErr).c_str());
                 break;
             }
         } else if (!CalibrationManager::getInstance()->getIpcClient().IsConnected()) {
@@ -786,6 +786,29 @@ namespace spacecal {
                     ImGui::EndCard();
                 }
 
+                auto hmdMeta = VRState::getInstance()->getHmdMeta();
+                if ((g_state.bIsSettingsAdvanced && !g_state.bIgnoreStageTrackingWarning) && hmdMeta.isVirtualDesktopAvailable && /* VRState::getInstance()->isHmdVirtualDesktop() && */ !hmdMeta.VD_stageTrackingEnabled) {
+                    if (hmdMeta.VD_hmdModel == ipc::protocol::VD_HmdModel_OculusGo ||
+                        hmdMeta.VD_hmdModel == ipc::protocol::VD_HmdModel_OculusQuest ||
+                        hmdMeta.VD_hmdModel == ipc::protocol::VD_HmdModel_OculusQuest2 ||
+                        hmdMeta.VD_hmdModel == ipc::protocol::VD_HmdModel_MetaQuestPro ||
+                        hmdMeta.VD_hmdModel == ipc::protocol::VD_HmdModel_MetaQuest3 ||
+                        hmdMeta.VD_hmdModel == ipc::protocol::VD_HmdModel_MetaQuest3S) {
+
+                        ImGui::BeginCardDanger("calibration_no_stage_tracking");
+                        ImGui::TextWrapped(LOCALE_GET("calibration_warning_stage_tracking_disabled").c_str());
+
+                        if (g_state.bIsSettingsAdvanced) {
+                            if (ImGui::IconButton(ICON_MS_VISIBILITY_OFF, LOCALE_GET("calibration_warning_stage_tracking_disabled_ignore_button").c_str())) {
+                                ConfigurationManager::getInstance()->getConfiguration()->ignore_stage_tracking_warning = true;
+                                ConfigurationManager::getInstance()->saveConfiguration();
+                            }
+                        }
+
+                        ImGui::EndCardDanger();
+                    }
+                }
+
                 if (calibration.state == CalibrationState::EDITING) {
                     ImGuiStyle& style = ImGui::GetStyle();
                     float width = ImGui::GetContentRegionAvail().x / 3.0f - style.FramePadding.x;
@@ -848,7 +871,7 @@ namespace spacecal {
                     if (calibration.isValidCalibration() && !calibration.isActive) {
                         ImGui::BeginCardDanger("calibration_invalid");
                         std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
-                        ImGui::TextUnformatted(LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
+                        ImGui::TextWrapped(LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
                         ImGui::EndCardDanger();
                     }
 
@@ -1572,6 +1595,7 @@ namespace spacecal {
     void drawInterface(bool isOverlay, double currentTime) {
         g_state.bIsRunningInOverlay = isOverlay;
         g_state.bIsSettingsAdvanced = ConfigurationManager::getInstance()->getConfiguration()->advanced_settings;
+        g_state.bIgnoreStageTrackingWarning = ConfigurationManager::getInstance()->getConfiguration()->ignore_stage_tracking_warning;
         g_state.bCursorOverriddenThisFrame = false;
         g_state.bBaseStationPowerManagementEnabled = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_power_management_enabled;
         g_state.bBaseStationPowerManagementOnStartup = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_on_during_startup;

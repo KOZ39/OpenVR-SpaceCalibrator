@@ -125,6 +125,7 @@ namespace spacecal {
 
                 std::string ui_locale = "system";
                 bool advanced_settings = false;
+                bool ignore_stage_tracking_warning = false;
 
                 BaseStationManagementData base_stations;
 
