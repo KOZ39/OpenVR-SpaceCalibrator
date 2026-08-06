@@ -1,9 +1,14 @@
 #pragma once
 
+#include "platform.h"
 #include <inttypes.h>
 #include <string>
 #include <vector>
 #include <unordered_map>
+
+BEGIN_EXTERNAL_HEADERS
+#include <glaze/glaze.hpp>
+END_EXTERNAL_HEADERS
 
 namespace spacecal {
     namespace config {
@@ -12,8 +17,9 @@ namespace spacecal {
             enum class DataVersions : uint32_t {
                 Legacy = 0xFFFFFFFFU, // pushrax / bd versions
                 _0 = 0,               // nova v1
+                _1,                   // nova v1 (enum anchor mode)
 
-                Current = _0,
+                Current = _1,
                 Count,
             };
 
@@ -109,7 +115,7 @@ namespace spacecal {
                     bool calibrate_motion_vectors = true;
                     bool attempt_auto_fix_playspace_jumps = true;
                     bool enforce_minimum_rotation_variance = true;
-                    uint64_t calibration_speed = 0;
+                    uint64_t calibration_speed = 100;
 
                     TrackingDevice reference_device;
                     TrackingDevice target_device;
@@ -132,7 +138,76 @@ namespace spacecal {
                 std::vector<Calibration_t> calibrations;
             };
 
-            typedef Configuration_0 Configuration_Latest;
+            struct Configuration_1 {
+                spacecal::config::versioned::DataVersions dataVersion = spacecal::config::versioned::DataVersions::_1;
+
+                enum class AnchorMode : uint32_t {
+                    FixedWorld = 0,         // Worldspace calibration
+                    HmdRelative = 1         // Relative to reference device (typically HMD)
+                };
+
+                struct TrackingDevice {
+                    std::string model;
+                    std::string serial;
+                    std::string tracking_system;
+                };
+                struct Transform {
+                    float x = 0.0f, y = 0.0f, z = 0.0f; // pos, meters
+                    float yaw = 0.0f, pitch = 0.0f, roll = 0.0f; // rot, deg
+                };
+
+                struct ContinuousCalibrationData {
+                    bool is_active = false;
+                    bool hide_reference_tracker = false;
+                };
+
+                struct Calibration_t {
+                    bool is_active = false;
+
+                    Transform calibrated_transform;
+                    float scale = 1.0f;
+
+                    AnchorMode anchor_mode = AnchorMode::FixedWorld;
+                    ContinuousCalibrationData continuous;
+
+                    bool calibrate_motion_vectors = true;
+                    bool attempt_auto_fix_playspace_jumps = true;
+                    bool enforce_minimum_rotation_variance = true;
+                    uint64_t calibration_speed = 100;
+
+                    TrackingDevice reference_device;
+                    TrackingDevice target_device;
+                };
+
+                struct BaseStationManagementData {
+                    bool auto_power_management_enabled = false;
+                    bool auto_turn_on_during_startup = true;
+                    bool auto_turn_off_during_shutdown = true;
+                    bool off_should_use_standby = false;
+                    std::unordered_map<std::string, std::string> nicknames; // KV pair -> "LHB XXXXXXXX" to "my nick name"
+                };
+
+                std::string ui_locale = "system";
+                bool advanced_settings = false;
+                bool ignore_stage_tracking_warning = false;
+
+                BaseStationManagementData base_stations;
+
+                std::vector<Calibration_t> calibrations;
+            };
+
+            typedef Configuration_1 Configuration_Latest;
         } // namespace versioned
     } // namespace config
 } // namespace spacecal
+
+// enum to str:
+
+template <>
+struct glz::meta<spacecal::config::versioned::Configuration_1::AnchorMode> {
+    using enum spacecal::config::versioned::Configuration_1::AnchorMode;
+    static constexpr auto value = glz::enumerate(
+        FixedWorld,
+        HmdRelative
+    );
+};

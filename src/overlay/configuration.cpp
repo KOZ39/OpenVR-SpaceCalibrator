@@ -146,6 +146,13 @@ namespace spacecal {
             }
         }
 
+        // @FIXME: remove once we support multiple calibrations in the UI
+        // ensure at least one calibration exists until we add support in the ui for dynamically making new ones
+        if (m_config.calibrations.empty()) {
+            LOG_WARN("Config loaded with 0 calibrations. Creating initial calibration entry...");
+            m_config.calibrations.emplace_back();
+        }
+
         return ConfigurationError::Ok;
     }
 
@@ -175,6 +182,13 @@ namespace spacecal {
         using namespace spacecal::config::versioned;
         if (!jsonData)
             return false;
+
+        constexpr glz::opts options{
+            .comments = true,
+            .error_on_unknown_keys = false,
+            .error_on_missing_keys = false,
+            .error_on_const_read = false
+        };
 
         DataVersions version = (DataVersions)readVersion;
 
@@ -266,6 +280,58 @@ namespace spacecal {
         }
 
         if (version == DataVersions::_0) {
+            // parse into struct and re-map
+            Configuration_0 calib = {};
+            Configuration_1 nextConfig = {};
+            auto ec = glz::read_json<Configuration_0>(calib, *jsonData);
+            if (!ec) {
+                nextConfig.dataVersion = DataVersions::_1;
+                
+                nextConfig.advanced_settings = calib.advanced_settings;
+                nextConfig.ignore_stage_tracking_warning = calib.ignore_stage_tracking_warning;
+                nextConfig.ui_locale = calib.ui_locale;
+                
+                nextConfig.base_stations.auto_power_management_enabled = calib.base_stations.auto_power_management_enabled;
+                nextConfig.base_stations.auto_turn_on_during_startup = calib.base_stations.auto_turn_on_during_startup;
+                nextConfig.base_stations.auto_turn_off_during_shutdown = calib.base_stations.auto_turn_off_during_shutdown;
+                nextConfig.base_stations.off_should_use_standby = calib.base_stations.off_should_use_standby;
+                nextConfig.base_stations.nicknames = std::move(calib.base_stations.nicknames);
+
+                nextConfig.calibrations.resize(calib.calibrations.size());
+                for (size_t i = 0; i < calib.calibrations.size(); i++) {
+                    nextConfig.calibrations[i].target_device.model = calib.calibrations[i].target_device.model;
+                    nextConfig.calibrations[i].target_device.serial = calib.calibrations[i].target_device.serial;
+                    nextConfig.calibrations[i].target_device.tracking_system = calib.calibrations[i].target_device.tracking_system;
+
+                    nextConfig.calibrations[i].reference_device.model = calib.calibrations[i].reference_device.model;
+                    nextConfig.calibrations[i].reference_device.serial = calib.calibrations[i].reference_device.serial;
+                    nextConfig.calibrations[i].reference_device.tracking_system = calib.calibrations[i].reference_device.tracking_system;
+
+                    nextConfig.calibrations[i].is_active = calib.calibrations[i].is_active;
+                    nextConfig.calibrations[i].scale = calib.calibrations[i].scale;
+                    nextConfig.calibrations[i].anchor_mode = (Configuration_1::AnchorMode) calib.calibrations[i].anchor_mode;
+                    nextConfig.calibrations[i].calibrate_motion_vectors = calib.calibrations[i].calibrate_motion_vectors;
+                    nextConfig.calibrations[i].attempt_auto_fix_playspace_jumps = calib.calibrations[i].attempt_auto_fix_playspace_jumps;
+                    nextConfig.calibrations[i].enforce_minimum_rotation_variance = calib.calibrations[i].enforce_minimum_rotation_variance;
+                    nextConfig.calibrations[i].calibration_speed = calib.calibrations[i].calibration_speed;
+
+                    nextConfig.calibrations[i].continuous.is_active = calib.calibrations[i].continuous.is_active;
+                    nextConfig.calibrations[i].continuous.hide_reference_tracker = calib.calibrations[i].continuous.hide_reference_tracker;
+
+                    nextConfig.calibrations[i].calibrated_transform.x = calib.calibrations[i].calibrated_transform.x;
+                    nextConfig.calibrations[i].calibrated_transform.y = calib.calibrations[i].calibrated_transform.y;
+                    nextConfig.calibrations[i].calibrated_transform.z = calib.calibrations[i].calibrated_transform.z;
+                    nextConfig.calibrations[i].calibrated_transform.yaw = calib.calibrations[i].calibrated_transform.yaw;
+                    nextConfig.calibrations[i].calibrated_transform.pitch = calib.calibrations[i].calibrated_transform.pitch;
+                    nextConfig.calibrations[i].calibrated_transform.roll = calib.calibrations[i].calibrated_transform.roll;
+                }
+
+                m_config = std::move(nextConfig);
+                version = DataVersions::_1;
+            }
+        }
+
+        if (version == DataVersions::_1) {
             // @TODO: fill on config version bump
         }
 
