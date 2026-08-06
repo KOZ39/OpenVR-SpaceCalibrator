@@ -947,6 +947,59 @@ namespace spacecal {
             ImGui::TextWrapped(LOCALE_GET("base_stations_power_mgmt_warning").c_str());
         }
         ImGui::EndCard();
+
+        if (g_state.bIsSettingsAdvanced) {
+            ImGui::BeginCardDanger("settings_reset");
+            ImGui::TextWrappedDisabled(LOCALE_GET("settings_reset_description").c_str());
+            bool bDoShowPopup = ImGui::IconButton(ICON_MS_RESET_SETTINGS, LOCALE_GET("settings_reset").c_str());
+            ImGui::EndCardDanger();
+            if (bDoShowPopup) {
+                ImGui::OpenPopup("##settings_reset_modal");
+            }
+        }
+
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(450.0f, 220.0f), ImGuiCond_Appearing);
+        if (ImGui::BeginPopupModal("##settings_reset_modal", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove)) {
+            ImGui::TextTitle(LOCALE_GET("settings_reset").c_str());
+            ImGui::TextWrappedDisabled(LOCALE_GET("settings_reset_confirm").c_str());
+
+            // anchor to bottom
+            float buttonHeight = ImGui::GetFrameHeight();
+            float targetY = ImGui::GetWindowHeight() - buttonHeight - ImGui::GetStyle().WindowPadding.y;
+            ImGui::SetCursorPosY(targetY);
+
+            // center the buttons
+            std::string yesLabel = fmt::format("{} {}", ICON_MS_DELETE_FOREVER, LOCALE_GET("settings_reset_yes"));
+            std::string noLabel = fmt::format("{} {}", ICON_MS_CLOSE, LOCALE_GET("settings_reset_no"));
+
+            float paddingX = ImGui::GetStyle().FramePadding.x * 2.0f;
+            float btn1Width = ImGui::CalcTextSize(yesLabel.c_str()).x + paddingX;
+            float btn2Width = ImGui::CalcTextSize(noLabel.c_str()).x + paddingX;
+            float totalWidth = btn1Width + btn2Width + ImGui::GetStyle().ItemSpacing.x;
+            float startX = (ImGui::GetWindowWidth() - totalWidth) * 0.5f;
+            if (startX > 0.0f) {
+                ImGui::SetCursorPosX(startX);
+            }
+
+            // danger button
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.68f, 0.28f, 0.32f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.75f, 0.38f, 0.42f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.72f, 0.32f, 0.36f, 1.0f));
+            if (ImGui::IconButton(ICON_MS_DELETE_FOREVER, LOCALE_GET("settings_reset_yes").c_str())) {
+                ConfigurationManager::getInstance()->resetConfiguration();
+                ConfigurationManager::getInstance()->saveConfiguration();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::PopStyleColor(3);
+
+            ImGui::SameLine();
+            if (ImGui::IconButton(ICON_MS_CLOSE, LOCALE_GET("settings_reset_no").c_str())) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
     }
 
     void page_base_station_management(double currentTime) {

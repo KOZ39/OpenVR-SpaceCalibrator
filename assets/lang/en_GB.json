@@ -147,6 +147,11 @@
   "settings_enforce_minimum_rotation_variance": "Enforce minimum rotation variance",
   "settings_enforce_minimum_rotation_variance_description": "Automatically rejects samples that are rotationally similar to improve calibration quality.",
   "settings_locale": "Language",
+  "settings_reset": "Reset all settings",
+  "settings_reset_description": "Resets all settings to default. This is permanent and cannot be undone.",
+  "settings_reset_confirm": "This change is permanent and cannot be undone. Are you sure you want to continue?",
+  "settings_reset_yes": "Yes",
+  "settings_reset_no": "No",
 
   /* about */
   "about_title": "About",

@@ -338,4 +338,15 @@ namespace spacecal {
         return true;
     }
 
+    void ConfigurationManager::resetConfiguration() {
+        Configuration defaultConfig;
+        m_config = defaultConfig;
+
+        // @FIXME: remove once we support multiple calibrations in the UI
+        // ensure at least one calibration exists until we add support in the ui for dynamically making new ones
+        if (m_config.calibrations.empty()) {
+            LOG_WARN("Config loaded with 0 calibrations. Creating initial calibration entry...");
+            m_config.calibrations.emplace_back();
+        }
+    }
 }

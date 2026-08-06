@@ -29,6 +29,8 @@ namespace spacecal {
         ConfigurationError loadConfiguration();
         ConfigurationError saveConfiguration() const;
 
+        void resetConfiguration();
+
         std::string inline getConfigurationPath() const { return m_configPath; }
 
         [[nodiscard]] static inline ConfigurationManager* getInstance() { return s_instance; }
