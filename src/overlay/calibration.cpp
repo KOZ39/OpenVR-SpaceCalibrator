@@ -655,7 +655,7 @@ namespace spacecal {
         return changed;
     }
 
-    bool TrackingSystemCalibration::checkWorldFromDriverJump(double currentTime) {
+    bool TrackingSystemCalibration::checkWorldFromDriverJump() {
         Eigen::AffineCompact3d deltaRef = Eigen::AffineCompact3d::Identity();
         Eigen::AffineCompact3d deltaTarget = Eigen::AffineCompact3d::Identity();
 
@@ -796,7 +796,7 @@ namespace spacecal {
 
         // detect playspace jumps and try auto-correcting for it.
         if (autoFixPlayspaceJumps) {
-            if (checkWorldFromDriverJump(currentTime)) {
+            if (checkWorldFromDriverJump()) {
                 apply();
             }
         }

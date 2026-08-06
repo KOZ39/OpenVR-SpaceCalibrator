@@ -244,7 +244,7 @@ namespace spacecal {
         bool validateCalibration(const Eigen::Quaterniond& rotation, const Eigen::Vector3d& translation, double& rmsError, Eigen::Vector3d& posOffset, bool isRelative);
 
         bool checkAndUpdateWorldFromDriver(const CalibrationDevice& device, Eigen::Quaterniond& lastRot, Eigen::Vector3d& lastTrans, Eigen::AffineCompact3d& outDelta) const;
-        bool checkWorldFromDriverJump(double currentTime);
+        bool checkWorldFromDriverJump();
 
         // we collect a series of **VALID** calibrations' worth of samples to improve RMS error accuracy
         void trackCollectedSamplesForErrorTracking();
