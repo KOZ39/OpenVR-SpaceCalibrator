@@ -4,7 +4,7 @@
   "tracking_system_no_systems": "No tracked devices present. Please turn on a device to continue.", /* Should never be hit but you never know */
 
   "error_unknown_catastrophic": "Something went catastrophically wrong! Please report this to the developer either on GitHub or Steam Discussions so that this can be addressed.",
-  "ipc_unavailable": "Failed to connect to Space Calibrator SteamVR driver. Please verify file integrity in Properties -> Installed Files, or re-install the app.",
+  "ipc_unavailable": "Failed to connect to the Space Calibrator SteamVR driver. Please verify file integrity in Properties -> Installed Files, or re-install the app.",
   "steamvr_unavailable": "Failed to connect to SteamVR.",
   "vr_troubleshooting_hmd_not_found": "Please connect your VR headset and launch SteamVR first.",
   "vr_troubleshooting_connect_steamlink": "Please open SteamLink on your VR headset and connect to SteamVR first.",
@@ -30,7 +30,7 @@
   "reference_device": "Reference device",
   "reference_device_description": "This device is what you are calibrating with, usually your VR headset or a controller.",
   "target_device": "Target device",
-  "target_device_description": "This device will be used to line up your trackers or controllers with the reference device, usually your VR headset.",
+  "target_device_description": "This device will be used to line up your trackers or controllers.",
   "select_reference_device": "Select reference device",
   "select_target_device": "Select target device",
 
@@ -45,7 +45,7 @@
   "save_calibration_profile": "Save Profile",
 
   "calibration_progress": "Calibration Progress",
-  "calibration_info_move_around_insufficient_samples": "Move your selected devices together in your playspace, and walk around your room while doing so. Rotate the devices as well!",
+  "calibration_info_move_around_insufficient_samples": "Hold your selected devices together, then walk around your playspace while gently rotating them in figure-eight patterns.",
 
   "calibration_speed": "Calibration Speed",
   "calibration_speed_description": "How long it takes to calibrate. Slower calibrations tend to be more accurate.",
@@ -129,7 +129,7 @@
   "base_stations_power_mgmt_on_shutdown": "Turn off Base Stations on SteamVR shutdown",
   "base_stations_power_mgmt_on_shutdown_description": "Powered base stations are powered down when SteamVR is not in use.",
   "base_stations_power_mgmt_standby": "Standby",
-  "base_stations_power_mgmt_standby_description": "Base Stations will power off only their lasers for a faster wake up when SteamVR starts. This is unavailable on Base Station 1.0s and some Base Station 2.0s, and Sleep will be used in these cases.",
+  "base_stations_power_mgmt_standby_description": "Base Stations will power off only their lasers for a faster wake up when SteamVR starts. This is unavailable on Base Station 1.0 models and some Base Station 2.0 models, and Sleep will be used in these cases.",
   "base_stations_power_mgmt_sleep": "Sleep",
   "base_stations_power_mgmt_sleep_description": "Base Stations will power off their lasers and motors.",
   "base_stations_power_mgmt_warning": "* NOT RECOMMENDED for shared tracking spaces with multiple SteamVR users.",
@@ -139,7 +139,7 @@
   "settings_advanced": "Advanced settings",
   "settings_advanced_description": "Shows extra settings and fine-tuning controls for power users.",
   "settings_calibrate_motion_vectors": "Calibrate motion vectors",
-  "settings_calibrate_motion_vectors_description": "Improves movement prediction for more responsive tracking. May affect physics heavy games.",
+  "settings_calibrate_motion_vectors_description": "Improves movement prediction for more responsive tracking. May affect physics-heavy games.",
   "settings_autofix_playspace_jumps": "Auto-correct playspace jumps",
   "settings_autofix_playspace_jumps_description": "Attempts to automatically detect and correct sudden jumps in playspace tracking.",
   "settings_enforce_minimum_rotation_variance": "Enforce minimum rotation variance",
