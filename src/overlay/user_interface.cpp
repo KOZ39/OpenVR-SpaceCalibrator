@@ -275,7 +275,7 @@ namespace spacecal {
         ImGui::SameLine();
 
         if (ImGui::Button(LOCALE_GET("identify_auto_detect_devices").c_str(), ImVec2(paneSize.x, ImGui::GetTextLineHeightWithSpacing() + 4.0f))) {
-            LOG_WARN("identify_auto_detect_devices:: Not implemented");
+            calibration.autoDetectDevices();
         }
     }
 
