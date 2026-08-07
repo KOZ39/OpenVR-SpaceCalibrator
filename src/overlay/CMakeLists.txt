@@ -176,7 +176,8 @@ if (WIN32)
         PRIVATE d3d11.lib
         PRIVATE d3dcompiler.lib
         PRIVATE dwmapi.lib
-        PRIVATE Bthprops.lib)
+        PRIVATE Bthprops.lib
+        PRIVATE Dbghelp.lib)
 
     target_compile_definitions(SpaceCalibratorOverlay
         PRIVATE NOMINMAX

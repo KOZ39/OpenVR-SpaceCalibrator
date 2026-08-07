@@ -9,6 +9,7 @@
 #include "vr_core.h"
 #include "log.h"
 #include "base_station_management.h"
+#include "crash_handler.h"
 #if OS_WINDOWS
 #include <windows.h>
 #endif
@@ -68,6 +69,7 @@ int entry_point(int argc, char* argv[]) {
     }
 
     util::init();
+    spacecal::init_crash_handler();
     logging::Init(/* isOverlay */ true);
 
     // Setup config manager
@@ -141,6 +143,7 @@ int entry_point(int argc, char* argv[]) {
 
     // releases global mutex, ie allows other instances to run
     platform::shutdownCurrentInstance();
+    spacecal::shutdown_crash_handler();
 
 #if OS_WINDOWS
     CoUninitialize();

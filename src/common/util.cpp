@@ -22,6 +22,7 @@ namespace util {
     fs::path k_spaceCalibratorLangsDirectory{};
     fs::path k_spaceCalibratorConfigDirectory{};
     fs::path k_spaceCalibratorLogsDirectory{};
+    fs::path k_spaceCalibratorDumpsDirectory{};
 
     fs::path k_spaceCalibratorConfigFile{};
 
@@ -30,6 +31,7 @@ namespace util {
         k_spaceCalibratorConfigDirectory = platform::getUserConfigDir() / k_szSpaceCalibratorDirName;
         k_spaceCalibratorConfigFile = k_spaceCalibratorConfigDirectory / "config.json";
         k_spaceCalibratorLogsDirectory = k_spaceCalibratorConfigDirectory / "logs";
+        k_spaceCalibratorDumpsDirectory = k_spaceCalibratorConfigDirectory / "dumps";
 
         k_spaceCalibratorLangsDirectory = k_spaceCalibratorInstallDirectory / "assets" / "lang";
 
@@ -39,6 +41,9 @@ namespace util {
         }
         if (!std::filesystem::is_directory(k_spaceCalibratorLogsDirectory)) {
             std::filesystem::create_directories(k_spaceCalibratorLogsDirectory);
+        }
+        if (!std::filesystem::is_directory(k_spaceCalibratorDumpsDirectory)) {
+            std::filesystem::create_directories(k_spaceCalibratorDumpsDirectory);
         }
     }
 
@@ -75,5 +80,12 @@ namespace util {
         assert(!k_spaceCalibratorLogsDirectory.empty());
 #endif
         return k_spaceCalibratorLogsDirectory;
+    }
+
+    const fs::path& getSpaceCalibratorDumpsDir() {
+#if _DEBUG
+        assert(!k_spaceCalibratorDumpsDirectory.empty());
+#endif
+        return k_spaceCalibratorDumpsDirectory;
     }
 }
