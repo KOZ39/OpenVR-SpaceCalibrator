@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <inttypes.h>
 #include <imgui.h>
 #include <implot.h>
 #include <implot3d.h>
