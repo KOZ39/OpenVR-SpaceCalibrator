@@ -23,6 +23,15 @@ namespace spacecal {
         std::string szNickname; // user string or empty
     };
 
+    enum ELearnPage_t {
+        LearnPage_Home = 0,
+        LearnPage_Standard,
+        LearnPage_Continuous,
+        LearnPage_BaseStations,
+        LearnPage_UITour,
+        LearnPage_Unknown,
+    };
+
     // state for the UI
     struct UserInterfaceState_t {
         bool bIsRunningInOverlay = false;
@@ -35,6 +44,7 @@ namespace spacecal {
         bool bBaseStationPowerManagementOffModeIsSleep = true;
         size_t dwSelectedCalibrationIndex = 0; // selected calibration in the ui
         size_t dwSelectedUiPage = 0; // selected vertical tab
+        uint32_t dwSelectedLearnPage = LearnPage_Home; // selected learn page
 
         // flat list cuz realistically we won't have enough elements to warrant the overhead of a hashmap
         bool bNicknamesLoaded = false;

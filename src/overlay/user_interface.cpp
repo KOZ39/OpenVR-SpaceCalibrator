@@ -1504,8 +1504,193 @@ namespace spacecal {
     void page_tutorial(double currentTime) {
         ImGui::TextTitle("%s", LOCALE_GET("learn_title").c_str());
 
-        // fuck me
+#define DRAW_DUMMY_IMAGE(label, height) \
+    do { \
+        if (ImGui::BeginChild((label), ImVec2(-1.0f, (height)), ImGuiChildFlags_Borders)) { \
+            ImVec2 avail = ImGui::GetContentRegionAvail(); \
+            ImVec2 textSize = ImGui::CalcTextSize(label); \
+            ImGui::SetCursorPos(ImVec2((avail.x - textSize.x) * 0.5f, (avail.y - textSize.y) * 0.5f)); \
+            ImGui::TextUnformatted(label); \
+        } \
+        ImGui::EndChild(); \
+        ImGui::Spacing(); \
+    } while (0)
 
+        switch (g_state.dwSelectedLearnPage) {
+            default:
+            case LearnPage_Home:
+            {
+                // @TODO: image loading
+                if (ImGui::InformationButton(ICON_MS_TARGET,
+                    LOCALE_GET("learn_card_standard_calibration").c_str(),
+                    LOCALE_GET("learn_card_standard_calibration_description").c_str(),
+                    ImTextureID_Invalid,
+                    ImVec2(120.0f, 80.0f))
+                ) {
+                    g_state.dwSelectedLearnPage = LearnPage_Standard;
+                }
+
+                if (ImGui::InformationButton(ICON_MS_TARGET,
+                    LOCALE_GET("learn_card_continuous_calibration").c_str(),
+                    LOCALE_GET("learn_card_continuous_calibration_description").c_str(),
+                    ImTextureID_Invalid,
+                    ImVec2(120.0f, 80.0f))
+                ) {
+                    g_state.dwSelectedLearnPage = LearnPage_Continuous;
+                }
+                if (ImGui::InformationButton(ICON_MS_TARGET,
+                    LOCALE_GET("learn_card_base_station_management").c_str(),
+                    LOCALE_GET("learn_card_base_station_management_description").c_str(),
+                    ImTextureID_Invalid,
+                    ImVec2(120.0f, 80.0f))
+                ) {
+                    g_state.dwSelectedLearnPage = LearnPage_BaseStations;
+                }
+                if (ImGui::InformationButton(ICON_MS_TARGET,
+                    LOCALE_GET("learn_card_ui_tour").c_str(),
+                    LOCALE_GET("learn_card_ui_tour_description").c_str(),
+                    ImTextureID_Invalid,
+                    ImVec2(120.0f, 80.0f))
+                ) {
+                    g_state.dwSelectedLearnPage = LearnPage_UITour;
+                }
+                break;
+            }
+            case LearnPage_Standard:
+            {
+                ImGui::TextHeading(LOCALE_GET("learn_card_standard_calibration").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_desc").c_str());
+                ImGui::Spacing();
+
+                ImGui::TextHeading(LOCALE_GET("learn_page_standard_select_devices_title").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_select_devices_desc").c_str());
+                ImGui::Bullet();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_ref_device").c_str());
+                ImGui::Bullet();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_target_device").c_str());
+                ImGui::Spacing();
+
+                ImGui::TextHeading(LOCALE_GET("learn_page_standard_perform_title").c_str());
+                ImGui::Bullet();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_perform_step1").c_str());
+                ImGui::Bullet();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_perform_step2").c_str());
+                ImGui::Bullet();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_perform_step3").c_str());
+                ImGui::Spacing();
+
+                // video demonstrating calibration method
+                DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
+
+                ImGui::TextHeading(LOCALE_GET("learn_page_standard_speeds_title").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_speeds_desc").c_str());
+                ImGui::Bullet();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_speed_fast").c_str());
+                ImGui::Bullet();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_speed_slow").c_str());
+
+                ImGui::Spacing();
+                ImGui::Spacing();
+
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_completion_note").c_str());
+                ImGui::Spacing();
+
+                ImGui::BeginCardDanger("learn_note_drift");
+                ImGui::TextHeading(LOCALE_GET("learn_page_standard_drift_title").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_standard_drift_desc").c_str());
+                ImGui::EndCardDanger();
+
+                break;
+            }
+            case LearnPage_Continuous:
+            {
+                ImGui::TextHeading(LOCALE_GET("learn_card_continuous_calibration").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_continuous_desc1").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_continuous_desc2").c_str());
+                ImGui::BeginCardDanger("info_dedicated_tracker_cont_cal");
+                ImGui::TextHeading(LOCALE_GET("learn_page_continuous_note_title").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_continuous_note_desc").c_str());
+                ImGui::EndCardDanger();
+                ImGui::Spacing();
+                ImGui::Spacing();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_continuous_desc3").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_continuous_setup_instructions").c_str());
+
+                // pic of tracker on virtual VR headset to illustrate mounting
+                DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
+
+                ImGui::TextHeading(LOCALE_GET("learn_page_continuous_should_use_title").c_str());
+                ImGui::Bullet();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_continuous_should_use_standard").c_str());
+                ImGui::Bullet();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_continuous_should_use_continuous").c_str());
+                ImGui::Spacing();
+                ImGui::Spacing();
+
+                ImGui::TextHeading(LOCALE_GET("learn_page_continuous_physical_setup_title").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_continuous_physical_setup_desc1").c_str());
+                ImGui::Spacing();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_continuous_physical_setup_desc2").c_str());
+                ImGui::Spacing();
+                ImGui::Spacing();
+                break;
+            }
+            case LearnPage_BaseStations:
+            {
+                ImGui::TextHeading(LOCALE_GET("learn_card_base_station_management").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_basestation_desc").c_str());
+                ImGui::Spacing();
+                
+                ImGui::TextHeading(LOCALE_GET("learn_page_basestation_1_title").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_basestation_1_desc").c_str());
+                ImGui::Spacing();
+                ImGui::TextHeading(LOCALE_GET("learn_page_basestation_2_title").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_basestation_2_desc1").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_basestation_2_desc2").c_str());
+                ImGui::Spacing();
+                ImGui::Spacing();
+                ImGui::TextHeading(LOCALE_GET("learn_page_basestation_auto_power_title").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_basestation_auto_power_desc").c_str());
+
+                DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
+                break;
+            }
+            case LearnPage_UITour:
+            {
+                ImGui::TextHeading(LOCALE_GET("learn_card_ui_tour").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_desc").c_str());
+                ImGui::Spacing();
+
+                ImGui::TextHeading(LOCALE_GET("learn_page_ui_tour_calibration_heading").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_cal_desc1").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_cal_desc2").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_cal_desc3").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_cal_desc4").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_cal_desc5").c_str());
+
+                DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
+
+                ImGui::TextHeading(LOCALE_GET("learn_page_ui_tour_base_stations_heading").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_bs_desc").c_str());
+                ImGui::Spacing();
+
+                DRAW_DUMMY_IMAGE("TODO: Image here##2", 140.0f);
+                
+                ImGui::TextHeading(LOCALE_GET("learn_page_ui_tour_settings_heading").c_str());
+                ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_settings_desc1").c_str());
+                ImGui::Spacing();
+                ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_settings_desc2").c_str());
+                
+                break;
+            }
+        }
+        if (g_state.dwSelectedLearnPage != LearnPage_Home) {
+            if (ImGui::IconButton(ICON_MS_ARROW_BACK, LOCALE_GET("learn_action_back").c_str())) {
+                g_state.dwSelectedLearnPage = LearnPage_Home;
+            }
+        }
+
+#undef DRAW_DUMMY_IMAGE
     }
 
     // UI CORE LAYOUT
@@ -1519,6 +1704,7 @@ namespace spacecal {
         { .szLocaleKey = "tab_page_learn", .szIcon = ICON_MS_SCHOOL, .fnDrawTab = page_tutorial, .bIsAdvancedTab = false,  },
         { .szLocaleKey = "tab_page_about", .szIcon = ICON_MS_INFO, .fnDrawTab = page_about, .bIsAdvancedTab = false,  },
     };
+    constexpr size_t k_TAB_INDEX_LEARN = 5; // @NOTE: hardcoded- adjust if we add more
     constexpr size_t k_SIZE_SPACECAL_UI_TABS = sizeof(g_spaceCalUiTabs) / sizeof(g_spaceCalUiTabs[0]);
 
     inline bool verticalTab(const SpaceCalibratorVerticalTab_t& tabData, bool selected, const ImVec2& size) {
@@ -1658,6 +1844,10 @@ namespace spacecal {
         g_state.bBaseStationPowerManagementOnStartup = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_on_during_startup;
         g_state.bBaseStationPowerManagementOnShutdown = ConfigurationManager::getInstance()->getConfiguration()->base_stations.auto_turn_off_during_shutdown;
         g_state.bBaseStationPowerManagementOffModeIsSleep = !ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby;
+        // reset learn page index to home if we're not in the learn page
+        if (g_state.dwSelectedUiPage != k_TAB_INDEX_LEARN) {
+            g_state.dwSelectedLearnPage = LearnPage_Home;
+        }
 
         // load base station nicknames from config
         if (!g_state.bNicknamesLoaded) {

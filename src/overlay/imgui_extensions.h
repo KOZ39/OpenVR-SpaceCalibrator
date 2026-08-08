@@ -154,6 +154,47 @@ namespace ImGui
 		ImGui::PopStyleColor(5);
 	}
 
+	// @TODO: polish these cards
+	inline bool InformationButton(const char* icon, const char* title, const char* desc, ImTextureID previewTex, ImVec2 previewSize) {
+		bool clicked = false;
+
+		std::string id = fmt::format("id__{}", title);
+		if (BeginCard(id.c_str(), ImVec2(0.0f, 0.0f), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY)) {
+
+			ImVec2 avail = ImGui::GetContentRegionAvail();
+			ImGui::SetNextItemAllowOverlap();
+			if (ImGui::Selectable(fmt::format("##sel_{}", id).c_str(), false, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, avail.y))) {
+				clicked = true;
+			}
+
+			ImGui::SetCursorPos(ImGui::GetStyle().WindowPadding);
+
+			if (ImGui::BeginTable(fmt::format("table_{}", id).c_str(), 2, ImGuiTableFlags_SizingStretchSame)) {
+				ImGui::TableNextColumn();
+
+				ImGui::TextHeading("%s  %s", icon, title);
+				ImGui::Spacing();
+				ImGui::TextDisabled("%s", desc);
+
+				ImGui::TableNextColumn();
+
+				if (previewTex) {
+					float availX = ImGui::GetContentRegionAvail().x;
+					if (availX > previewSize.x) {
+						ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (availX - previewSize.x));
+					}
+					ImGui::Image(previewTex, previewSize);
+				}
+
+				ImGui::EndTable();
+			}
+
+			EndCard();
+		}
+
+		return clicked;
+	}
+
 	bool CheckboxWithDescription(const char* title, bool* v, const char* desc);
 	bool RadioButtonWithDescription(const char* title, bool v, const char* desc);
 

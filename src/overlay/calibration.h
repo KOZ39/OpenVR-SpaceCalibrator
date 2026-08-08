@@ -163,6 +163,10 @@ namespace spacecal {
             device.deviceId = vr::k_unTrackedDeviceIndexInvalid;
         }
 
+        inline const bool devicesAreValid() const {
+            return referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount && targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount;
+        }
+
         [[nodiscard]] inline const float getCalibrationProgress() const {
             return getSampleCount() == 0 ? 0.0f : (float)((double)m_samples.size() / (double)getSampleCount());
         }
