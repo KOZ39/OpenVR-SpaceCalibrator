@@ -1,10 +1,10 @@
 #include "crash_handler.h"
+#if OS_WINDOWS
 #include "util.h"
 #include <windows.h>
 #include <Dbghelp.h>
 
 namespace spacecal {
-#if OS_WINDOWS
     // based on https://mecanik.dev/en/posts/how-to-write-mini-dump-on-software-crash/
 
     LPTOP_LEVEL_EXCEPTION_FILTER g_previousExceptionFilter = 0;
@@ -49,5 +49,5 @@ namespace spacecal {
     void shutdown_crash_handler() {
         SetUnhandledExceptionFilter(g_previousExceptionFilter);
     }
-#endif
 }
+#endif // OS_WINDOWS
