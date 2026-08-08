@@ -11,6 +11,10 @@
 #endif
 #endif
 
+#ifndef EIGEN_PI
+#define EIGEN_PI 3.141592653589793238462643383279502884197169399375105820974944592307816406L
+#endif
+
 #if defined(_OPENVR_API) && defined(IS_OVERLAY)
 
 namespace vr
@@ -190,18 +194,24 @@ namespace ipc::protocol
          *
          * These values are expressed as distance squared
          */
-        double thr_trans_tiny, thr_trans_small, thr_trans_large;
+        double thr_trans_tiny = 0.1f / 1000.0; // mm
+        double thr_trans_small = 1.0f / 1000.0; // mm
+        double thr_trans_large = 20.0f / 1000.0; // mm
 
         /**
          * Similar thresholds for rotation offsets, in radians
          */
-        double thr_rot_tiny, thr_rot_small, thr_rot_large;
+        double thr_rot_tiny = 0.1f * (EIGEN_PI / 180.0f);
+        double thr_rot_small = 1.0f * (EIGEN_PI / 180.0f);
+        double thr_rot_large = 5.0f * (EIGEN_PI / 180.0f);
 
         /**
          * The speed of alignment, expressed as a lerp/slerp factor. 1 will blend most of the way in <1 second.
          * (We actually do a lerp(s * delta_t) where s is the speed factor here)
          */
-        double align_speed_tiny, align_speed_small, align_speed_large;
+        double align_speed_tiny = 0.05f;
+        double align_speed_small = 0.2f;
+        double align_speed_large = 2.0f;
     };
 
     struct SharedData_HmdMetadata {
