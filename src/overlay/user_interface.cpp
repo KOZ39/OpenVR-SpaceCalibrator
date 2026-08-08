@@ -295,6 +295,8 @@ namespace spacecal {
             scale = (1.0f / 4.0f);
         }
 
+        ImGui::BeginDisabled(!calibration.devicesAreValid());
+
         if (ImGui::IconButton(ICON_MS_PLAY_ARROW, LOCALE_GET("calibration_action_start").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2))) {
             calibration.start();
         }
@@ -303,6 +305,8 @@ namespace spacecal {
         if (ImGui::IconButton(ICON_MS_SYNC, LOCALE_GET("calibration_action_continuous").c_str(), ImVec2(width * scale, ImGui::GetTextLineHeight() * 2))) {
             calibration.startContinuous();
         }
+
+        ImGui::EndDisabled();
 
         if (calibration.isValidCalibration()) {
             ImGui::SameLine();
