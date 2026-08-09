@@ -1,6 +1,6 @@
 # Translating
 
-The ground truth translation will always be available at `assets/en_GB.json`. If you notice that something is different there when compared to the langugae you're translating please use the `en_GB` file as reference.
+The ground truth translation will always be available at `assets/en_GB.json`. If you notice that something is different there when compared to the language you're translating please use the `en_GB` file as reference.
 
 Translations are authored in JSON. They're a key value pair of IDs to the text:
 
@@ -26,7 +26,7 @@ Translations are authored in JSON. They're a key value pair of IDs to the text:
 
 The format supports comments, which are usually used to inform you of what numbered arguments are.
 
-Text formatting may use `{N}`, where N is a numbered argument so that you can re-order text to make grammatical sense in your language of choice.
+Text formatting may use `{N}`, where `N` is a numbered argument so that you can re-order text to make grammatical sense in your language of choice.
 
 For example, you can write: `Arg0: {0} arg1: {1}` ; and itll appear as `Arg0: foo arg1: bar` or `Arg0: {1} arg1: {0}` which appears as `Arg0: bar arg1: foo`.
 
