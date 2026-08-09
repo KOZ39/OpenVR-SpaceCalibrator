@@ -135,6 +135,27 @@ namespace spacecal {
         cfg.PixelSnapH = false;
         io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
+        fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "NotoSansSC-Regular.ttf").string();
+        cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.GlyphOffset.y = 0.0f;
+        cfg.MergeMode = true;
+        cfg.PixelSnapH = false;
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+
+        fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "NotoSansTC-Regular.ttf").string();
+        cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.GlyphOffset.y = 0.0f;
+        cfg.MergeMode = true;
+        cfg.PixelSnapH = false;
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+
+        fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "NotoSansKR-Regular.ttf").string();
+        cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.GlyphOffset.y = 0.0f;
+        cfg.MergeMode = true;
+        cfg.PixelSnapH = false;
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+
         fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "MaterialSymbolsSharp_FILL.ttf").string();
         cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
         cfg.GlyphOffset.y = 4.0f;
@@ -151,6 +172,27 @@ namespace spacecal {
         ImGui::fonts::pHeading = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
 
         fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "MPLUS1p-Bold.ttf").string();
+        cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.GlyphOffset.y = 0.0f;
+        cfg.MergeMode = true;
+        cfg.PixelSnapH = false;
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+
+        fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "NotoSansSC-Bold.ttf").string();
+        cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.GlyphOffset.y = 0.0f;
+        cfg.MergeMode = true;
+        cfg.PixelSnapH = false;
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+
+        fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "NotoSansTC-Bold.ttf").string();
+        cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
+        cfg.GlyphOffset.y = 0.0f;
+        cfg.MergeMode = true;
+        cfg.PixelSnapH = false;
+        io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 24.0f, &cfg);
+
+        fontPath = (util::getSpaceCalibratorInstallDir() / "assets" / "fonts" / "NotoSansKR-Bold.ttf").string();
         cfg.GlyphExcludeRanges = k_RANGE_CORE_LATIN;
         cfg.GlyphOffset.y = 0.0f;
         cfg.MergeMode = true;
