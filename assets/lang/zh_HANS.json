@@ -1,0 +1,277 @@
+{
+  "app_title": "{0} {1}", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "app_title_vr": "{0} {1} - 关闭 VR 叠加层后可使用鼠标", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "tracking_system_no_systems": "未检测到可追踪的设备。请开启设备后继续。", /* Should never be hit but you never know */
+
+  "error_unknown_catastrophic": "发生严重错误！请在 GitHub 或 Steam 讨论区向开发者报告，以便解决此问题。",
+  "ipc_unavailable": "无法连接 Space Calibrator 的 SteamVR 驱动程序。请在“属性”>“已安装文件”中验证文件完整性，或重新安装本应用。",
+  "steamvr_unavailable": "无法连接 SteamVR。",
+  "vr_troubleshooting_hmd_not_found": "请先连接 VR 头显并启动 SteamVR。",
+  "vr_troubleshooting_connect_steamlink": "请先在 VR 头显上打开 SteamLink 并连接到 SteamVR。",
+  "vr_troubleshooting_generic": "请先连接 VR 头显并启动 SteamVR。({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
+
+  "calibration_title": "校准",
+  "calibration_count_none": "暂无校准。请新建校准以开始使用。", // Shown when there are no calibrations active
+  "calibration_new": "新建校准",
+  "calibration_delete": "删除校准",
+  "calibration_next": "下一个校准",
+  "calibration_previous": "上一个校准",
+
+  "calibration_status_none": "当前无校准",
+  "calibration_status_none_description": "请选择一组设备并进行校准。",
+  "calibration_status_edit": "正在编辑校准",
+  "calibration_status_edit_description": "正在调整当前校准。",
+  "calibration_status_continuous": "持续校准",
+  "calibration_status_continuous_description": "持续校准已启用。系统会使用固定在头显上的追踪器，每隔几秒自动重新校准。",
+  "calibration_status_standard": "标准校准",
+  "calibration_status_standard_description": "校准已启用。如果发生漂移，可能需要重新校准。",
+
+  // space here refers to a tracking space / tracking system.
+  "reference_device": "参考设备",
+  "reference_device_description": "用于校准的参考设备，通常是 VR 头显或控制器。",
+  "target_device": "目标设备",
+  "target_device_description": "需要与参考设备对齐的设备，通常是追踪器或控制器。",
+  "select_reference_device": "选择参考设备",
+  "select_target_device": "选择目标设备",
+
+  "identify_selected_devices": "识别所选设备（LED 闪烁或设备振动）",
+  "identify_auto_detect_devices": "自动检测设备",
+  "calibration_error_reference_hmd_missing": "找不到追踪系统“{0}”中的目标设备。可能需要重新校准。", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "calibration_warning_stage_tracking_disabled": "舞台追踪已关闭！为获得更好的体验，请在 Quest 上打开 Virtual Desktop 菜单，进入“串流”标签页并启用“居中至游玩区域（舞台追踪）”。",
+  "calibration_warning_stage_tracking_disabled_ignore_button": "不再显示",
+
+  "calibration_action_start": "标准校准",
+  "calibration_action_clear": "清除校准",
+  "calibration_action_continuous": "持续校准",
+  "calibration_action_edit": "编辑校准",
+  "save_calibration_profile": "保存配置",
+
+  "calibration_progress": "校准进度",
+  "calibration_info_move_around_insufficient_samples": "将所选设备贴在一起，然后在游玩区域内走动，同时轻轻转动设备并画 8 字。",
+
+  "calibration_speed": "校准速度",
+  "calibration_speed_description": "校准所需的时间。校准越慢，结果通常越准确。",
+  "calibration_speed_fast": "快速",
+  "calibration_speed_slow": "慢速",
+  "calibration_speed_very_slow": "极慢",
+
+  /* Editing calibrations */
+  "edit_calibration_rotation": "旋转",
+  "edit_calibration_position": "位置（米）",
+  "edit_calibration_yaw": "偏航角",
+  "edit_calibration_pitch": "俯仰角",
+  "edit_calibration_roll": "滚转角",
+  "edit_calibration_x": "X",
+  "edit_calibration_y": "Y",
+  "edit_calibration_z": "Z",
+  "edit_calibration_scale": "缩放（米）",
+
+  "continuous_hide_tracker": "对应用隐藏参考追踪器",
+  "continuous_relative_calibration": "启用相对校准",
+  "continuous_relative_calibration_description": "校准将以目标设备（通常是头显）为参照，因此无需重新校准即可逐帧更新。此功能必须配合持续校准使用。",
+
+  /* HMD names for Virtual Desktop */
+  /* Virtual desktop lies that it's a Quest 2/3 on most headsets, so we have to substitute the real HMD name ourselves. you generally should
+     NOT have to change these! but some headsets have different names in certain regions (eg PFD MR is YVR MR in China) */
+  "virtual_desktop_hmd_none": "无", /* should never appear but you never know*/
+  "virtual_desktop_hmd_gearvr": "Samsung Gear VR",
+  "virtual_desktop_hmd_oculus_go": "Oculus Go",
+  "virtual_desktop_hmd_oculus_quest_1": "Oculus Quest",
+  "virtual_desktop_hmd_oculus_quest_2": "Oculus Quest 2",
+  "virtual_desktop_hmd_meta_quest_pro": "Meta Quest Pro",
+  "virtual_desktop_hmd_pico_4": "Pico 4",
+  "virtual_desktop_hmd_meta_quest_3": "Meta Quest 3",
+  "virtual_desktop_hmd_meta_quest_3s": "Meta Quest 3S",
+  "virtual_desktop_hmd_pico_4_ultra": "Pico 4 Ultra",
+  "virtual_desktop_hmd_samsung_galaxy_xr": "Samsung Galaxy XR",
+  "virtual_desktop_hmd_play_for_dream_mr": "Play For Dream MR",
+
+  /* vertical tabs on the left */
+  "tab_page_calibration": "校准",
+  "tab_page_graphs": "图表",
+  "tab_page_base_station_management": "基站",
+  "tab_page_settings": "设置",
+  "tab_page_debug": "调试",
+  "tab_page_learn": "教程",
+  "tab_page_about": "关于",
+  
+  /* graphs */
+  "graphs_title": "图表",
+
+  /* base stations */
+  "base_stations_title": "基站管理",
+  "base_stations_no_bluetooth": "未找到可用的蓝牙适配器。请连接支持 BLE 的蓝牙设备，以使用基站管理功能。",
+  "base_stations_none_found": "未检测到基站。如有基站，请确认已接通电源。",
+  "base_stations_header_info": "{0}", // 0: station ID (LHB XXXXXXXX) / nickname
+  "base_stations_warning_collision": "检测到信道冲突！这会导致追踪异常。每台基站必须使用不同的信道。",
+  "base_stations_state_sleep": "休眠",
+  "base_stations_state_standby": "待机",
+  "base_stations_state_active": "运行中",
+  "base_stations_state_unknown": "未知",
+  "base_stations_channel_select_label": "选择基站信道：",
+  "base_stations_active_channel": "信道 {0}", // 0: channel number (1-15) ; eg Channel 12
+  "base_stations_nickname": "别名",
+
+  /* actions */
+  "base_stations_action_wake_all": "全部唤醒",
+  "base_stations_action_sleep_all": "全部休眠",
+  "base_stations_action_fix_collisions": "修复信道冲突",
+  "base_stations_btn_wake": "唤醒",
+  "base_stations_btn_standby": "待机",
+  "base_stations_btn_sleep": "休眠",
+  "base_stations_btn_edit": "编辑",
+  "base_stations_btn_save": "保存",
+
+  "base_station_power_management": "基站电源管理",
+  "base_stations_power_mgmt_enable": "启用电源管理 *",
+  "base_stations_power_mgmt_enable_description_standby": "SteamVR 未使用时，已开启的基站会进入待机模式；SteamVR 启动时会再次唤醒。",
+  "base_stations_power_mgmt_enable_description_sleep": "SteamVR 未使用时，已开启的基站会进入休眠模式；SteamVR 启动时会再次唤醒。",
+  "base_stations_power_mgmt_on_startup": "SteamVR 启动时开启基站",
+  "base_stations_power_mgmt_on_startup_description": "SteamVR 启动时，处于关闭状态的基站会被唤醒。",
+  "base_stations_power_mgmt_on_shutdown": "SteamVR 关闭时关闭基站",
+  "base_stations_power_mgmt_on_shutdown_description": "SteamVR 停止使用后，已开启的基站会关闭。",
+  "base_stations_power_mgmt_standby": "待机",
+  "base_stations_power_mgmt_standby_description": "基站仅关闭激光器，以便在 SteamVR 启动时更快唤醒。基站 1.0 及部分基站 2.0 型号不支持此模式，届时将改用休眠模式。",
+  "base_stations_power_mgmt_sleep": "休眠",
+  "base_stations_power_mgmt_sleep_description": "基站会关闭激光器和电机。",
+  "base_stations_power_mgmt_warning": "* 不建议在多名 SteamVR 用户共用的追踪空间中启用。",
+
+  /* settings */
+  "settings_title": "设置",
+  "settings_advanced": "高级设置",
+  "settings_advanced_description": "显示面向高级用户的附加设置和微调选项。",
+  "settings_calibrate_motion_vectors": "校准运动矢量",
+  "settings_calibrate_motion_vectors_description": "改善移动预测，使追踪响应更及时。可能会影响物理效果较多的游戏。",
+  "settings_autofix_playspace_jumps": "自动修正游玩区域跳变",
+  "settings_autofix_playspace_jumps_description": "尝试自动检测并修正游玩区域追踪的突然跳变。",
+  "settings_enforce_minimum_rotation_variance": "强制最小旋转变化量",
+  "settings_enforce_minimum_rotation_variance_description": "自动丢弃旋转角度过于相近的采样，以提高校准质量。",
+  "settings_locale": "语言",
+  "settings_reset": "恢复所有设置",
+  "settings_reset_description": "将所有设置恢复为默认值。此操作无法撤销。",
+  "settings_reset_confirm": "此操作无法撤销。确定要继续吗？",
+  "settings_reset_yes": "是",
+  "settings_reset_no": "否",
+
+  /* about */
+  "about_title": "关于",
+  "about_description": "Space Calibrator 是一款免费开源工具，可让不同厂商的设备在 SteamVR 中协同使用。",
+  "about_view_source_info": "可在 GitHub 仓库中查看源代码。",
+  "about_contributors_title": "贡献者",
+  "about_contributors_description": "感谢以下人员对 Space Calibrator 的贡献：",
+  "about_translators_title": "翻译人员",
+  "about_translators_description": "感谢以下人员为 Space Calibrator 提供翻译：",
+  "about_licenses_title": "许可证",
+  "about_licenses_description": "本程序采用 MIT 许可证。其他依赖项可能采用不同的许可证，详情请查看下方信息。",
+  "about_link_github": "GitHub",
+  "about_link_discord": "Discord 服务器",
+  "about_link_logs_dir": "日志文件夹",
+  
+  /* self-troubleshooting */
+  /* found another driver loaded in SteamVR -> legacy ipc connection successful */
+  "troubleshoot_diagnosis_legacy_ipc_found_title": "检测到另一个 Space Calibrator 实例",
+  "troubleshoot_diagnosis_legacy_ipc_found_description": "当前正在运行的 Space Calibrator 版本与本应用冲突。必须将其卸载后才能继续使用。是否自动移除？",
+  /* found legacy overlay key registered (non steam) */
+  "troubleshoot_diagnosis_legacy_overlay_found_title": "检测到另一个 Space Calibrator 实例",
+  "troubleshoot_diagnosis_legacy_overlay_found_description": "当前已安装另一个版本的 Space Calibrator。是否将其移除？",
+  "troubleshoot_action_yes": "是",
+  "troubleshoot_action_no": "否",
+  "troubleshoot_action_quit": "退出",
+
+  /* tutorial */
+  "learn_title": "教程",
+  "learn_card_standard_calibration": "标准校准",
+  "learn_card_standard_calibration_description": "了解如何校准一组设备。",
+  "learn_card_continuous_calibration": "持续校准",
+  "learn_card_continuous_calibration_description": "在使用过程中定期校准，以修正漂移。",
+  "learn_card_base_station_management": "基站管理",
+  "learn_card_base_station_management_description": "无线控制 SteamVR 基站。",
+  "learn_card_ui_tour": "界面导览",
+  "learn_card_ui_tour_description": "了解 Space Calibrator 的界面。",
+  "learn_action_back": "返回",
+
+  /* these are kinda like a messed up wiki because its inlined into the app like this, oh well lol */
+  "learn_page_standard_desc": "标准校准可对齐两个追踪系统，让不同的 VR 设备在同一物理空间中协同工作。",
+  "learn_page_standard_select_devices_title": "选择设备",
+  "learn_page_standard_select_devices_desc": "开始前，请先选择需要对齐的两台设备。",
+  "learn_page_standard_ref_device": "参考设备：校准时用作参照的设备，通常是控制器。",
+  "learn_page_standard_target_device": "目标设备：需要与参考设备对齐的设备，通常是追踪器或类似设备。",
+  "learn_page_standard_perform_title": "开始校准",
+  "learn_page_standard_perform_step1": "将两台设备牢牢握在同一只手中，尽量固定，避免它们在校准过程中相互移动。",
+  "learn_page_standard_perform_step2": "点击“标准校准”按钮开始校准。",
+  "learn_page_standard_perform_step3": "在房间内走动，同时让设备画 8 字，如下图所示。",
+  "learn_page_standard_speeds_title": "校准速度",
+  "learn_page_standard_speeds_desc": "可调整校准速度，以改变所需的移动量。移动量越大，校准质量通常越高。",
+  "learn_page_standard_speed_fast": "快速：校准时间较短，但结果可能不够准确。",
+  "learn_page_standard_speed_slow": "慢速/极慢：校准时间较长，但结果通常更准确。",
+  "learn_page_standard_completion_note": "进度条填满后，设备会立即在 VR 中对齐。如果没有对齐，请重新校准。",
+  "learn_page_standard_drift_title": "关于漂移",
+  "learn_page_standard_drift_desc": "设备可能会随着时间推移发生漂移，导致校准失效。此时需要重新校准。如果经常发生这种情况，建议使用持续校准。",
+
+  "learn_page_continuous_desc1": "游玩时如发现设备缓慢位移、旋转或偏离原位，可使用持续校准解决。",
+  "learn_page_continuous_desc2": "持续校准会在游玩过程中于后台自动保持追踪同步，无需定期手动校准。",
+  "learn_page_continuous_note_title": "注意",
+  "learn_page_continuous_note_desc": "使用此功能必须在头显上安装一个专用追踪器。",
+  "learn_page_continuous_desc3": "持续校准会频繁重新校准设备，尽可能消除漂移。设置完成后，通常无需再次手动校准。",
+  "learn_page_continuous_setup_instructions": "设置持续校准时，请先按照“标准校准”页面的说明选择设备。将头显设为参考设备，将校准追踪器设为目标设备，然后点击“持续校准”。首次校准可能需要一些时间，请四处移动，让应用收集追踪数据。",
+  "learn_page_continuous_should_use_title": "是否需要使用持续校准？",
+  "learn_page_continuous_should_use_standard": "如果没有可安装在头显上的额外追踪器、通常不会长时间使用 VR，或不介意在发生漂移时偶尔重新校准，请使用标准校准。",
+  "learn_page_continuous_should_use_continuous": "如果希望尽量避免处理漂移问题，请使用持续校准。经常长时间使用 VR，或设备漂移较明显时，建议使用此模式。",
+  "learn_page_continuous_physical_setup_title": "硬件安装（将追踪器固定在头显上）",
+  "learn_page_continuous_physical_setup_desc1": "使用持续校准时，需要在 VR 头显上安装专用追踪器。不同的头显和追踪器需要不同的支架。通常可以在网上找到可供 3D 打印的模型，也可以在社区中参考其他用户的安装方案。",
+  "learn_page_continuous_physical_setup_desc2": "安装后，追踪器必须牢牢固定在头显上，不能晃动、转动或抖动。固定得越稳，校准结果就越稳定。",
+
+  "learn_page_basestation_desc": "如果有兼容的 BLE 蓝牙适配器，可使用 Space Calibrator 控制 SteamVR 基站。",
+  "learn_page_basestation_1_title": "基站 1.0",
+  "learn_page_basestation_1_desc": "只能控制基站的开关，不支持无线设置信道。要切换信道，请按基站背面的实体按钮。",
+  "learn_page_basestation_2_title": "基站 2.0",
+  "learn_page_basestation_2_desc1": "基站 2.0 由 Valve 和 HTC 生产，相比基站 1.0 提供更完整的无线管理功能。除开关外，还可设置信道。每台基站 2.0 必须使用不同的信道，否则无法正常工作。发生冲突时，Space Calibrator 会提示并协助修复。",
+  "learn_page_basestation_2_desc2": "要更改基站 2.0 的信道，请打开“基站管理”标签页，点击目标基站的“编辑”按钮，然后选择所需信道（绿色标记）。",
+  "learn_page_basestation_auto_power_title": "自动电源管理",
+  "learn_page_basestation_auto_power_desc": "在“设置”中启用基站自动管理后，启动 Space Calibrator 时会开启基站；在 Space Calibrator 仍运行的情况下，关闭 SteamVR 时会关闭基站。请注意，如果先手动关闭 Space Calibrator，再关闭 SteamVR，基站不会自动关闭。",
+
+  "learn_page_ui_tour_desc": "界面分为多个标签页，每个标签页提供不同的功能。",
+  "learn_page_ui_tour_calibration_heading": "“校准”标签页",
+  "learn_page_ui_tour_cal_desc1": "可在“校准”标签页中查看和管理校准。",
+  "learn_page_ui_tour_cal_desc2": "顶部卡片会显示当前是否有已启用的校准，以及校准类型。",
+  "learn_page_ui_tour_cal_desc3": "在下方选择要配对校准的设备。先选择要校准的两个追踪系统，再在左侧选择作为校准参照的设备，在右侧选择要校准的设备。",
+  "learn_page_ui_tour_cal_desc4": "再往下是执行校准的按钮。如果不确定该选择哪种校准，请阅读“标准校准”和“持续校准”教程。",
+  "learn_page_ui_tour_cal_desc5": "“校准”标签页底部提供多个校准选项，其中部分选项仅在启用高级设置后显示。",
+  "learn_page_ui_tour_base_stations_heading": "“基站管理”标签页",
+  "learn_page_ui_tour_bs_desc": "可通过兼容的 BLE 蓝牙适配器控制房间内的基站。通常只需在初次设置时使用此功能。",
+  "learn_page_ui_tour_settings_heading": "“设置”标签页",
+  "learn_page_ui_tour_settings_desc1": "可在此调整程序的全局设置，包括高级设置、基站管理和界面语言。",
+  "learn_page_ui_tour_settings_desc2": "本应用的部分功能需要启用高级设置。请仅在了解相关功能的情况下启用。",
+
+  /* Names of the various languages one may select. Shown in settings */
+  "languages_en_GB": "英语（英国）",
+  "languages_en_US": "英语（美国）",
+  "languages_fr": "法语",
+  "languages_it": "意大利语",
+  "languages_de": "德语",
+  "languages_nl": "荷兰语",
+  "languages_es_ES": "西班牙语（西班牙）",
+  "languages_es_US": "西班牙语（拉丁美洲）",
+  "languages_da": "丹麦语",
+  "languages_sv": "瑞典语",
+  "languages_fi": "芬兰语",
+  "languages_no": "挪威语",
+  "languages_bg": "保加利亚语",
+  "languages_pl": "波兰语",
+  "languages_cs": "捷克语",
+  "languages_el": "希腊语",
+  "languages_hu": "匈牙利语",
+  "languages_pt_PT": "葡萄牙语（葡萄牙）",
+  "languages_pt_BR": "葡萄牙语（巴西）",
+  "languages_ro": "罗马尼亚语",
+  "languages_ru": "俄语",
+  "languages_tr": "土耳其语",
+  "languages_uk": "乌克兰语",
+  "languages_zh_HANS": "简体中文",
+  "languages_zh_HANT": "繁体中文",
+  "languages_ja": "日语",
+  "languages_ko": "韩语",
+  "languages_th": "泰语",
+  "languages_vi": "越南语",
+  "languages_system": "系统语言"
+}
