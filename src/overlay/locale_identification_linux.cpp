@@ -300,6 +300,13 @@ namespace spacecal {
             {"es_US", Locale::Spanish_LatinAmerica},
             {"es_UY", Locale::Spanish_LatinAmerica},
 
+            // catalan is weird so alias it
+            {"ca", Locale::Spanish_Spain },
+            {"ca-AD", Locale::Spanish_Spain },
+            {"ca-ES", Locale::Spanish_Spain },
+            {"ca-FR", Locale::French },
+            {"ca-IT", Locale::Italian },
+
             {"sv", Locale::Swedish},
             {"sv_AX", Locale::Swedish},
             {"sv_FI", Locale::Swedish},

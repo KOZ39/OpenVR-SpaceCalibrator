@@ -324,6 +324,13 @@ namespace spacecal {
             {L"es-US", Locale::Spanish_LatinAmerica},
             {L"es-UY", Locale::Spanish_LatinAmerica},
 
+            // catalan is weird so alias it
+            {L"ca", Locale::Spanish_Spain },
+            {L"ca-AD", Locale::Spanish_Spain },
+            {L"ca-ES", Locale::Spanish_Spain },
+            {L"ca-FR", Locale::French },
+            {L"ca-IT", Locale::Italian },
+
             {L"sv", Locale::Swedish},
             {L"sv-AX", Locale::Swedish},
             {L"sv-FI", Locale::Swedish},
