@@ -135,7 +135,7 @@ namespace ipc::protocol
     };
     ENUM_FLAG_OPERATORS(DeviceQuirks_t);
 
-    enum VirtualDesktop_HmdModel
+    enum VD_HmdModel
     {
         VD_HmdModel_None,
         VD_HmdModel_GearVR,
@@ -217,7 +217,7 @@ namespace ipc::protocol
     struct SharedData_HmdMetadata {
         bool isVirtualDesktopAvailable = false;
         bool VD_stageTrackingEnabled = false;
-        VirtualDesktop_HmdModel VD_hmdModel = VD_HmdModel_None;
+        VD_HmdModel VD_hmdModel = VD_HmdModel_None;
     };
 
     constexpr uint32_t k_unSharedMemoryPoseSize = vr::k_unMaxTrackedDeviceCount * sizeof(vr::DriverPose_t);

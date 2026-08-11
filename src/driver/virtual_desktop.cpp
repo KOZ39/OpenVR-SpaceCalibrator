@@ -88,11 +88,11 @@ namespace hmd {
         return false;
     }
     
-    ipc::protocol::VirtualDesktop_HmdModel VD_getHmdModel() {
+    ipc::protocol::VD_HmdModel VD_getHmdModel() {
         if (ovr_GetInt) {
-            return (ipc::protocol::VirtualDesktop_HmdModel)ovr_GetInt(nullptr, "HmdModel", 0);
+            return (ipc::protocol::VD_HmdModel)ovr_GetInt(nullptr, "HmdModel", 0);
         }
-        return ipc::protocol::VirtualDesktop_HmdModel::VD_HmdModel_None;
+        return ipc::protocol::VD_HmdModel::VD_HmdModel_None;
     }
 
     bool VD_isStageTrackingEnabled() {
