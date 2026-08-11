@@ -171,7 +171,7 @@ namespace spacecal {
                     ContinuousCalibrationData continuous;
 
                     bool calibrate_motion_vectors = true;
-                    bool attempt_auto_fix_playspace_jumps = true;
+                    bool attempt_auto_fix_playspace_jumps = false; // @TODO: default to true whenever i fix it
                     bool enforce_minimum_rotation_variance = true;
                     uint64_t calibration_speed = 100;
 
