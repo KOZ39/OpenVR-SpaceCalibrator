@@ -29,8 +29,8 @@ namespace spacecal {
         renderer::IRenderContext* m_graphicsContext = nullptr;
 
         GLFWwindow* m_glfwWindow = nullptr;
-        int m_windowWidth = 1750;
-        int m_windowHeight = 1050;
+        int m_windowWidth = 1580;
+        int m_windowHeight = 950;
 
         bool m_isYFlipped = false;
 
