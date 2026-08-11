@@ -1,0 +1,277 @@
+{
+  "app_title": "{0} {1}", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "app_title_vr": "{0} {1} - chiudere la sovrapposizione del VR per utilizzare il mouse", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "tracking_system_no_systems": "Nessun dispositivo di tracking presente. Per continuare per favore accendere un dispositivo.", /* Should never be hit but you never know */
+
+  "error_unknown_catastrophic": "Qualcosa è andato catastroficamente storto! La preghiamo di inoltrare l'errore allo sviluppatore o su GitHub o Steam Discussions così che possa venir controllato.",
+  "ipc_unavailable": "Fallito a connettere il driver di Space Calibrator SteamVR. La preghiamo di verificare l'integrità dei file in Proprietà -> File Installati, o reinstallare l'applicazione.",
+  "steamvr_unavailable": "Fallito a connettersi a SteamVR.",
+  "vr_troubleshooting_hmd_not_found": "La preghiamo di connettere il tuo VR headset  e di avviare prima SteamVR",
+  "vr_troubleshooting_connect_steamlink": "La preghiamo di avviare SteamLink nel tuo VR headset e di avviare prima SteamVR.",
+  "vr_troubleshooting_generic": "La preghiamo di connettere il VR headset e di avviare prima SteamVR ({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
+
+  "calibration_title": "Calibrazione",
+  "calibration_count_none": "Nessuna Calibrazione. La preghiamo di creare una nuova calibrazione per iniziare.", // Shown when there are no calibrations active
+  "calibration_new": "Nuova Calibrazione",
+  "calibration_delete": "Cancella Calibrazione",
+  "calibration_next": "Prossima Calibrazione",
+  "calibration_previous": "Calibrazione Precedente",
+
+  "calibration_status_none": "Nessuna Calibrazione attiva",
+  "calibration_status_none_description": "La preghiamo di selezionare un paio di dispositivi e di calibrare per iniziare.",
+  "calibration_status_edit": "Modificando calibrazione",
+  "calibration_status_edit_description": "Modificando la calibrazione attuale.",
+  "calibration_status_continuous": "Calibrazione Continua",
+  "calibration_status_continuous_description": "È presente una calibrazione attiva. Utilizza un tracker montato per ricalibrare automaticamente ogni paio di secondi.",
+  "calibration_status_standard": "Calibrazione Standard",
+  "calibration_status_standard_description": "È presente una calibrazione attiva. Potrebbe esser necessario ricalibrare all'occorrenza di drifting.",
+
+  // space here refers to a tracking space / tracking system.
+  "reference_device": "Dispositivo di riferimento",
+  "reference_device_description": "Questo è il dispositivo con cui stai calibrando, solitamente un VR headset o un controller.",
+  "target_device": "Dispositivo di destinazione",
+  "target_device_description": "Questo dispositivo verrà utilizzato per allineare i tuoi tracker o controller.",
+  "select_reference_device": "Selezionare dispositivo di riferimento",
+  "select_target_device": "Selezionare dispositivo di destinazione",
+
+  "identify_selected_devices": "Identificare i dispositivi selezionati (fa lampeggiare i LED o vibra)",
+  "identify_auto_detect_devices": "Auto-identifica dispositivi",
+  "calibration_error_reference_hmd_missing": "Ingrado di trovare il dispositivo di destinazione dal sistema di tracking \"{0}\". È possibile che sia necessario ricalibrare.", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "calibration_warning_stage_tracking_disabled": "Stage tracking è disabilitato! Per un'esperienza migliore, aprire il menù del Desktop Virtuale del tuo Quest, andare nella casella Streaming e abilitare \"Centrare all'area di gioco (Stage Tracking)\".",
+  "calibration_warning_stage_tracking_disabled_ignore_button": "Non mostrare più questa notifica",
+
+  "calibration_action_start": "Calibrazione Standard",
+  "calibration_action_clear": "Svuota Calibrazione",
+  "calibration_action_continuous": "Calibrazione Continua",
+  "calibration_action_edit": "Modifica Calibrazione",
+  "save_calibration_profile": "Salva Profilo",
+
+  "calibration_progress": "Progresso della Calibrazione",
+  "calibration_info_move_around_insufficient_samples": "Tieni insieme i tuoi dispositivi scelti, poi cammina intorno la tua area di gioco, ruotando i dispositivi in una manovra a figura otto.",
+
+  "calibration_speed": "Velocità di Calibrazione",
+  "calibration_speed_description": "Quanto tempo impiega la calibrazione. Una calibrazione più lenta tende ad essere più precisa.",
+  "calibration_speed_fast": "Veloce",
+  "calibration_speed_slow": "Lenta",
+  "calibration_speed_very_slow": "Molto Lenta",
+
+  /* Editing calibrations */
+  "edit_calibration_rotation": "Rotazione",
+  "edit_calibration_position": "Posizione (m)",
+  "edit_calibration_yaw": "Yaw",
+  "edit_calibration_pitch": "Pitch",
+  "edit_calibration_roll": "Roll",
+  "edit_calibration_x": "X",
+  "edit_calibration_y": "Y",
+  "edit_calibration_z": "Z",
+  "edit_calibration_scale": "Scala (m)",
+
+  "continuous_hide_tracker": "Nascondi il tracker di riferimento dalle app",
+  "continuous_relative_calibration": "Attiva calibrazione relativa",
+  "continuous_relative_calibration_description": "Rende la calibrazione relativa al dispositivo di destinazione (tipicamente l'headset) così che venga aggiornato ad ogni frame senza bisogno di venir ricalibrato. Ciò NECESSITA la Calibrazione Continua.",
+
+  /* HMD names for Virtual Desktop */
+  /* Virtual desktop lies that it's a Quest 2/3 on most headsets, so we have to substitute the real HMD name ourselves. you generally should
+     NOT have to change these! but some headsets have different names in certain regions (eg PFD MR is YVR MR in China) */
+  "virtual_desktop_hmd_none": "Nessuno", /* should never appear but you never know*/
+  "virtual_desktop_hmd_gearvr": "Samsung Gear VR",
+  "virtual_desktop_hmd_oculus_go": "Oculus Go",
+  "virtual_desktop_hmd_oculus_quest_1": "Oculus Quest",
+  "virtual_desktop_hmd_oculus_quest_2": "Oculus Quest 2",
+  "virtual_desktop_hmd_meta_quest_pro": "Meta Quest Pro",
+  "virtual_desktop_hmd_pico_4": "Pico 4",
+  "virtual_desktop_hmd_meta_quest_3": "Meta Quest 3",
+  "virtual_desktop_hmd_meta_quest_3s": "Meta Quest 3S",
+  "virtual_desktop_hmd_pico_4_ultra": "Pico 4 Ultra",
+  "virtual_desktop_hmd_samsung_galaxy_xr": "Samsung Galaxy XR",
+  "virtual_desktop_hmd_play_for_dream_mr": "Play For Dream MR",
+
+  /* vertical tabs on the left */
+  "tab_page_calibration": "Calibrazione",
+  "tab_page_graphs": "Grafici",
+  "tab_page_base_station_management": "Base Stations",
+  "tab_page_settings": "Impostazioni",
+  "tab_page_debug": "Debug",
+  "tab_page_learn": "Impara",
+  "tab_page_about": "A Riguardo",
+  
+  /* graphs */
+  "graphs_title": "Grafici",
+
+  /* base stations */
+  "base_stations_title": "Gestione Base Stations",
+  "base_stations_no_bluetooth": "Fallito a trovare un adattatore Bluetooth valido. La preghiamo di connettere un dispositivo Bluetooth compatibile con BLE per poter utilizzare la Gestione Base Stations.",
+  "base_stations_none_found": "Nessuna Base Station rilevata. Se in possedimento, assicurarsi che siano collegate.",
+  "base_stations_header_info": "{0}", // 0: station ID (LHB XXXXXXXX) / nickname
+  "base_stations_warning_collision": "Collisione tra canali rilevata! Questo causerà problemi di tracking. Ogni Base Station dovrebbe utilizzare un canale proprio.",
+  "base_stations_state_sleep": "Sospensione",
+  "base_stations_state_standby": "Standby",
+  "base_stations_state_active": "Attivo",
+  "base_stations_state_unknown": "Sconosciuto",
+  "base_stations_channel_select_label": "Selezionare un canale Base Station:",
+  "base_stations_active_channel": "Canale {0}", // 0: channel number (1-15) ; eg Channel 12
+  "base_stations_nickname": "Soprannome",
+
+  /* actions */
+  "base_stations_action_wake_all": "Attiva Tutto",
+  "base_stations_action_sleep_all": "Sospendi Tutto",
+  "base_stations_action_fix_collisions": "Aggiusta Collisioni tra Canali",
+  "base_stations_btn_wake": "Attiva",
+  "base_stations_btn_standby": "Standby",
+  "base_stations_btn_sleep": "Sospendi",
+  "base_stations_btn_edit": "Modifica",
+  "base_stations_btn_save": "Salva",
+
+  "base_station_power_management": "Gestione dell'Alimentazione Base Station",
+  "base_stations_power_mgmt_enable": "Abilita gestione dell'alimentazione *",
+  "base_stations_power_mgmt_enable_description_standby": "Le base station alimentate vanno in modalità standby quando SteamVR non è in uso, e si riattivano quando SteamVR si accende.",
+  "base_stations_power_mgmt_enable_description_sleep": "Le base station alimentate vanno in modalità sospensione quando SteamVR non è in uso, e si riattivano quando SteamVR si accende.",
+  "base_stations_power_mgmt_on_startup": "Attiva le Base Station quando SteamVR viene aperto",
+  "base_stations_power_mgmt_on_startup_description": "Le base station disattivate vengono attivate quando SteamVR viene aperto.",
+  "base_stations_power_mgmt_on_shutdown": "Spegni le base station quando SteamVR viene chiuso",
+  "base_stations_power_mgmt_on_shutdown_description": "Le base station alimentate vengono spente quando SteamVR non è in uso.",
+  "base_stations_power_mgmt_standby": "Standby",
+  "base_stations_power_mgmt_standby_description": "Le base station disattiveranno solamente i laser per un attivamento più veloce quando viene aperto SteamVR. Questo non è disponibile nei modelli Base Station 1.0 e alcuni modelli Base Station 2.0, e in quei casi verrà utilizzata la modalità di sospensione.",
+  "base_stations_power_mgmt_sleep": "Sospensione",
+  "base_stations_power_mgmt_sleep_description": "I laser e motori delle base station verranno spente.",
+  "base_stations_power_mgmt_warning": "* NON CONSIGLIATO per spazi di tracking condivisi tra più utenti di SteamVR.",
+
+  /* settings */
+  "settings_title": "Impostazioni",
+  "settings_advanced": "Impostazioni avanzate",
+  "settings_advanced_description": "Dimostra impostazioni extra e controlli di ritocco per utenti esperti.",
+  "settings_calibrate_motion_vectors": "Calibra vettori di movimento",
+  "settings_calibrate_motion_vectors_description": "Migliora le predizioni di movimento per un tracking più reattivo. Potrebbe influire giochi con fisica abbondante.",
+  "settings_autofix_playspace_jumps": "Auto-correggi salti nell'area di gioco",
+  "settings_autofix_playspace_jumps_description": "Prova ad individuare automaticamente e correggere salti improvvisi nel tracking dell'area di gioco.",
+  "settings_enforce_minimum_rotation_variance": "Imponi minima variazione di rotazioni",
+  "settings_enforce_minimum_rotation_variance_description": "Automaticamente rifiuta sample che sono rotazionalmente simili per migliorare la qualità di calibrazione.",
+  "settings_locale": "Lingua",
+  "settings_reset": "Ripristina tutte le impostazioni",
+  "settings_reset_description": "Ripristina tutte le impostazioni a quelle predefinite. Questa modifica è permanente e non può essere annullata.",
+  "settings_reset_confirm": "Questa modifica è permanente e non può essere annullata. Sicuri di voler continuare?",
+  "settings_reset_yes": "Sì",
+  "settings_reset_no": "No",
+
+  /* about */
+  "about_title": "A Riguardo",
+  "about_description": "Space Calibrator è un attrezzo gratis e open source che ti permette di utilizzare insieme dispositivi di più fornitori con SteamVR.",
+  "about_view_source_info": "È possibile vedere il source code nel repositorio GitHub.",
+  "about_contributors_title": "Contributori",
+  "about_contributors_description": "Space Calibrator è reso possibile con l'aiuto delle seguenti persone:",
+  "about_translators_title": "Traduttori",
+  "about_translators_description": "Space Calibrator è stato tradotto dalle seguenti persone:",
+  "about_licenses_title": "Licenze",
+  "about_licenses_description": "Questo programma è munito di licenza tramite la MIT license. Altre dipendenze sono munite di licenze grazie ad altre licenze, per più informazioni è possibile consultare le licenze qui sotto.",
+  "about_link_github": "GitHub",
+  "about_link_discord": "Server Discord",
+  "about_link_logs_dir": "Cartella di Registri",
+  
+  /* self-troubleshooting */
+  /* found another driver loaded in SteamVR -> legacy ipc connection successful */
+  "troubleshoot_diagnosis_legacy_ipc_found_title": "È già presente un'altra istanza di Space Calibrator",
+  "troubleshoot_diagnosis_legacy_ipc_found_description": "Una versione contrastante di Space Calibrator è attualmente in uso. Avrai bisogno di disinstallarla per poter utilizzare questa applicazione. Vorresti rimuoverla automaticamente?",
+  /* found legacy overlay key registered (non steam) */
+  "troubleshoot_diagnosis_legacy_overlay_found_title": "È già presente un'altra istanza di Space Calibrator",
+  "troubleshoot_diagnosis_legacy_overlay_found_description": "Un'altra versione di Space Calibrator è già presente. Vorresti rimuoverla?",
+  "troubleshoot_action_yes": "Sì",
+  "troubleshoot_action_no": "No",
+  "troubleshoot_action_quit": "Esci",
+
+  /* tutorial */
+  "learn_title": "Impara",
+  "learn_card_standard_calibration": "Calibrazione Standard",
+  "learn_card_standard_calibration_description": "Impara come calibrare un paio di dispositivi.",
+  "learn_card_continuous_calibration": "Calibrazione Continua",
+  "learn_card_continuous_calibration_description": "Calibra frequente per contrastare il drift nel mezzo di una sessione.",
+  "learn_card_base_station_management": "Gestione Base Stations",
+  "learn_card_base_station_management_description": "Controlla le tue Base Station di SteamVR senza cavo.",
+  "learn_card_ui_tour": "UI Tour",
+  "learn_card_ui_tour_description": "Una paronamica dell'interfaccia di Space Calibrator.",
+  "learn_action_back": "Indietro",
+
+  /* these are kinda like a messed up wiki because its inlined into the app like this, oh well lol */
+  "learn_page_standard_desc": "Calibrazione Standard allinea due sistemi di tracking così che i tuoi dispositivi VR funzionano insieme nello stesso spazio di gioco fisico.",
+  "learn_page_standard_select_devices_title": "Seleziona i tuoi dispositivi",
+  "learn_page_standard_select_devices_desc": "Prima di iniziare, l'app ha bisogno di sapere quali due dispositivi vuoi che allinei.",
+  "learn_page_standard_ref_device": "Dispositivo di Riferimento: Questo dispositivo è a cosa stai calibrando, solitamente un controller.",
+  "learn_page_standard_target_device": "Dispositivo di Destinazione: Il dispositivo non allineato con cui stai calibrando, tipicamente un tracker o qualcosa di simile.",
+  "learn_page_standard_perform_title": "Eseguire la Calibrazione",
+  "learn_page_standard_perform_step1": "Tenere entrambi i dispositivi strettamente su una mano. Tienili con più forza possibile così che non si muovano durante il processo di calibrazione.",
+  "learn_page_standard_perform_step2": "Clicca il pulsante Calibrazione Standard per iniziare a calibrare.",
+  "learn_page_standard_perform_step3": "Spostati attorno la tua stanza mentre muovi i tuoi dispositivi in una manovra a figura otto, come qua sotto illustrato.",
+  "learn_page_standard_speeds_title": "Velocità di Calibrazione",
+  "learn_page_standard_speeds_desc": "Puoi opzionalmente alterare la velocità di calibrazione per influenzare quanto movimento è richiesto. Più movimento tende a migliorare la qualità di calibrazione.",
+  "learn_page_standard_speed_fast": "Veloce: Impiega meno tempo, ma può risultare in calibrazioni di qualità più scarsa.",
+  "learn_page_standard_speed_slow": "Lenta / Molto Lenta: Impiega di più, e tende a risultare in calibrazioni più precise.",
+  "learn_page_standard_completion_note": "Una volta che la barra di progresso si riempe del tutto, i tuoi dispositivi dovrebbero istantaneamente allinearsi in VR. Se questo non accade, prova a calibrare di nuovo.",
+  "learn_page_standard_drift_title": "Una Nota a Riguardo del Drift",
+  "learn_page_standard_drift_desc": "Col passare del tempo, I tuoi dispositivi possono iniziare a driftare, rompendo la calibrazione. Se questo accade, dovrai ricalibrare per correggerlo. Se devi fare ciò frequentemente, dovresti considerare l'utilizzo della Calibrazione Continua.",
+
+  "learn_page_continuous_desc1": "Se noti che i tuoi dispositivi iniziano lentamente a muoversi, rotearsi, o a driftare a caso durante una sessione di gioco, la Calibrazione Continua è una soluzione a questi problemi.",
+  "learn_page_continuous_desc2": "Invece di forzare a fermarti e di calibrare manualmente ogni po' di tempo, la Calibrazione Continua mantiene in sintonia automaticamente il tuo tracking dietro le quinte mentre giochi.",
+  "learn_page_continuous_note_title": "Nota",
+  "learn_page_continuous_note_desc": "Un tracker dedicato montato sul tuo headset è NECESSARIO per usare questa funzione.",
+  "learn_page_continuous_desc3": "La Calibrazione Continua prova a ricalibrare i tuoi dispositivi frequentemente per eliminare al più possiible il drift. Tende a rendere la calibrazione una cosa a cui neanche pensi una volta setuppata.",
+  "learn_page_continuous_setup_instructions": "Per setuppare la Calibrazione Continua, prima seleziona i tuoi dispositivi come spiegato nella pagina della Calibrazione Standard. Vorrai il tuo headset selezionato come dispositivo di riferimento, e il tracker di calibrazione come dispositivo di destinazione. Poi clicca il pulsante di Calibrazione Continua per iniziare la calibrazione. Potrebbe impiegarci un po' prima che la calibrazione iniziale venga completata, dunque muoviti attorno per far sì che l'app impari il tuo tracking!",
+  "learn_page_continuous_should_use_title": "Dovresti usare la Calibrazione Continua?",
+  "learn_page_continuous_should_use_standard": "Utilizza la Calibrazione Standard se non hai un tracker extra da montare sul tuo headset, se non spendi lunghe sessioni in VR, o se non ti turba dover ricalibrare ogni tanto quando c'è bisogno.",
+  "learn_page_continuous_should_use_continuous": "Usa la Calibrazione Continua se non vuoi praticamente pensare più al drifting. Questo è consigliato se spendi molto tempo in VR o se noti una grande quantità di drifting col passare del tempo.",
+  "learn_page_continuous_physical_setup_title": "Setup fisico (montare il tracker sul tuo headset)",
+  "learn_page_continuous_physical_setup_desc1": "Per usare la Calibrazione Continua avrai bisogno di un tracker dedicato attaccato al tuo VR headset. Ci sono vari tipi di montaggio in base al tipo di VR headset e tracker che viene utilizzato. Per iniziare, puoi tipicamente trovare modelli 3D sull'internet che puoi stampare, oppure puoi chiedere attorno nella comunità per capire cos'hanno fatto gli altri.",
+  "learn_page_continuous_physical_setup_desc2": "Una volta montato, il tracker dovrebbe essere attaccato fermamente all'headset. Non dovrebbe tremare, traballare o girare. Meglio montato è, meglio e più consistenti saranno le calibrazioni.",
+
+  "learn_page_basestation_desc": "Space Calibrator ti permette di controllare le SteamVR Base Station se hai un adattatore BLE Bluetooth disponibile.",
+  "learn_page_basestation_1_title": "Modelli Base Station 1.0",
+  "learn_page_basestation_1_desc": "Questi puoi solamente accenderli e spegnerli. L'utilizzo di canali senza cavo non è disponibile, e dovrai premere il bottone fisico installato nella parte retro della Base Station per alternare tra canali.",
+  "learn_page_basestation_2_title": "Modelli Base Station 2.0",
+  "learn_page_basestation_2_desc1": "Prodotti da entrambi Valve e HTC, questi hanno un miglior supporto per la gestione wireless rispetto a quelle 1.0. Con queste sei in grado di accenderle e spegnerle, e inoltre cambiare il loro canale. Ogni Base Station 2.0 deve essere in un canale unico e proprio, se no non funzioneranno. Space Calibrator ti offrirà ad aiutarti ad aggiustarle se ciò accade.",
+  "learn_page_basestation_2_desc2": "Per cambiare il canale di una Base Station 2.0, naviga alla casella Gestione Base Stations, seleziona il pulsante modifica per la Base Station che vuoi controllare, e clicca nel canale desiderato (marcato in verde).",
+  "learn_page_basestation_auto_power_title": "Gestione di Alimentazione Automatica",
+  "learn_page_basestation_auto_power_desc": "Puoi andare nella casella Impostazioni per abilitare la Gestione Base Station automatica, che accenderà le tue Base Station quando Space Calibrator viene aperto, e spegnerle quando chiudi SteamVR (con Space Calibrator aperto). Nota che chiudendo Space Calibrator manualmente prima di chiudere SteamVR NON spegnerà alcuna Base Station automaticamente.",
+
+  "learn_page_ui_tour_desc": "Questa interfaccia è suddivisa in varie caselle ognuna contenendo varie cose.",
+  "learn_page_ui_tour_calibration_heading": "Casella di Calibrazione",
+  "learn_page_ui_tour_cal_desc1": "La Casella di Calibraizone contiene controlli riguardanti le calibrazioni. Controlli le tue calibrazioni qui.",
+  "learn_page_ui_tour_cal_desc2": "In cima, vedrai una carta che ti mostrerà se hai una calibrazione attiva, e se sì, di che tipo.",
+  "learn_page_ui_tour_cal_desc3": "Sotto quello, puoi selezionare quali dispositivi con cui calibrare. Prima dovresti scegliere il sistema di tracking che desideri calibrare- Poi, sul pannello a sinistra dovresti selezionare con cosa lo andrai a calibrare. E sul pannello a destra dovresti selezionare cosa vorrai calibrare.",
+  "learn_page_ui_tour_cal_desc4": "Sotto quello ci sono i pulsanti per effettuare una calibrazione. Se non sei sicuro di quale calibrazione dovresti fare, la preghiamo di leggere le pagine a riguardo delle Calibrazioni Standard e Continua per saperne di più.",
+  "learn_page_ui_tour_cal_desc5": "Alla fine della casella di Calibrazioni troverai alcune opzioni per controllare la calibrazione. Un numero di queste impostazioni richiedono che le impostazioni avanzate siano visibili.",
+  "learn_page_ui_tour_base_stations_heading": "Casella Gestione Base Stations",
+  "learn_page_ui_tour_bs_desc": "Qui puoi controllare qualunque Base Station nella tua stanza con un adattatore BLE Bluetooth supportato. Tipicamente, non dovresti aver bisogno di toccare questa casella oltre il setup iniziale.",
+  "learn_page_ui_tour_settings_heading": "Casella Impostazioni",
+  "learn_page_ui_tour_settings_desc1": "Qui puoi impostare alcune impostazioni globali per il programma. Queste includono le impostazioni avanzate, Gestione Base Stations e lingua UI.",
+  "learn_page_ui_tour_settings_desc2": "Alcune feature in quest'app richiedono che le Impostazioni Avanzate siano attivate. Dovresti abilitarlo solo se sai esattamente cosa stai facendo.",
+
+  /* Names of the various languages one may select. Shown in settings */
+  "languages_en_GB": "Inglese (UK)",
+  "languages_en_US": "Inglese (US)",
+  "languages_fr": "Francese",
+  "languages_it": "Italiano",
+  "languages_de": "Tedesco",
+  "languages_nl": "Olandese",
+  "languages_es_ES": "Spagnolo (Spagna)",
+  "languages_es_US": "Spagnolo (America Latina)",
+  "languages_da": "Danese",
+  "languages_sv": "Svedese",
+  "languages_fi": "Finlandese",
+  "languages_no": "Norvegese",
+  "languages_bg": "Bulgaro",
+  "languages_pl": "Polacco",
+  "languages_cs": "Ceco",
+  "languages_el": "Greco",
+  "languages_hu": "Ungherese",
+  "languages_pt_PT": "Portoghese (Portogallo)",
+  "languages_pt_BR": "Portoghese (Brasile)",
+  "languages_ro": "Rumeno",
+  "languages_ru": "Russo",
+  "languages_tr": "Turco",
+  "languages_uk": "Ucraino",
+  "languages_zh_HANS": "Cinese (Semplificato)",
+  "languages_zh_HANT": "Cinese (Tradizionale)",
+  "languages_ja": "Giapponese",
+  "languages_ko": "Coreano",
+  "languages_th": "Tailandese",
+  "languages_vi": "Vietnamita",
+  "languages_system": "Lingua del Sistema"
+}
