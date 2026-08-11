@@ -66,7 +66,7 @@
   "edit_calibration_z": "Z",
   "edit_calibration_scale": "Scale (m)",
 
-  "continuous_hide_tracker": "Hide reference tracker from apps",
+  "continuous_hide_tracker": "Hide reference device from apps",
   "continuous_relative_calibration": "Enable relative calibration",
   "continuous_relative_calibration_description": "Makes the calibration relative to the target device (typically your headset) so that it updates every frame without needing to re-calibrate. This REQUIRES Continuous Calibration.",
 

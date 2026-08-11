@@ -1,0 +1,277 @@
+{
+  "app_title": "{0} {1}", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "app_title_vr": "{0} {1} - закройте оверлей для управления курсором", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "tracking_system_no_systems": "Не найдено ни одного отслеживаемого устройства. Включите отслеживаемое устройство, чтобы продолжить.", /* Should never be hit but you never know */
+
+  "error_unknown_catastrophic": "Что-то пошло совсем не так! Сообщите об этом разработчику через GitHub или на форуме Steam.",
+  "ipc_unavailable": "Не удалось подключиться к SteamVR-драйверу Space Calibrator. Проверьте целостность файлов через Свойства -> Установленные файлы или переустановите приложение.",
+  "steamvr_unavailable": "Не удалось подключиться к SteamVR.",
+  "vr_troubleshooting_hmd_not_found": "Пожалуйста, подключите VR-гарнитуру и запустите SteamVR перед запуском программы.",
+  "vr_troubleshooting_connect_steamlink": "Пожалуйста, запустите Steam Link на VR-гарнитуре и подключите её к SteamVR.",
+  "vr_troubleshooting_generic": "Пожалуйста, подключите VR-гарнитуру и запустите SteamVR. ({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
+
+  "calibration_title": "Калибровка",
+  "calibration_count_none": "Нет активных калибровок. Пожалуйста, создайте новую калибровку для начала работы.", // Shown when there are no calibrations active
+  "calibration_new": "Новая калибровка",
+  "calibration_delete": "Удалить калибровку",
+  "calibration_next": "Следующая калибровка",
+  "calibration_previous": "Предыдущая калибровка",
+
+  "calibration_status_none": "Нет активных калибровок",
+  "calibration_status_none_description": "Пожалуйста, выберите пару устройств и откалибруйте их для начала работы.",
+  "calibration_status_edit": "Редактирование калибровки",
+  "calibration_status_edit_description": "Изменение текущей калибровки.",
+  "calibration_status_continuous": "Непрерывная калибровка",
+  "calibration_status_continuous_description": "Калибровка активна. Трекер на гарнитуре используется для автоматической перекалибровки каждые несколько секунд.",
+  "calibration_status_standard": "Стандартная калибровка",
+  "calibration_status_standard_description": "Калибровка активна. Вам придётся провести калибровку заново, если трекинг уплывёт.",
+
+  // space here refers to a tracking space / tracking system.
+  "reference_device": "Основное устройство",
+  "reference_device_description": "Это ваше основное устройство - VR-гарнитура или контроллер.",
+  "target_device": "Калибруемое устройство",
+  "target_device_description": "Это устройство будет использоваться для калибровки трекеров или контроллеров.",
+  "select_reference_device": "Выбрать основное устройство",
+  "select_target_device": "Выбрать калибруемое устройство",
+
+  "identify_selected_devices": "Идентифицировать устройства (миганием или вибрацией)",
+  "identify_auto_detect_devices": "Автоопределение устройств",
+  "calibration_error_reference_hmd_missing": "Не удалось найти устройство из системы трекинга \"{0}\". Вам нужно провести калибровку заново.", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "calibration_warning_stage_tracking_disabled": "Stage Tracking выключен! Для более надёжной работы откройте меню Virtual Desktop, перейдите на вкладку Streaming и выберите \"Center to play area (Stage Tracking)\".",
+  "calibration_warning_stage_tracking_disabled_ignore_button": "Больше не показывать",
+
+  "calibration_action_start": "Стандартная калибровка",
+  "calibration_action_clear": "Очистить калибровку",
+  "calibration_action_continuous": "Непрерывная калибровка",
+  "calibration_action_edit": "Изменить калибровку",
+  "save_calibration_profile": "Сохранить профиль",
+
+  "calibration_progress": "Прогресс калибровки",
+  "calibration_info_move_around_insufficient_samples": "Прижмите выбранные вами устройства друг к другу и походите по игровой зоне, плавно двигая оба устройства по траектории в форме восьмёрки.",
+
+  "calibration_speed": "Скорость калибровки",
+  "calibration_speed_description": "Насколько быстро собираются данные для калибровки. Обычно чем медленнее калибровка, тем выше её точность.",
+  "calibration_speed_fast": "Быстрая",
+  "calibration_speed_slow": "Медленная",
+  "calibration_speed_very_slow": "Очень медленная",
+
+  /* Editing calibrations */
+  "edit_calibration_rotation": "Поворот",
+  "edit_calibration_position": "Положение (м)",
+  "edit_calibration_yaw": "Рыскание",
+  "edit_calibration_pitch": "Тангаж",
+  "edit_calibration_roll": "Крен",
+  "edit_calibration_x": "X",
+  "edit_calibration_y": "Y",
+  "edit_calibration_z": "Z",
+  "edit_calibration_scale": "Масштаб (м)",
+
+  "continuous_hide_tracker": "Скрывать калибруемый трекер от других приложений",
+  "continuous_relative_calibration": "Включить относительную калибровку",
+  "continuous_relative_calibration_description": "Калибровка применяется относительно основного устройства (обычно вашей гарнитуры), чтобы она применялась каждый кадр без перекалибровок. Для функции нужна непрерывная калибровка.",
+
+  /* HMD names for Virtual Desktop */
+  /* Virtual desktop lies that it's a Quest 2/3 on most headsets, so we have to substitute the real HMD name ourselves. you generally should
+     NOT have to change these! but some headsets have different names in certain regions (eg PFD MR is YVR MR in China) */
+  "virtual_desktop_hmd_none": "Отсутствует", /* should never appear but you never know*/
+  "virtual_desktop_hmd_gearvr": "Samsung Gear VR",
+  "virtual_desktop_hmd_oculus_go": "Oculus Go",
+  "virtual_desktop_hmd_oculus_quest_1": "Oculus Quest",
+  "virtual_desktop_hmd_oculus_quest_2": "Oculus Quest 2",
+  "virtual_desktop_hmd_meta_quest_pro": "Meta Quest Pro",
+  "virtual_desktop_hmd_pico_4": "Pico 4",
+  "virtual_desktop_hmd_meta_quest_3": "Meta Quest 3",
+  "virtual_desktop_hmd_meta_quest_3s": "Meta Quest 3S",
+  "virtual_desktop_hmd_pico_4_ultra": "Pico 4 Ultra",
+  "virtual_desktop_hmd_samsung_galaxy_xr": "Samsung Galaxy XR",
+  "virtual_desktop_hmd_play_for_dream_mr": "Play For Dream MR",
+
+  /* vertical tabs on the left */
+  "tab_page_calibration": "Калибровка",
+  "tab_page_graphs": "Графики",
+  "tab_page_base_station_management": "Базовые станции",
+  "tab_page_settings": "Настройки",
+  "tab_page_debug": "Отладка",
+  "tab_page_learn": "Инструкции",
+  "tab_page_about": "О программе",
+  
+  /* graphs */
+  "graphs_title": "Графики",
+
+  /* base stations */
+  "base_stations_title": "Управление базовыми станциями",
+  "base_stations_no_bluetooth": "Не удалось найти совместимый Bluetooth-адаптер. Подключите адаптер с поддержкой BLE для управления базовыми станциями.",
+  "base_stations_none_found": "Базовые станции не найдены. Проверьте, подключены ли они к сети.",
+  "base_stations_header_info": "{0}", // 0: station ID (LHB XXXXXXXX) / nickname
+  "base_stations_warning_collision": "Базовые станции находятся на одном канале! Из-за этого будут проблемы с отслеживанием. Базовые станции должны находиться на разных каналах.",
+  "base_stations_state_sleep": "Сон",
+  "base_stations_state_standby": "Ожидание",
+  "base_stations_state_active": "Активный",
+  "base_stations_state_unknown": "Неизвестно",
+  "base_stations_channel_select_label": "Выберите канал базовой станции:",
+  "base_stations_active_channel": "Канал {0}", // 0: channel number (1-15) ; eg Channel 12
+  "base_stations_nickname": "Имя",
+
+  /* actions */
+  "base_stations_action_wake_all": "Разбудить все",
+  "base_stations_action_sleep_all": "Перевести все в режим сна",
+  "base_stations_action_fix_collisions": "Исправить конфликты каналов",
+  "base_stations_btn_wake": "Разбудить",
+  "base_stations_btn_standby": "В режим ожидания",
+  "base_stations_btn_sleep": "В режим сна",
+  "base_stations_btn_edit": "Редактировать",
+  "base_stations_btn_save": "Сохранить",
+
+  "base_station_power_management": "Управление питанием базовых станций",
+  "base_stations_power_mgmt_enable": "Включить управление питанием *",
+  "base_stations_power_mgmt_enable_description_standby": "Включенные базовые станции будут уходить в режим ожидания, когда SteamVR закрывается, и просыпаться при запуске SteamVR.",
+  "base_stations_power_mgmt_enable_description_sleep": "Включенные базовые станции будут уходить в режим сна, когда SteamVR закрывается, и просыпаться при запуске SteamVR.",
+  "base_stations_power_mgmt_on_startup": "Включать базовые станции при запуске SteamVR",
+  "base_stations_power_mgmt_on_startup_description": "Выключенные базовые станции будут включаться при запуске SteamVR.",
+  "base_stations_power_mgmt_on_shutdown": "Выключать базовые станции при закрытии SteamVR",
+  "base_stations_power_mgmt_on_shutdown_description": "Включенные базовые станции будут выключаться при закрытии SteamVR.",
+  "base_stations_power_mgmt_standby": "Режим ожидания",
+  "base_stations_power_mgmt_standby_description": "Базовые станции будут выключать только лазеры, чтобы быстрее включаться при запуске SteamVR. Эта функция НЕ работает с базовыми станциями 1.0 и некоторыми станциями 2.0, и вместо этого для них будет использоваться режим сна.",
+  "base_stations_power_mgmt_sleep": "Режим сна",
+  "base_stations_power_mgmt_sleep_description": "Базовые станции будут выключать и моторы, и лазеры.",
+  "base_stations_power_mgmt_warning": "* НЕ РЕКОМЕНДУЕТСЯ в игровых зонах, где базовыми станциями пользуется несколько человек.",
+
+  /* settings */
+  "settings_title": "Настройки",
+  "settings_advanced": "Расширенные настройки",
+  "settings_advanced_description": "Показывает дополнительные настройки и параметры для продвинутых пользователей.",
+  "settings_calibrate_motion_vectors": "Калибровать векторы движения",
+  "settings_calibrate_motion_vectors_description": "Улучшает предсказание движений для более отзывчивого трекинга. Может повлиять на игры с тяжёлой физикой.",
+  "settings_autofix_playspace_jumps": "Автоисправление скачков игровой зоны",
+  "settings_autofix_playspace_jumps_description": "Пытается автоматически определять и исправлять резкие рывки трекинга игровой зоны.",
+  "settings_enforce_minimum_rotation_variance": "Минимальное значение отклонений трекинга",
+  "settings_enforce_minimum_rotation_variance_description": "Автоматически игнорирует данные, близкие друг к другу, чтобы трекинг был более точным.",
+  "settings_locale": "Язык",
+  "settings_reset": "Сбросить все настройки",
+  "settings_reset_description": "Все настройки будут сброшены. Это действие нельзя будет отменить.",
+  "settings_reset_confirm": "Результат этого действия нельзя будет отменить. Вы хотите продолжить?",
+  "settings_reset_yes": "Да",
+  "settings_reset_no": "Нет",
+
+  /* about */
+  "about_title": "О программе",
+  "about_description": "Space Calibrator - это бесплатная программа с открытым исходным кодом, которая позволяет использовать несколько систем трекинга вместе в SteamVR.",
+  "about_view_source_info": "Исходный код доступен в репозитории на GitHub.",
+  "about_contributors_title": "Разработчики",
+  "about_contributors_description": "Space Calibrator создан благодаря усилиям этих людей:",
+  "about_translators_title": "Переводчики",
+  "about_translators_description": "Space Calibrator был переведён этими людьми:",
+  "about_licenses_title": "Лицензии",
+  "about_licenses_description": "Эта программа доступна по лицензии MIT. Другие зависимости доступны под другими лицензиями, указанными ниже.",
+  "about_link_github": "GitHub",
+  "about_link_discord": "Сервер Discord",
+  "about_link_logs_dir": "Папка логов",
+  
+  /* self-troubleshooting */
+  /* found another driver loaded in SteamVR -> legacy ipc connection successful */
+  "troubleshoot_diagnosis_legacy_ipc_found_title": "Запущена другая версия Space Calibrator",
+  "troubleshoot_diagnosis_legacy_ipc_found_description": "В данный момент запущена конфликтующая версия Space Calibrator. Вам придётся удалить её, чтобы использовать это приложение. Вы хотите автоматически удалить её?",
+  /* found legacy overlay key registered (non steam) */
+  "troubleshoot_diagnosis_legacy_overlay_found_title": "Найдена другая версия Space Calibrator",
+  "troubleshoot_diagnosis_legacy_overlay_found_description": "В системе установлена другая версия Space Calibrator. Вы хотите удалить её?",
+  "troubleshoot_action_yes": "Да",
+  "troubleshoot_action_no": "Нет",
+  "troubleshoot_action_quit": "Выход",
+
+  /* tutorial */
+  "learn_title": "Инструкции",
+  "learn_card_standard_calibration": "Стандартная калибровка",
+  "learn_card_standard_calibration_description": "Узнайте, как откалибровать пару устройств.",
+  "learn_card_continuous_calibration": "Непрерывная калибровка",
+  "learn_card_continuous_calibration_description": "Проводите калибровку автоматически, чтобы исключить уплывание трекинга.",
+  "learn_card_base_station_management": "Управление базовыми станциями",
+  "learn_card_base_station_management_description": "Управляйте своими базовыми станциями SteamVR с компьютера.",
+  "learn_card_ui_tour": "Тур по интерфейсу",
+  "learn_card_ui_tour_description": "Обзор интерфейса Space Calibrator.",
+  "learn_action_back": "Назад",
+
+  /* these are kinda like a messed up wiki because its inlined into the app like this, oh well lol */
+  "learn_page_standard_desc": "Стандартная калибровка совмещает две системы отслеживания, чтобы ваши VR-устройства работали в одной игровой зоне.",
+  "learn_page_standard_select_devices_title": "Выбор устройств",
+  "learn_page_standard_select_devices_desc": "Перед началом работы приложению нужно узнать, какие два устройства вы хотите использовать для калибровки.",
+  "learn_page_standard_ref_device": "Основное устройство - это то, которым вы обычно пользуетесь, например, контроллер.",
+  "learn_page_standard_target_device": "Калибруемое устройство - это устройство, трекинг которого будет калиброваться, например, трекер или что-либо подобное.",
+  "learn_page_standard_perform_title": "Калибровка",
+  "learn_page_standard_perform_step1": "Жёстко зафиксируйте оба устройства в одной руке. Держите их так плотно друг к другу, чтобы они не шевелились во время калибровочного процесса.",
+  "learn_page_standard_perform_step2": "Нажмите на кнопку \"Стандартная калибровка\", чтобы начать калибровку.",
+  "learn_page_standard_perform_step3": "Походите по комнате, перемещая их по траектории в форме восьмёрки, как показано ниже.",
+  "learn_page_standard_speeds_title": "Скорости калибровки",
+  "learn_page_standard_speeds_desc": "Вы можете изменить скорость калибровки, чтобы указать, как много вы собираетесь перемещаться во время калибровки. Обычно чем больше движений собрано, тем выше качество калибровки.",
+  "learn_page_standard_speed_fast": "Быстрая: Делается быстро, но может иметь низкое качество калибровки.",
+  "learn_page_standard_speed_slow": "Медленная / Очень медленная: Делается дольше, но обычно выдаёт более точный результат.",
+  "learn_page_standard_completion_note": "Когда индикатор прогресса заполнится полностью, ваши устройства станут мгновенно совмещены друг с другом в VR. Если это не произойдёт, попробуйте провести калибровку ещё раз.",
+  "learn_page_standard_drift_title": "Уплывание трекинга",
+  "learn_page_standard_drift_desc": "Время от времени трекинг ваших устройств может начать уплывать, и калибровка будет нарушаться. Если это случится, вам придётся провести калибровку заново. Если вам приходится часто перекалибровываться, вам стоит попробовать перейти на непрерывную калибровку.",
+
+  "learn_page_continuous_desc1": "Если вы замечаете, что трекинг ваших устройств постоянно смещается, поворачивается или уплывает, непрерывная калибровка поможет исправить проблему.",
+  "learn_page_continuous_desc2": "Вместо того, чтобы калиброваться каждый раз вручную, непрерывная калибровка автоматически совмещает два игровых пространства во время игры.",
+  "learn_page_continuous_note_title": "Внимание",
+  "learn_page_continuous_note_desc": "Для использования этой функции ОБЯЗАТЕЛЕН отдельный трекер, закреплённый на гарнитуре.",
+  "learn_page_continuous_desc3": "Непрерывная калибровка пытается часто перекалибровывать ваши устройства, чтобы исключить уплывание трекинга. Она старается сделать так, чтобы вы могли забыть о необходимости калибровки вообще.",
+  "learn_page_continuous_setup_instructions": "Чтобы настроить непрерывную калибровку, выберите устройства по аналогии с обычной калибровкой. Выберите VR-гарнитуру как основное устройство, а прикреплённый к ней трекер как калибруемое. После этого нажмите кнопку \"Непрерывная калибровка\" для начала работы. Программе нужны данные трекинга для калибровки, поэтому подвигайтесь по игровой зоне, чтобы программа смогла подстроиться под вас!",
+  "learn_page_continuous_should_use_title": "Нужна ли вам непрерывная калибровка?",
+  "learn_page_continuous_should_use_standard": "Если у вас нет отдельного трекера на гарнитуре, или если вы не проводите длинные VR-сессии, или если вас не волнует ручная калибровка время от времени, то непрерывная калибровка и не нужна, достаточно обычной.",
+  "learn_page_continuous_should_use_continuous": "Используйте непрерывную калибровку тогда, когда вы не хотите думать об уплывании трекинга вообще. Это рекомендуется тем, кто проводит много времени в VR или замечает уплывание трекинга время от времени.",
+  "learn_page_continuous_physical_setup_title": "Настройка трекера (фиксация на гарнитуре)",
+  "learn_page_continuous_physical_setup_desc1": "Чтобы использовать непрерывный трекинг, вам понадобится отдельный трекер, зафиксированный на VR-гарнитуре. В зависимости от моделей гарнитуры и трекера есть разные способы фиксации. Вы можете найти в интернете модели фиксаторов трекеров для 3D-печати или узнать у друзей, как они фиксируют свои трекеры на гарнитурах.",
+  "learn_page_continuous_physical_setup_desc2": "Трекер должен быть жёстко зафиксирован на гарнитуре. Он не должен как-то болтаться, качаться или дребезжать. Чем лучше крепление, тем стабильнее будет калибровка.",
+
+  "learn_page_basestation_desc": "Space Calibrator позволяет управлять базовыми станциями, не отходя от компьютера и не имея VR-гарнитуры Vive, если у вас есть USB BLE-адаптер.",
+  "learn_page_basestation_1_title": "Базовые станции 1.0",
+  "learn_page_basestation_1_desc": "Их можно только включать и выключать. Изменять режимы на них с ПК нельзя, и для переключения режима нужно нажимать кнопку сзади каждой базы.",
+  "learn_page_basestation_2_title": "Базовые станции 2.0",
+  "learn_page_basestation_2_desc1": "Базовые станции, производившиеся Valve и HTC, имеют больше вариантов управления без проводов в сравнении с 1.0. Вы можете не только включать/выключать их, но и изменять канал, на котором они работают. Станции 2.0 в одной игровой зоне должны использовать разные каналы, иначе они не будут работать. Space Calibrator поможет вам исправить проблему, если такое случится.",
+  "learn_page_basestation_2_desc2": "Чтобы изменить канал базовой станции 2.0, перейдите на вкладку \"Управление базовыми станциями\", нажмите \"Изменить\" возле станции, которую вы хотите настроить, и нажмите на желаемый канал работы станции (выделено зелёным).",
+  "learn_page_basestation_auto_power_title": "Автоматическое управление питанием базовых станций",
+  "learn_page_basestation_auto_power_desc": "Вы можете перейти на вкладку \"Настройки\", чтобы включить автоматическое управление питанием базовых станций. Оно будет само включать базовые станции при запуске Space Calibrator и выключать их при закрытии SteamVR (если Space Calibrator запущен при этом). Учтите, что ручное закрытие Space Calibrator НЕ БУДЕТ ВЫКЛЮЧАТЬ базовые станции.",
+
+  "learn_page_ui_tour_desc": "Интерфейс программы разделён на несколько частей с разными функциями",
+  "learn_page_ui_tour_calibration_heading": "Вкладка \"Калибровка\"",
+  "learn_page_ui_tour_cal_desc1": "Вкладка \"Калибровка\" содержит настройки, связанные с калибровкой. Здесь вы можете менять свою калибровку.",
+  "learn_page_ui_tour_cal_desc2": "В самом верху вы увидите карточку, на которой указан статус и режим калибровки.",
+  "learn_page_ui_tour_cal_desc3": "Под карточкой можно выбрать устройства для калибровки. Сначала стоит выбрать систему трекинга, которая будет калиброваться. Затем в левом окне нужно выбрать устройство, для которого будет делаться калибровка. Справа же нужно выбрать устройство, которым будет проводиться калибровка.",
+  "learn_page_ui_tour_cal_desc4": "Под панелью находятся кнопки калибровки. Если вы не уверены, какую из них лучше нажимать, прочитайте инструкцию по режимам стандартной и непрерывной калибровок.",
+  "learn_page_ui_tour_cal_desc5": "В самом низу вкладки показываются опции управления калибровкой. Часть этих опций скрыта галочкой расширенных настроек.",
+  "learn_page_ui_tour_base_stations_heading": "Вкладка \"Управление базовыми станциями\"",
+  "learn_page_ui_tour_bs_desc": "Здесь вы можете управлять всеми базовыми станциями вашей комнаты, если у вас есть адаптер BLE (Bluetooth Low Energy). Обычно на неё не нужно заходить после начальной настройки.",
+  "learn_page_ui_tour_settings_heading": "Вкладка \"Настройки\"",
+  "learn_page_ui_tour_settings_desc1": "Здесь вы можете поменять глобальные настройки программы. В эти опции входят расширенные настройки, управление питанием базовых станций и язык программы.",
+  "learn_page_ui_tour_settings_desc2": "Некоторые функции этого приложения требуют включения расширенных настроек. Включайте их только тогда, когда знаете, что делать с ними.",
+
+  /* Names of the various languages one may select. Shown in settings */
+  "languages_en_GB": "Английский (Великобритания)",
+  "languages_en_US": "Английский (США)",
+  "languages_fr": "Французский",
+  "languages_it": "Итальянский",
+  "languages_de": "Немецкий",
+  "languages_nl": "Нидерландский",
+  "languages_es_ES": "Испанский (Испания)",
+  "languages_es_US": "Испанский (Латинская Америка)",
+  "languages_da": "Датский",
+  "languages_sv": "Шведский",
+  "languages_fi": "Финский",
+  "languages_no": "Норвежский",
+  "languages_bg": "Болгарский",
+  "languages_pl": "Польский",
+  "languages_cs": "Чешский",
+  "languages_el": "Греческий",
+  "languages_hu": "Венгерский",
+  "languages_pt_PT": "Португальский (Португалия)",
+  "languages_pt_BR": "Португальский (Бразилия)",
+  "languages_ro": "Румынский",
+  "languages_ru": "Русский",
+  "languages_tr": "Турецкий",
+  "languages_uk": "Украинский",
+  "languages_zh_HANS": "Китайский (упрощённый)",
+  "languages_zh_HANT": "Китайский (традиционный)",
+  "languages_ja": "Японский",
+  "languages_ko": "Корейский",
+  "languages_th": "Тайский",
+  "languages_vi": "Вьетнамский",
+  "languages_system": "Язык системы"
+}
