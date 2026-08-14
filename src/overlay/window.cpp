@@ -530,6 +530,7 @@ namespace spacecal {
             }
         }
 
+        spacecal::cleanupInterface();
         CalibrationManager::getInstance()->shutdown();
     }
 }

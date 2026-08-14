@@ -20,6 +20,7 @@ namespace util {
 
     fs::path k_spaceCalibratorInstallDirectory{};
     fs::path k_spaceCalibratorLangsDirectory{};
+    fs::path k_spaceCalibratorImagesDir{};
     fs::path k_spaceCalibratorConfigDirectory{};
     fs::path k_spaceCalibratorLogsDirectory{};
     fs::path k_spaceCalibratorDumpsDirectory{};
@@ -34,6 +35,7 @@ namespace util {
         k_spaceCalibratorDumpsDirectory = k_spaceCalibratorConfigDirectory / "dumps";
 
         k_spaceCalibratorLangsDirectory = k_spaceCalibratorInstallDirectory / "assets" / "lang";
+        k_spaceCalibratorImagesDir = k_spaceCalibratorInstallDirectory / "assets" / "images";
 
         // create dirs if they dont exist
         if (!std::filesystem::is_directory(k_spaceCalibratorConfigDirectory)) {
@@ -59,6 +61,13 @@ namespace util {
         assert(!k_spaceCalibratorLangsDirectory.empty());
 #endif
         return k_spaceCalibratorLangsDirectory;
+    }
+    
+    const fs::path& getSpaceCalibratorImagesDir() {
+#if _DEBUG
+        assert(!k_spaceCalibratorImagesDir.empty());
+#endif
+        return k_spaceCalibratorImagesDir;
     }
 
     const fs::path& getSpaceCalibratorConfigDir() {

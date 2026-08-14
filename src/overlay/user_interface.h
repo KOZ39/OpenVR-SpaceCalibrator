@@ -7,6 +7,7 @@
 #include <implot.h>
 #include <implot3d.h>
 #include <IconsMaterialSymbols.h>
+#include "renderer/renderer.h"
 
 namespace spacecal {
 
@@ -33,6 +34,15 @@ namespace spacecal {
         LearnPage_Unknown,
     };
 
+    enum EImageId_t {
+        EImageId_LearnStandard_CalibrateDiagram,
+        EImageId_LearnContinuous_Mounting,
+        EImageId_LearnBaseStation_Unk,
+        EImageId_LearnUI_Unk0,
+        EImageId_LearnUI_Unk1,
+        EImageId_Count,
+    };
+
     // state for the UI
     struct UserInterfaceState_t {
         bool bIsRunningInOverlay = false;
@@ -50,6 +60,8 @@ namespace spacecal {
         // flat list cuz realistically we won't have enough elements to warrant the overhead of a hashmap
         bool bNicknamesLoaded = false;
         std::vector<UserInterface_BaseStationState_t> aBaseStations;
+
+        renderer::TextureData_t textures[EImageId_Count] = {};
     };
 
     struct SpaceCalibratorVerticalTab_t {
@@ -61,4 +73,5 @@ namespace spacecal {
 
     // Draws the user interface with ImGUI
     void drawInterface(bool isOverlay, double currentTime);
+    void cleanupInterface();
 }

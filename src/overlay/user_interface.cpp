@@ -1520,6 +1520,17 @@ namespace spacecal {
         ImGui::Spacing(); \
     } while (0)
 
+#define DRAW_IMAGE(label, idx) \
+    do { \
+        if (ImGui::BeginChild((label), ImVec2(-1.0f, (float)g_state.textures[idx].dwHeight))) { \
+            ImVec2 avail = ImGui::GetContentRegionAvail(); \
+            ImGui::SetCursorPos(ImVec2((avail.x - (float)g_state.textures[idx].dwWidth) * 0.5f, (avail.y - (float)g_state.textures[idx].dwHeight) * 0.5f)); \
+            ImGui::Image(g_state.textures[idx].hTexture, ImVec2((float)g_state.textures[idx].dwWidth, (float)g_state.textures[idx].dwHeight)); \
+        } \
+        ImGui::EndChild(); \
+        ImGui::Spacing(); \
+    } while (0)
+
         switch (g_state.dwSelectedLearnPage) {
             default:
             case LearnPage_Home:
@@ -1585,6 +1596,7 @@ namespace spacecal {
 
                 // video demonstrating calibration method
                 DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
+                DRAW_IMAGE("calibrate_diagram", EImageId_LearnStandard_CalibrateDiagram);
 
                 ImGui::TextHeading(LOCALE_GET("learn_page_standard_speeds_title").c_str());
                 ImGui::TextWrapped(LOCALE_GET("learn_page_standard_speeds_desc").c_str());
@@ -1622,6 +1634,7 @@ namespace spacecal {
 
                 // pic of tracker on virtual VR headset to illustrate mounting
                 DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
+                DRAW_IMAGE("continuous_mount", EImageId_LearnContinuous_Mounting);
 
                 ImGui::TextHeading(LOCALE_GET("learn_page_continuous_should_use_title").c_str());
                 ImGui::Bullet();
@@ -1657,6 +1670,7 @@ namespace spacecal {
                 ImGui::TextWrapped(LOCALE_GET("learn_page_basestation_auto_power_desc").c_str());
 
                 DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
+                DRAW_IMAGE("basestation_image", EImageId_LearnBaseStation_Unk);
                 break;
             }
             case LearnPage_UITour:
@@ -1673,12 +1687,14 @@ namespace spacecal {
                 ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_cal_desc5").c_str());
 
                 DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
+                DRAW_IMAGE("ui_tour_0", EImageId_LearnUI_Unk0);
 
                 ImGui::TextHeading(LOCALE_GET("learn_page_ui_tour_base_stations_heading").c_str());
                 ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_bs_desc").c_str());
                 ImGui::Spacing();
 
                 DRAW_DUMMY_IMAGE("TODO: Image here##2", 140.0f);
+                DRAW_IMAGE("ui_tour_1", EImageId_LearnUI_Unk1);
                 
                 ImGui::TextHeading(LOCALE_GET("learn_page_ui_tour_settings_heading").c_str());
                 ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_settings_desc1").c_str());
@@ -1855,6 +1871,12 @@ namespace spacecal {
 
         // load base station nicknames from config
         if (!g_state.bNicknamesLoaded) {
+            g_state.textures[EImageId_LearnStandard_CalibrateDiagram] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_calibrate_diagram.png");
+            g_state.textures[EImageId_LearnContinuous_Mounting] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_continuous_mount.png");
+            g_state.textures[EImageId_LearnBaseStation_Unk] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_basestations.png");
+            g_state.textures[EImageId_LearnUI_Unk0] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_ui_0.png");
+            g_state.textures[EImageId_LearnUI_Unk1] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_ui_1.png");
+
             if (g_state.aBaseStations.capacity() == 0) {
                 g_state.aBaseStations.reserve(64);
             }
@@ -1933,5 +1955,11 @@ namespace spacecal {
 #if defined(IMGUI_USE_DEBUG_WINDOW)
         ImGui::ShowDemoWindow();
 #endif // IMGUI_USE_DEBUG_WINDOW
+    }
+
+    void cleanupInterface() {
+        for (size_t i = 0; i < EImageId_Count; i++) {
+            renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->destroyTexture(g_state.textures[i]);
+        }
     }
 }

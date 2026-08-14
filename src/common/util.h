@@ -9,6 +9,7 @@ namespace util {
     void init();
     const std::filesystem::path& getSpaceCalibratorInstallDir();
     const std::filesystem::path& getSpaceCalibratorLangsDir();
+    const std::filesystem::path& getSpaceCalibratorImagesDir();
     const std::filesystem::path& getSpaceCalibratorConfigDir();
     
     const std::filesystem::path& getSpaceCalibratorLogsDir();
