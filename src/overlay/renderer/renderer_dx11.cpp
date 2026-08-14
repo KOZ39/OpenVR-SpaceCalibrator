@@ -12,6 +12,7 @@
 #include <imgui/backends/imgui_impl_dx11.h>
 #include "log.h"
 #include "util.h"
+#include <stb_image.h>
 
 namespace spacecal {
     namespace renderer {
@@ -222,6 +223,63 @@ namespace spacecal {
         void Renderer_DX11::cleanup_render_target() {
             SAFE_RELEASE(m_mainRenderTargetView);
             SAFE_RELEASE(m_pBackBuffer);
+        }
+
+        TextureData_t Renderer_DX11::loadTexture(const std::string& szFilePath) {
+            ID3D11ShaderResourceView* pSrv = nullptr;
+
+            int image_width, image_height, nrChannels;
+            unsigned char* textureData = stbi_load(szFilePath.c_str(), &image_width, &image_height, &nrChannels, STBI_rgb_alpha);
+            if (textureData) {
+                D3D11_TEXTURE2D_DESC desc;
+                ZeroMemory(&desc, sizeof(desc));
+                desc.Width = image_width;
+                desc.Height = image_height;
+                desc.MipLevels = 1;
+                desc.ArraySize = 1;
+                desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+                desc.SampleDesc.Count = 1;
+                desc.Usage = D3D11_USAGE_DEFAULT;
+                desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+                desc.CPUAccessFlags = 0;
+
+                ID3D11Texture2D* pTexture = NULL;
+                D3D11_SUBRESOURCE_DATA subResource;
+                subResource.pSysMem = textureData;
+                subResource.SysMemPitch = desc.Width * 4;
+                subResource.SysMemSlicePitch = 0;
+                m_pd3dDevice->CreateTexture2D(&desc, &subResource, &pTexture);
+
+                // Create texture view
+                D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+                ZeroMemory(&srvDesc, sizeof(srvDesc));
+                srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+                srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+                srvDesc.Texture2D.MipLevels = desc.MipLevels;
+                srvDesc.Texture2D.MostDetailedMip = 0;
+                m_pd3dDevice->CreateShaderResourceView(pTexture, &srvDesc, &pSrv);
+                SAFE_RELEASE(pTexture);
+                stbi_image_free(textureData);
+            } else {
+                LOG_WARN("Failed to load texture from {}...", szFilePath);
+            }
+
+            TextureHandle_t hHandle = pSrv == nullptr ? k_INVALID_TEXTURE_HANDLE : (TextureHandle_t)pSrv;
+            TextureData_t data = {
+                .hTexture = hHandle,
+                .dwWidth = (uint32_t) image_width,
+                .dwHeight = (uint32_t) image_height,
+                .hInternalData = (uintptr_t)-1,
+            };
+            
+            return data;
+        }
+
+        void Renderer_DX11::destroyTexture(TextureData_t hTexture) {
+            if (hTexture.hTexture != k_INVALID_TEXTURE_HANDLE) {
+                ID3D11ShaderResourceView* pSrv = (ID3D11ShaderResourceView*) hTexture.hTexture;
+                SAFE_RELEASE(pSrv);
+            }
         }
     }
 }

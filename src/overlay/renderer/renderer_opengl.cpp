@@ -2,6 +2,7 @@
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include "log.h"
 #include "util.h"
+#include <stb_image.h>
 
 namespace spacecal {
     namespace renderer {
@@ -121,6 +122,43 @@ namespace spacecal {
                 .eColorSpace = vr::EColorSpace::ColorSpace_Auto,
             };
             return vrTexture;
+        }
+
+        TextureData_t Renderer_OpenGL::loadTexture(const std::string& szFilePath) {
+            GLuint hGlTexture = 0;
+            glGenTextures(1, &hGlTexture);
+            glBindTexture(GL_TEXTURE_2D, hGlTexture);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            int width, height, nrChannels;
+            unsigned char* textureData = stbi_load(szFilePath.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+            if (textureData) {
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+                glGenerateMipmap(GL_TEXTURE_2D);
+                stbi_image_free(textureData);
+            } else {
+                LOG_WARN("OpenGL Failed to load texture from {}...", szFilePath);
+                glDeleteTextures(1, &hGlTexture);
+                hGlTexture = 0;
+            }
+            TextureHandle_t hHandle = hGlTexture == 0 ? k_INVALID_TEXTURE_HANDLE : (TextureHandle_t)hGlTexture;
+            TextureData_t data = {
+                .hTexture = hHandle,
+                .dwWidth = (uint32_t) width,
+                .dwHeight = (uint32_t)height,
+                .hInternalData = (uintptr_t)-1,
+            };
+
+            return data;
+        }
+
+        void Renderer_OpenGL::destroyTexture(TextureData_t hTexture) {
+            if (hTexture.hTexture != k_INVALID_TEXTURE_HANDLE) {
+                GLuint hGlTexture = (GLuint) hTexture.hTexture;
+                glDeleteTextures(1, &hGlTexture);
+            }
         }
     }
 }

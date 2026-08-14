@@ -27,6 +27,9 @@ namespace spacecal {
             void present(int width, int height) override;
 
             vr::Texture_t getVRTexture() override;
+
+            TextureData_t loadTexture(const std::string& szFilePath) override;
+            void destroyTexture(TextureData_t hTexture) override;
         private:
             IDXGIAdapter* get_dxgi_adapter_by_index_or_luid(int32_t adapterIndex, uint64_t dwLuid);
             bool create_d3d_device(HWND hWnd);

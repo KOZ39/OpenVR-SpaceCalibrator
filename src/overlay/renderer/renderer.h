@@ -2,6 +2,8 @@
 
 #include "platform.h"
 #include <inttypes.h>
+#include <string>
+#include <filesystem>
 // tell GLFW to NOT include OpenGL as it'll conflict with GLAD in the OpenGL backend
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -20,6 +22,16 @@ namespace spacecal {
         typedef uintptr_t RenderHandle_t;
         constexpr RenderHandle_t k_INVALID_RENDER_HANDLE = (RenderHandle_t)-1;
 
+        typedef uintptr_t TextureHandle_t;
+        constexpr TextureHandle_t k_INVALID_TEXTURE_HANDLE = (TextureHandle_t)-1;
+
+        struct TextureData_t {
+            TextureHandle_t hTexture = k_INVALID_TEXTURE_HANDLE;
+            uint32_t dwWidth = 0;
+            uint32_t dwHeight = 0;
+            uintptr_t hInternalData = (uintptr_t)-1; // index, for vulkan
+        };
+
         class IRenderContext {
         public:
             virtual ~IRenderContext() = default;
@@ -35,6 +47,10 @@ namespace spacecal {
             virtual void present(int width, int height) = 0;
             
             virtual vr::Texture_t getVRTexture() = 0;
+
+            virtual TextureData_t loadTexture(const std::string& szFilePath) = 0;
+            inline TextureData_t loadTexture(const std::filesystem::path& path) { return loadTexture(path.string()); }
+            virtual void destroyTexture(TextureData_t hTexture) = 0;
         };
 
         bool isGraphicsApiSupported(GraphicsBackend gfxApi);

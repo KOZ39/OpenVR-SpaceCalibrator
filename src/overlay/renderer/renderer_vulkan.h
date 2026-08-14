@@ -25,11 +25,15 @@ namespace spacecal {
             void present(int width, int height) override;
 
             vr::Texture_t getVRTexture() override;
+
+            TextureData_t loadTexture(const std::string& szFilePath) override;
+            void destroyTexture(TextureData_t hTexture) override;
             
         private:
             bool setupVulkan(ImVector<const char*> instance_extensions);
             bool getOpenvrVulkanInstanceExtensionsRequired(std::vector<std::string>& outInstanceExtensionList);
             bool getOpenvrVulkanDeviceExtensionsRequired(VkPhysicalDevice pPhysicalDevice, std::vector<std::string>& outDeviceExtensionList);
+            uint32_t findMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties);
         private:
             GLFWwindow* m_window = nullptr;
             int m_width = 0;
@@ -50,6 +54,18 @@ namespace spacecal {
             bool                     m_swapChainRebuild = false;
 
             vr::VRVulkanTextureData_t m_vrTextureData = {};
+
+            // auxiliary data
+            struct VkTextureData_t {
+                // VkDescriptorSet DS; --> this is TextureHandle_t
+                VkImageView     ImageView = VK_NULL_HANDLE;
+                VkImage         Image = VK_NULL_HANDLE;
+                VkDeviceMemory  ImageMemory = VK_NULL_HANDLE;
+                VkBuffer        UploadBuffer = VK_NULL_HANDLE;
+                VkDeviceMemory  UploadBufferMemory = VK_NULL_HANDLE;
+            };
+
+            std::vector<VkTextureData_t> m_loadedTextureData;
         };
     }
 }

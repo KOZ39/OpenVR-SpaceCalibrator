@@ -20,6 +20,9 @@ namespace spacecal {
             void present(int width, int height) override;
 
             vr::Texture_t getVRTexture() override;
+
+            TextureData_t loadTexture(const std::string& szFilePath) override;
+            void destroyTexture(TextureData_t hTexture) override;
         private:
             GLFWwindow* m_window = nullptr;
             GLuint m_fboHandle = 0;
