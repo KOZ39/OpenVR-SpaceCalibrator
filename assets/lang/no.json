@@ -1,0 +1,277 @@
+{
+  "app_title": "{0} {1}", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "app_title_vr": "{0} {1} - lukk VR-overlayet for å bruke musen", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "tracking_system_no_systems": "Fant ingen sporingsenheter. Slå på en enhet for å fortsette.", /* Should never be hit but you never know */
+
+  "error_unknown_catastrophic": "En alvorlig feil har oppstått! Vennligst rapporter dette til utvikleren enten på GitHub eller Steam-diskusjoner slik at dette kan rettes opp i.",
+  "ipc_unavailable": "Tilkobling til Space Calibrator SteamVR-driveren mislyktes. Velg \"Sjekk etter feil i spillfiler\" under Egenskaper ... -> Installerte filer, eller installer appen på nytt.",
+  "steamvr_unavailable": "Tilkobling til SteamVR mislyktes.",
+  "vr_troubleshooting_hmd_not_found": "Vennligst koble til VR-headsettet og start SteamVR først.",
+  "vr_troubleshooting_connect_steamlink": "Vennligst åpne SteamLink på VR-headsettet ditt og koble til SteamVR først.",
+  "vr_troubleshooting_generic": "Vennligst koble til VR-headsettet og start SteamVR først. ({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
+
+  "calibration_title": "Kalibrering",
+  "calibration_count_none": "Ingen kalibrering funnet. Vennligst opprett en ny kalibrering for å komme i gang.", // Shown when there are no calibrations active
+  "calibration_new": "Ny kalibrering",
+  "calibration_delete": "Slett kalibrering",
+  "calibration_next": "Neste kalibrering",
+  "calibration_previous": "Forrige kalibrering",
+
+  "calibration_status_none": "Ingen aktiv kalibrering",
+  "calibration_status_none_description": "Vennligst velg et par enheter og utfør kalibrering for å komme i gang.",
+  "calibration_status_edit": "Redigerer kalibreringen",
+  "calibration_status_edit_description": "Redigerer nåværende kalibrering.",
+  "calibration_status_continuous": "Kontinuerlig kalibrering",
+  "calibration_status_continuous_description": "Aktiv kalibrering pågår. En montert tracker brukes til å rekalibrere automatisk med få sekunders mellomrom.",
+  "calibration_status_standard": "Standard kalibrering",
+  "calibration_status_standard_description": "Du har en aktiv kalibrering. Ny kalibrering kan bli nødvendig ved eventuelle avvik (drift).",
+
+  // space here refers to a tracking space / tracking system.
+  "reference_device": "Referanseenhet",
+  "reference_device_description": "Dette er enheten som brukes til kalibrering, som regel VR-headsettet ditt eller en kontroller.",
+  "target_device": "Målenhet",
+  "target_device_description": "Denne enheten brukes til å rette inn trackere eller kontrollere.",
+  "select_reference_device": "Velg referanseenhet",
+  "select_target_device": "Velg målenhet",
+
+  "identify_selected_devices": "Identifiser valgte enheter (LED-blinking eller vibrasjon)",
+  "identify_auto_detect_devices": "Finn enheter automatisk",
+  "calibration_error_reference_hmd_missing": "Fant ikke målenheten i sporingssystemet \"{0}\". Ny kalibrering kan være nødvendig.", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "calibration_warning_stage_tracking_disabled": "Posisjonssporing er deaktivert! For en bedre opplevelse, åpne Virtual Desktop-menyen på din Quest, gå til Streamingfanen og aktiver \"Center to play area (Stage Tracking)\".",
+  "calibration_warning_stage_tracking_disabled_ignore_button": "Vis aldri dette igjen",
+
+  "calibration_action_start": "Standard kalibrering",
+  "calibration_action_clear": "Nullstill kalibrering",
+  "calibration_action_continuous": "Kontinuerlig kalibrering",
+  "calibration_action_edit": "Rediger kalibrering",
+  "save_calibration_profile": "Lagre profil",
+
+  "calibration_progress": "Kalibreringsfremdrift",
+  "calibration_info_move_around_insufficient_samples": "Hold de valgte enhetene inntil hverandre og gå rundt i spilleområdet mens du beveger dem i rolige åttetallsbevegelser.",
+
+  "calibration_speed": "Kalibreringshastighet",
+  "calibration_speed_description": "Tidsbruk ved kalibrering. Tregere kalibreringer er ofte mer presise.",
+  "calibration_speed_fast": "Rask",
+  "calibration_speed_slow": "Sakte",
+  "calibration_speed_very_slow": "Veldig sakte",
+
+  /* Editing calibrations */
+  "edit_calibration_rotation": "Rotasjon",
+  "edit_calibration_position": "Posisjon (m)",
+  "edit_calibration_yaw": "Yaw",
+  "edit_calibration_pitch": "Pitch",
+  "edit_calibration_roll": "Roll",
+  "edit_calibration_x": "X",
+  "edit_calibration_y": "Y",
+  "edit_calibration_z": "Z",
+  "edit_calibration_scale": "Skala (m)",
+
+  "continuous_hide_tracker": "Skjul referanseenheten fra apper",
+  "continuous_relative_calibration": "Slå på relativ kalibrering",
+  "continuous_relative_calibration_description": "Kalibreringen gjøres relativt til målenheten (som regel VR-headsettet), slik at den oppdateres i sanntid per bilde. Dette KREVER kontinuerlig kalibrering.",
+
+  /* HMD names for Virtual Desktop */
+  /* Virtual desktop lies that it's a Quest 2/3 on most headsets, so we have to substitute the real HMD name ourselves. you generally should
+     NOT have to change these! but some headsets have different names in certain regions (eg PFD MR is YVR MR in China) */
+  "virtual_desktop_hmd_none": "Ingen", /* should never appear but you never know*/
+  "virtual_desktop_hmd_gearvr": "Samsung Gear VR",
+  "virtual_desktop_hmd_oculus_go": "Oculus Go",
+  "virtual_desktop_hmd_oculus_quest_1": "Oculus Quest",
+  "virtual_desktop_hmd_oculus_quest_2": "Oculus Quest 2",
+  "virtual_desktop_hmd_meta_quest_pro": "Meta Quest Pro",
+  "virtual_desktop_hmd_pico_4": "Pico 4",
+  "virtual_desktop_hmd_meta_quest_3": "Meta Quest 3",
+  "virtual_desktop_hmd_meta_quest_3s": "Meta Quest 3S",
+  "virtual_desktop_hmd_pico_4_ultra": "Pico 4 Ultra",
+  "virtual_desktop_hmd_samsung_galaxy_xr": "Samsung Galaxy XR",
+  "virtual_desktop_hmd_play_for_dream_mr": "Play For Dream MR",
+
+  /* vertical tabs on the left */
+  "tab_page_calibration": "Kalibrering",
+  "tab_page_graphs": "Grafer",
+  "tab_page_base_station_management": "Basestasjoner",
+  "tab_page_settings": "Innstillinger",
+  "tab_page_debug": "Feilsøking",
+  "tab_page_learn": "Lær",
+  "tab_page_about": "Om",
+  
+  /* graphs */
+  "graphs_title": "Grafer",
+
+  /* base stations */
+  "base_stations_title": "Basestasjonshåndtering",
+  "base_stations_no_bluetooth": "Fant ingen gyldig Bluetooth-adapter. Koble til en BLE-kompatibel enhet for å bruke Basestasjonshåndtering.",
+  "base_stations_none_found": "Ingen basestasjoner ble funnet. Sørg for at de er plugget i hvis du har noen.",
+  "base_stations_header_info": "{0}", // 0: station ID (LHB XXXXXXXX) / nickname
+  "base_stations_warning_collision": "Kanalkollisjon funnet! Dette skaper problemer med sporingen. Hver basestasjon må ha sin egen kanal.",
+  "base_stations_state_sleep": "Hvilemodus",
+  "base_stations_state_standby": "Standby",
+  "base_stations_state_active": "Aktiv",
+  "base_stations_state_unknown": "Ukjent",
+  "base_stations_channel_select_label": "Velg en basestasjonskanal:",
+  "base_stations_active_channel": "Kanal {0}", // 0: channel number (1-15) ; eg Channel 12
+  "base_stations_nickname": "Kallenavn",
+
+  /* actions */
+  "base_stations_action_wake_all": "Vekk alle",
+  "base_stations_action_sleep_all": "Sett alle i hvilemodus",
+  "base_stations_action_fix_collisions": "Løs kanalkollisjoner",
+  "base_stations_btn_wake": "Vekk",
+  "base_stations_btn_standby": "Standby",
+  "base_stations_btn_sleep": "Hvilemodus",
+  "base_stations_btn_edit": "Rediger",
+  "base_stations_btn_save": "Lagre",
+
+  "base_station_power_management": "Strømstyring for basestasjoner",
+  "base_stations_power_mgmt_enable": "Aktiver strømstyring *",
+  "base_stations_power_mgmt_enable_description_standby": "Tilkoblede basestasjoner går i standby når SteamVR ikke er i bruk, og våkner igjen når SteamVR starter.",
+  "base_stations_power_mgmt_enable_description_sleep": "Tilkoblede basestasjoner går i hvilemodus når SteamVR ikke er i bruk, og våkner igjen når SteamVR starter.",
+  "base_stations_power_mgmt_on_startup": "Aktiver basestasjoner ved oppstart av SteamVR",
+  "base_stations_power_mgmt_on_startup_description": "Inaktive basestasjoner vekkes når SteamVR kjøres.",
+  "base_stations_power_mgmt_on_shutdown": "Slå av basestasjoner når SteamVR lukkes",
+  "base_stations_power_mgmt_on_shutdown_description": "Basestasjoner slår seg av når SteamVR ikke brukes.",
+  "base_stations_power_mgmt_standby": "Standby",
+  "base_stations_power_mgmt_standby_description": "Basestasjonene deaktiverer kun laserne for at de skal våkne raskere når SteamVR starter. Dette støttes ikke av 1.0-modeller eller visse 2.0-modeller, og disse vil i stedet gå i hvilemodus.",
+  "base_stations_power_mgmt_sleep": "Hvilemodus",
+  "base_stations_power_mgmt_sleep_description": "Basestasjoner slår av lasere og motorer.",
+  "base_stations_power_mgmt_warning": "* ANBEFALES IKKE for delte sporingsområder med flere SteamVR-brukere.",
+
+  /* settings */
+  "settings_title": "Innstillinger",
+  "settings_advanced": "Avanserte innstillinger",
+  "settings_advanced_description": "Viser avanserte innstillinger og finjustering for erfarne brukere.",
+  "settings_calibrate_motion_vectors": "Kalibrer bevegelsesvektorer",
+  "settings_calibrate_motion_vectors_description": "Gir bedre bevegelsesforutsigbarhet for raskere sporing. Kan påvirke spill med mye fysikk.",
+  "settings_autofix_playspace_jumps": "Autokorriger hopp i spilleområdet",
+  "settings_autofix_playspace_jumps_description": "Prøver å automatisk finne og rette opp plutselige hopp i sporing av spilleområdet.",
+  "settings_enforce_minimum_rotation_variance": "Tving minimum rotasjonsvarians",
+  "settings_enforce_minimum_rotation_variance_description": "Avviser automatisk prøver med lignende rotasjon for å forbedre kalibreringskvaliteten.",
+  "settings_locale": "Språk",
+  "settings_reset": "Nullstill alle innstillinger",
+  "settings_reset_description": "Tilbakestiller alle innstillinger til standardverdier. Dette er permanent og kan ikke angres.",
+  "settings_reset_confirm": "Denne endringen er permanent og kan ikke angres. Er du sikker på at du vil fortsette?",
+  "settings_reset_yes": "Ja",
+  "settings_reset_no": "Nei",
+
+  /* about */
+  "about_title": "Om",
+  "about_description": "Space Calibrator er et gratis programvareverktøy basert på åpen kildekode som gjør det mulig å kombinere utstyr fra forskjellige leverandører i SteamVR.",
+  "about_view_source_info": "Kildekoden er tilgjengelig i GitHub-repositoriet.",
+  "about_contributors_title": "Bidragsytere",
+  "about_contributors_description": "Space Calibrator har blitt til takket være følgende personer:",
+  "about_translators_title": "Oversettere",
+  "about_translators_description": "Space Calibrator har blitt oversatt av følgende personer:",
+  "about_licenses_title": "Lisenser",
+  "about_licenses_description": "Dette programmet er utgitt under MIT-lisensen. Andre avhengigheter har egne lisensvilkår; se oversikten nedenfor for mer informasjon.",
+  "about_link_github": "GitHub",
+  "about_link_discord": "Discord-server",
+  "about_link_logs_dir": "Loggmappe",
+  
+  /* self-troubleshooting */
+  /* found another driver loaded in SteamVR -> legacy ipc connection successful */
+  "troubleshoot_diagnosis_legacy_ipc_found_title": "En annen instans av Space Calibrator kjører allerede",
+  "troubleshoot_diagnosis_legacy_ipc_found_description": "En annen versjon av Space Calibrator kjører allerede. Du må avinstallere denne før du kan fortsette. Vil du at denne skal fjernes automatisk?",
+  /* found legacy overlay key registered (non steam) */
+  "troubleshoot_diagnosis_legacy_overlay_found_title": "En annen instans av Space Calibrator kjører allerede",
+  "troubleshoot_diagnosis_legacy_overlay_found_description": "Det finnes allerede en annen versjon av Space Calibrator på maskinen. Vil du avinstallere denne?",
+  "troubleshoot_action_yes": "Ja",
+  "troubleshoot_action_no": "Nei",
+  "troubleshoot_action_quit": "Avslutt",
+
+  /* tutorial */
+  "learn_title": "Lær",
+  "learn_card_standard_calibration": "Standard kalibrering",
+  "learn_card_standard_calibration_description": "Lær hvordan du kalibrerer et par enheter.",
+  "learn_card_continuous_calibration": "Kontinuerlig kalibrering",
+  "learn_card_continuous_calibration_description": "Kalibrerer ofte for å kompensere for avvik (drift) i løpet av økten.",
+  "learn_card_base_station_management": "Basestasjonshåndtering",
+  "learn_card_base_station_management_description": "Trådløs styring av dine SteamVR-basestasjoner.",
+  "learn_card_ui_tour": "Omvisning i brukergrensesnittet",
+  "learn_card_ui_tour_description": "Oversikt over brukergrensesnittet i Space Calibrator.",
+  "learn_action_back": "Tilbake",
+
+  /* these are kinda like a messed up wiki because its inlined into the app like this, oh well lol */
+  "learn_page_standard_desc": "Standardkalibrering synkroniserer to sporingssystemer slik at VR-enhetene dine fungerer sammen på samme fysiske område.",
+  "learn_page_standard_select_devices_title": "Velg enhetene dine",
+  "learn_page_standard_select_devices_desc": "Appen trenger å vite hvilke to enheter som skal synkroniseres før du kan starte.",
+  "learn_page_standard_ref_device": "Referanseenhet: Dette er enheten du kalibrerer etter, som regel en kontroller.",
+  "learn_page_standard_target_device": "Målenhet: Den ujusterte enheten som skal kalibreres, som regel en tracker eller tilsvarende.",
+  "learn_page_standard_perform_title": "Utfør kalibreringen",
+  "learn_page_standard_perform_step1": "Hold begge enhetene i et fast grep med én hånd. Pass på at de holdes helt i ro mens kalibreringen pågår.",
+  "learn_page_standard_perform_step2": "Trykk på Standardkalibrering-knappen for å starte kalibreringen.",
+  "learn_page_standard_perform_step3": "Gå rundt i rommet mens du fører enhetene i et åttetall, som vist under.",
+  "learn_page_standard_speeds_title": "Kalibreringshastigheter",
+  "learn_page_standard_speeds_desc": "Du kan velge å justere kalibreringshastigheten for å styre hvor mye bevegelse som trengs. Økt bevegelse gir som regel bedre kalibreringskvalitet.",
+  "learn_page_standard_speed_fast": "Rask: Sparer tid ved kalibrering, men kan gi et mindre presist resultat.",
+  "learn_page_standard_speed_slow": "Sakte / Veldig sakte: Kalibreringen tar lengre tid, men gir ofte mer presise resultater.",
+  "learn_page_standard_completion_note": "Når fremdriftslinjen er fullført, skal enhetene dine dukke opp i VR med en gang. Prøv å kalibrere på nytt dersom dette ikke skjer.",
+  "learn_page_standard_drift_title": "En merknad om avvik (drift)",
+  "learn_page_standard_drift_desc": "Enhetene dine kan miste nøyaktigheten over tid slik at kalibreringen ikke lenger stemmer. Skjer dette, må du utføre en ny kalibrering. Dersom dette må gjøres ofte, bør du vurdere å aktivere kontinuerlig kalibrering.",
+
+  "learn_page_continuous_desc1": "Dersom du opplever at enhetene dine begynner å skli eller rotere ut av stilling mens du spiller, så vil kontinuerlig kalibrering være en mulig løsning.",
+  "learn_page_continuous_desc2": "Kontinuerlig kalibrering sørger for at sporingen din alltid er synkronisert i bakgrunnen mens du spiller, slik at du slipper å avbryte spillet for manuell kalibrering.",
+  "learn_page_continuous_note_title": "Merk",
+  "learn_page_continuous_note_desc": "Du MÅ ha en egen tracker montert på VR-headsettet ditt for å bruke denne funksjonen.",
+  "learn_page_continuous_desc3": "Kontinuerlig kalibrering prøver å rekalibrere enhetene dine med jevne mellomrom for å fjerne alt av drift. Dette gjør at du slipper å tenke på kalibrering etter at første oppsett er ferdig.",
+  "learn_page_continuous_setup_instructions": "For å konfigurere kontinuerlig kalibrering må du først velge enhetene dine slik de er beskrevet under standardkalibrering. VR-headsettet skal velges som referanseenhet, mens kalibreringstrackeren skal være målenhet. Trykk så på knappen for kontinuerlig kalibrering for å sette i gang. Den første kalibreringen kan ta litt tid, så beveg deg gjerne rundt for å hjelpe appen med å forstå bevegelsene dine!",
+  "learn_page_continuous_should_use_title": "Bør du bruke kontinuerlig kalibrering?",
+  "learn_page_continuous_should_use_standard": "Velg standardkalibrering hvis du ikke har en ekstra tracker på VR-headsettet, sjelden har lange VR-økter, eller synes det er greit å rekalibrere litt når det oppstår avvik.",
+  "learn_page_continuous_should_use_continuous": "Benytt kontinuerlig kalibrering for å slippe å bekymre deg for avvik. Dette er lurt om du bruker mye tid i VR eller opplever at posisjonen forskyver seg over tid.",
+  "learn_page_continuous_physical_setup_title": "Fysisk oppsett (montering av trackeren på VR-headsettet ditt)",
+  "learn_page_continuous_physical_setup_desc1": "Kontinuerlig kalibrering krever en egen tracker montert på VR-headsettet ditt. Utvalget av fester varierer basert på hvilket VR-headsett og tracker-modell du har. Som regel finner du 3D-modeller på nettet som kan 3D-printes for å komme i gang, ellers kan du spørre rundt i fellesskapet for å få tips fra andre.",
+  "learn_page_continuous_physical_setup_desc2": "Etter montering må trackeren sitte stødig på VR-headsettet. Den skal ikke kunne bevege seg, rotere eller riste. En stabil montering sikrer mer nøyaktig kalibrering.",
+
+  "learn_page_basestation_desc": "Space Calibrator gjør det mulig å styre SteamVR-basestasjoner, forutsatt at du har en kompatibel BLE Bluetooth-adapter.",
+  "learn_page_basestation_1_title": "Basestasjon 1.0-modeller",
+  "learn_page_basestation_1_desc": "Disse kan kun skrus av eller på. Det er ikke mulig å endre kanaler trådløst; du må i stedet bruke den fysiske knappen bak på basestasjonen for å bytte kanal.",
+  "learn_page_basestation_2_title": "Basestasjon 2.0-modeller",
+  "learn_page_basestation_2_desc1": "Produsert av både Valve og HTC, disse tilbyr bedre trådløs styring enn 1.0-basestasjoner. Her kan du kontrollere av- og på-funksjonen og endre kanalinnstillinger. 2.0-basestasjoner må ha hver sin unike kanal for å fungere. Skulle det oppstå en konflikt, vil Space Calibrator hjelpe deg med å løse den.",
+  "learn_page_basestation_2_desc2": "For å endre kanal på en 2.0-basestasjon, går du til Basestasjonshåndtering-tabben, trykker på redigeringsikonet for den aktuelle basestasjonen og velger ønsket kanal (markert med grønt).",
+  "learn_page_basestation_auto_power_title": "Automatisk strømstyring",
+  "learn_page_basestation_auto_power_desc": "Under innstillingsfanen kan du aktivere automatisk styring av basestasjoner. Dette slår på basestasjonene når Space Calibrator starter, og slår dem av igjen når SteamVR lukkes (så lenge Space Calibrator kjører). Merk at basestasjonene IKKE slås av automatisk hvis du lukker Space Calibrator manuelt før SteamVR.",
+
+  "learn_page_ui_tour_desc": "Dette grensesnittet er delt opp i flere faner som inneholder forskjellige ting.",
+  "learn_page_ui_tour_calibration_heading": "Kalibreringsfane",
+  "learn_page_ui_tour_cal_desc1": "Kalibreringsfanen inneholder innstillinger for kalibrering. Her kan du administrere kalibreringene dine.",
+  "learn_page_ui_tour_cal_desc2": "Øverst ser du et kort som forteller om en kalibrering er aktiv, og hvilken type det er snakk om.",
+  "learn_page_ui_tour_cal_desc3": "Under dette velger du hvilke enheter som skal brukes til kalibrering. Begynn med å velge sporingssystemene som skal kalibreres. Bruk deretter venstre rute for å velge referanseenhet, og høyre rute for å velge enheten som skal kalibreres.",
+  "learn_page_ui_tour_cal_desc4": "Under dette finner du knappene for å utføre en kalibrering. Er du usikker på hvilken metode du skal bruke, finner du mer informasjon på sidene om standard og kontinuerlig kalibrering.",
+  "learn_page_ui_tour_cal_desc5": "Nederst i kalibreringsfanen ligger det flere alternativer for kalibrering. Enkelte av disse valgene forutsetter at avanserte innstillinger er aktivert.",
+  "learn_page_ui_tour_base_stations_heading": "Basestasjonshåndteringsfanen",
+  "learn_page_ui_tour_bs_desc": "Her kan du styre alle basestasjoner i rommet ditt via en støttet BLE Bluetooth-adapter. Som regel er det ikke behov for å endre disse innstillingene etter første gangs oppsett.",
+  "learn_page_ui_tour_settings_heading": "Innstillingsfane",
+  "learn_page_ui_tour_settings_desc1": "Her kan du konfigurere programmets globale innstillinger, som avanserte innstillinger, basestasjonshåndtering og språk.",
+  "learn_page_ui_tour_settings_desc2": "Noen funksjoner krever at du slår på avanserte innstillinger. Dette bør kun gjøres av erfarne brukere.",
+
+  /* Names of the various languages one may select. Shown in settings */
+  "languages_en_GB": "Engelsk (UK)",
+  "languages_en_US": "Engelsk (US)",
+  "languages_fr": "Fransk",
+  "languages_it": "Italiensk",
+  "languages_de": "Tysk",
+  "languages_nl": "Nederlandsk",
+  "languages_es_ES": "Spansk (Spania)",
+  "languages_es_US": "Spansk (Latin-Amerika)",
+  "languages_da": "Dansk",
+  "languages_sv": "Svensk",
+  "languages_fi": "Finsk",
+  "languages_no": "Norsk",
+  "languages_bg": "Bulgarsk",
+  "languages_pl": "Polsk",
+  "languages_cs": "Tsjekkisk",
+  "languages_el": "Gresk",
+  "languages_hu": "Ungarsk",
+  "languages_pt_PT": "Portugisisk (Portugal)",
+  "languages_pt_BR": "Portugisisk (Brasil)",
+  "languages_ro": "Rumensk",
+  "languages_ru": "Russisk",
+  "languages_tr": "Tyrkisk",
+  "languages_uk": "Ukrainsk",
+  "languages_zh_HANS": "Kinesisk (Forenklet)",
+  "languages_zh_HANT": "Kinesisk (Tradisjonell)",
+  "languages_ja": "Japansk",
+  "languages_ko": "Koreansk",
+  "languages_th": "Thai",
+  "languages_vi": "Vietnamesisk",
+  "languages_system": "Systemspråk"
+}
