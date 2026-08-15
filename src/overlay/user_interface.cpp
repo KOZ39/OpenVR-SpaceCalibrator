@@ -334,7 +334,7 @@ namespace spacecal {
 
             ImGui::TableNextColumn();
             ImGui::TextUnformatted(LOCALE_GET("calibration_speed").c_str());
-            ImGui::TextDisabled("%s", LOCALE_GET("calibration_speed_description").c_str());
+            ImGui::TextWrappedDisabled(LOCALE_GET("calibration_speed_description").c_str());
 
             ImGui::TableNextColumn();
             if (ImGui::RadioButton(LOCALE_GET("calibration_speed_fast").c_str(), speed == CalibrationSpeed::FAST)) {
@@ -932,19 +932,19 @@ namespace spacecal {
                 ConfigurationManager::getInstance()->saveConfiguration();
             }
 
-            ImGui::Indent(fCheckboxTextIndent);
             if (g_state.bIsSettingsAdvanced) {
+                ImGui::Indent(fCheckboxTextIndent);
                 if (ImGui::RadioButtonWithDescription(LOCALE_GET("base_stations_power_mgmt_standby").c_str(), !g_state.bBaseStationPowerManagementOffModeIsSleep, LOCALE_GET("base_stations_power_mgmt_standby_description").c_str())) {
                     ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby = true;
                     ConfigurationManager::getInstance()->saveConfiguration();
                 }
-            }
 
-            if (ImGui::RadioButtonWithDescription(LOCALE_GET("base_stations_power_mgmt_sleep").c_str(), g_state.bBaseStationPowerManagementOffModeIsSleep, LOCALE_GET("base_stations_power_mgmt_sleep_description").c_str())) {
-                ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby = false;
-                ConfigurationManager::getInstance()->saveConfiguration();
+                if (ImGui::RadioButtonWithDescription(LOCALE_GET("base_stations_power_mgmt_sleep").c_str(), g_state.bBaseStationPowerManagementOffModeIsSleep, LOCALE_GET("base_stations_power_mgmt_sleep_description").c_str())) {
+                    ConfigurationManager::getInstance()->getConfiguration()->base_stations.off_should_use_standby = false;
+                    ConfigurationManager::getInstance()->saveConfiguration();
+                }
+                ImGui::Unindent(fCheckboxTextIndent);
             }
-            ImGui::Unindent(fCheckboxTextIndent);
             ImGui::Unindent(fCheckboxTextIndent);
             ImGui::EndDisabled();
 
@@ -1508,18 +1508,6 @@ namespace spacecal {
     void page_tutorial(double currentTime) {
         ImGui::TextTitle("%s", LOCALE_GET("learn_title").c_str());
 
-#define DRAW_DUMMY_IMAGE(label, height) \
-    do { \
-        if (ImGui::BeginChild((label), ImVec2(-1.0f, (height)), ImGuiChildFlags_Borders)) { \
-            ImVec2 avail = ImGui::GetContentRegionAvail(); \
-            ImVec2 textSize = ImGui::CalcTextSize(label); \
-            ImGui::SetCursorPos(ImVec2((avail.x - textSize.x) * 0.5f, (avail.y - textSize.y) * 0.5f)); \
-            ImGui::TextUnformatted(label); \
-        } \
-        ImGui::EndChild(); \
-        ImGui::Spacing(); \
-    } while (0)
-
 #define DRAW_IMAGE(label, idx) \
     do { \
         if (ImGui::BeginChild((label), ImVec2(-1.0f, (float)g_state.textures[idx].dwHeight))) { \
@@ -1595,7 +1583,6 @@ namespace spacecal {
                 ImGui::Spacing();
 
                 // video demonstrating calibration method
-                DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
                 DRAW_IMAGE("calibrate_diagram", EImageId_LearnStandard_CalibrateDiagram);
 
                 ImGui::TextHeading(LOCALE_GET("learn_page_standard_speeds_title").c_str());
@@ -1633,7 +1620,6 @@ namespace spacecal {
                 ImGui::TextWrapped(LOCALE_GET("learn_page_continuous_setup_instructions").c_str());
 
                 // pic of tracker on virtual VR headset to illustrate mounting
-                DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
                 DRAW_IMAGE("continuous_mount", EImageId_LearnContinuous_Mounting);
 
                 ImGui::TextHeading(LOCALE_GET("learn_page_continuous_should_use_title").c_str());
@@ -1669,7 +1655,6 @@ namespace spacecal {
                 ImGui::TextHeading(LOCALE_GET("learn_page_basestation_auto_power_title").c_str());
                 ImGui::TextWrapped(LOCALE_GET("learn_page_basestation_auto_power_desc").c_str());
 
-                DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
                 DRAW_IMAGE("basestation_image", EImageId_LearnBaseStation_Unk);
                 break;
             }
@@ -1686,14 +1671,12 @@ namespace spacecal {
                 ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_cal_desc4").c_str());
                 ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_cal_desc5").c_str());
 
-                DRAW_DUMMY_IMAGE("TODO: Image here##0", 140.0f);
                 DRAW_IMAGE("ui_tour_0", EImageId_LearnUI_Unk0);
 
                 ImGui::TextHeading(LOCALE_GET("learn_page_ui_tour_base_stations_heading").c_str());
                 ImGui::TextWrapped(LOCALE_GET("learn_page_ui_tour_bs_desc").c_str());
                 ImGui::Spacing();
 
-                DRAW_DUMMY_IMAGE("TODO: Image here##2", 140.0f);
                 DRAW_IMAGE("ui_tour_1", EImageId_LearnUI_Unk1);
                 
                 ImGui::TextHeading(LOCALE_GET("learn_page_ui_tour_settings_heading").c_str());
