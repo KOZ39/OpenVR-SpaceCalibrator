@@ -104,10 +104,11 @@
   "base_stations_none_found": "Базовые станции не найдены. Проверьте, подключены ли они к сети.",
   "base_stations_header_info": "{0}", // 0: station ID (LHB XXXXXXXX) / nickname
   "base_stations_warning_collision": "Базовые станции находятся на одном канале! Из-за этого будут проблемы с отслеживанием. Базовые станции должны находиться на разных каналах.",
-  "base_stations_state_sleep": "Сон",
+  "base_stations_state_sleep": "Режим сна",
   "base_stations_state_standby": "Ожидание",
-  "base_stations_state_active": "Активный",
-  "base_stations_state_unknown": "Неизвестно",
+  "base_stations_state_active": "Работает",
+  "base_stations_state_unknown": "Неизвестный режим",
+"base_stations_state_faulty": "Неисправна",
   "base_stations_channel_select_label": "Выберите канал базовой станции:",
   "base_stations_active_channel": "Канал {0}", // 0: channel number (1-15) ; eg Channel 12
   "base_stations_nickname": "Имя",
@@ -117,9 +118,9 @@
   "base_stations_action_sleep_all": "Перевести все в режим сна",
   "base_stations_action_fix_collisions": "Исправить конфликты каналов",
   "base_stations_btn_wake": "Разбудить",
-  "base_stations_btn_standby": "В режим ожидания",
-  "base_stations_btn_sleep": "В режим сна",
-  "base_stations_btn_edit": "Редактировать",
+  "base_stations_btn_standby": "Режим ожидания",
+  "base_stations_btn_sleep": "Режим сна",
+  "base_stations_btn_edit": "Изменить",
   "base_stations_btn_save": "Сохранить",
 
   "base_station_power_management": "Управление питанием базовых станций",

@@ -108,6 +108,7 @@
   "base_stations_state_standby": "Czuwanie",
   "base_stations_state_active": "Aktywny",
   "base_stations_state_unknown": "Nieznany",
+  "base_stations_state_faulty": "Wadliwy",
   "base_stations_channel_select_label": "Wybierz kanał Stacji Bazowej:",
   "base_stations_active_channel": "Kanał {0}", // 0: channel number (1-15) ; eg Channel 12
   "base_stations_nickname": "Nazwa własna",

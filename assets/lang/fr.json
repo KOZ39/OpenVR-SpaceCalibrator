@@ -108,6 +108,7 @@
   "base_stations_state_standby": "En attente",
   "base_stations_state_active": "Active",
   "base_stations_state_unknown": "Inconnu",
+  "base_stations_state_faulty": "cassée :/",
   "base_stations_channel_select_label": "Sélectionner un canal pour votre station de base :",
   "base_stations_active_channel": "Canal {0}", // 0: channel number (1-15) ; eg Channel 12
   "base_stations_nickname": "Surnom",
