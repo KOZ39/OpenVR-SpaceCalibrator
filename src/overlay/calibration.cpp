@@ -791,8 +791,6 @@ namespace spacecal {
                 }
             }
         }
-        
-        m_lastTick = currentTime;
 
         // detect playspace jumps and try auto-correcting for it.
         if (autoFixPlayspaceJumps) {
@@ -815,6 +813,20 @@ namespace spacecal {
                 m_zRefPrev = (float)refPose[2];
             }
         }
+
+        if (state == CalibrationState::AUTO_DETECT_DEVICES_STANDARD || state == CalibrationState::AUTO_DETECT_DEVICES_CONTINUOUS) {
+            // @TODO: measure velocities, compare, determine devices
+            if (detectCorrelatingDevices(currentTime)) {
+                if (state == CalibrationState::AUTO_DETECT_DEVICES_STANDARD) {
+                    state = CalibrationState::NONE;
+                }
+                else if (state == CalibrationState::AUTO_DETECT_DEVICES_CONTINUOUS) {
+                    state = CalibrationState::CONTINUOUS_IDLE;
+                }
+            }
+        }
+
+        m_lastTick = currentTime;
 
         if (state == CalibrationState::CONTINUOUS_IDLE) {
             wantedUpdateInterval = 1.0;
@@ -845,18 +857,6 @@ namespace spacecal {
                 m_lastScan = currentTime;
             }
             return;
-        }
-
-        if (state == CalibrationState::AUTO_DETECT_DEVICES_STANDARD || state == CalibrationState::AUTO_DETECT_DEVICES_CONTINUOUS) {
-
-            // @TODO: measure velocities, compare, determine devices
-            if (detectCorrelatingDevices(currentTime)) {   
-                if (state == CalibrationState::AUTO_DETECT_DEVICES_STANDARD) {
-                    state = CalibrationState::NONE;
-                } else if (state == CalibrationState::AUTO_DETECT_DEVICES_CONTINUOUS) {
-                    state = CalibrationState::CONTINUOUS_IDLE;
-                }
-            }
         }
 
         if (state == CalibrationState::START || state == CalibrationState::CONTINUOUS_IDLE) {
@@ -999,9 +999,13 @@ namespace spacecal {
     }
 
     void TrackingSystemCalibration::autoDetectDevices() {
+        LOG_CALIB_INFO("Entering auto-detection mode...");
         state = isContinuousCalibration() ? CalibrationState::AUTO_DETECT_DEVICES_CONTINUOUS : CalibrationState::AUTO_DETECT_DEVICES_STANDARD;
         m_candidateScore = 0;
         m_autoDetectStartTime = NAN;
+        for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
+            m_autoDetectSpeeds[i] = 0.0;
+        }
     }
 
     bool TrackingSystemCalibration::detectCorrelatingDevices(double currentTime) {
@@ -1014,20 +1018,27 @@ namespace spacecal {
         vr::TrackedDeviceIndex_t frameTargetId = vr::k_unTrackedDeviceIndexInvalid;
         double frameClosestSpeedDelta = 999.0;
 
+        // because some vendors (vd) do njot provide velocity we estimate it from first principles...
+        double deltaTime = currentTime - m_lastTick;
         for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
-            const auto& poseI = CalibrationManager::getInstance()->m_poses[i];
-            if (!poseI.deviceIsConnected || !poseI.poseIsValid || poseI.result != vr::ETrackingResult::TrackingResult_Running_OK)
+            const auto& pose = CalibrationManager::getInstance()->m_poses[i];
+            const auto& lastPose = CalibrationManager::getInstance()->m_lastPoses[i];
+            if (!pose.deviceIsConnected || !pose.poseIsValid || pose.result != vr::ETrackingResult::TrackingResult_Running_OK)
                 continue;
+            if (!lastPose.deviceIsConnected || !lastPose.poseIsValid || lastPose.result != vr::ETrackingResult::TrackingResult_Running_OK)
+                continue;
+            double deltas[3] = { (pose.vecPosition[0] - lastPose.vecPosition[0]), (pose.vecPosition[1] - lastPose.vecPosition[1]), (pose.vecPosition[2] - lastPose.vecPosition[2]) };
+            m_autoDetectSpeeds[i] += (deltas[0] * deltas[0] + deltas[1] * deltas[1] + deltas[2] * deltas[2]) / deltaTime;
+        }
 
-            double speedI = Eigen::Vector3d(poseI.vecVelocity[0], poseI.vecVelocity[1], poseI.vecVelocity[2]).norm();
+        for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
+            double speedI = m_autoDetectSpeeds[i];
+            if (isnan(speedI)) continue;
             if (speedI < k_AUTO_DETECT_MIN_VELOCITY_THRESHOLD) continue;
 
             for (vr::TrackedDeviceIndex_t j = i + 1; j < vr::k_unMaxTrackedDeviceCount; j++) {
-                const auto& poseJ = CalibrationManager::getInstance()->m_poses[j];
-                if (!poseJ.deviceIsConnected || !poseJ.poseIsValid || poseJ.result != vr::ETrackingResult::TrackingResult_Running_OK)
-                    continue;
-
-                double speedJ = Eigen::Vector3d(poseJ.vecVelocity[0], poseJ.vecVelocity[1], poseJ.vecVelocity[2]).norm();
+                double speedJ = m_autoDetectSpeeds[j];
+                if (isnan(speedJ)) continue;
                 if (speedJ < k_AUTO_DETECT_MIN_VELOCITY_THRESHOLD) continue;
 
                 double speedDelta = std::abs(speedI - speedJ);
@@ -1046,10 +1057,12 @@ namespace spacecal {
                 m_candidateRefId = frameRefId;
                 m_candidateTargetId = frameTargetId;
                 m_candidateScore = 1;
-            } else if (m_candidateRefId == frameRefId && m_candidateTargetId == frameTargetId) {
+            }
+            else if (m_candidateRefId == frameRefId && m_candidateTargetId == frameTargetId) {
                 // the same pair we found earlier are moving together
                 m_candidateScore++;
-            } else {
+            }
+            else {
                 // a different pair was found, this may be a false positive so decrease score for now
                 m_candidateScore--;
                 if (m_candidateScore <= 0) {
@@ -1059,11 +1072,12 @@ namespace spacecal {
                     m_candidateScore = 1;
                 }
             }
-        } else {
+        }
+        else {
             // no devices generated a valid pair, did the user stop moving?
             if (m_candidateScore > 0) m_candidateScore--;
         }
-        
+
         if (currentTime - m_autoDetectStartTime >= k_AUTO_DETECT_DURATION) {
             if (m_candidateRefId != vr::k_unTrackedDeviceIndexInvalid && m_candidateTargetId != vr::k_unTrackedDeviceIndexInvalid && m_candidateScore > k_AUTO_DETECT_MINIMUM_SCORE) {
                 const auto& refDevInfo = VRState::getInstance()->getVrDevice(m_candidateRefId);
@@ -1071,11 +1085,18 @@ namespace spacecal {
 
                 referenceDevice.deviceId = m_candidateRefId;
                 referenceDevice.trackingSystem = refDevInfo.szTrackingSystemId;
+                referenceDevice.deviceModel = refDevInfo.szModel;
+                referenceDevice.deviceSerialNumber = refDevInfo.szSerial;
 
                 targetDevice.deviceId = m_candidateTargetId;
                 targetDevice.trackingSystem = targetDevInfo.szTrackingSystemId;
+                targetDevice.deviceModel = targetDevInfo.szModel;
+                targetDevice.deviceSerialNumber = targetDevInfo.szSerial;
 
                 LOG_CALIB_INFO("Automatically detected devices; ref: ID {}, target: ID {}", m_candidateRefId, m_candidateTargetId);
+
+                // we found a new tracking system pair, update the settings
+                CalibrationManager::getInstance()->saveConfig();
                 return true;
             } else {
                 LOG_CALIB_WARN("Failed to automatically detect devices. Did the user move them enough?");
@@ -1281,6 +1302,8 @@ namespace spacecal {
             // @NOTE: is max better here?
             m_wantedUpdateInterval = wantedInterval / countedCalibrations;
         }
+
+        memcpy(m_lastPoses, m_poses, sizeof(m_lastPoses));
     }
 
     void CalibrationManager::apply() {

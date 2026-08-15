@@ -13,9 +13,9 @@ namespace spacecal {
     constexpr double k_TICK_RATE_HZ = 20.0; // tick rate spacecal's internal logic runs at
     constexpr double k_MAX_INVALID_CALIBRATION_TIME_SEC = 60.0; // 60s between invalid calibrations
     constexpr double k_IPC_CONNECTION_RETRY_INTERVAL_SEC = 0.25; // 250ms between IPC connection attempts
-    constexpr double k_AUTO_DETECT_DURATION = 2.0; // 2 seconds for auto-detection
+    constexpr double k_AUTO_DETECT_DURATION = 5.0; // 2 seconds for auto-detection
     constexpr int k_AUTO_DETECT_MINIMUM_SCORE = 40;
-    constexpr float k_AUTO_DETECT_MIN_VELOCITY_THRESHOLD = 0.2f; // devices need to be moving enough for us to consider them
+    constexpr float k_AUTO_DETECT_MIN_VELOCITY_THRESHOLD = 0.1f; // devices need to be moving enough for us to consider them
     constexpr float k_AUTO_DETECT_MAX_VELOCITY_DIFF = 0.15f;     // speed tolerance between devices, we only allow for up to this much variance in speed due to hardware differences and unit to unit variance
     constexpr double k_PLAYSPACE_JUMP_WORLD_FROM_DRIVER_ANGLE_THRESHOLD_RAD = 1.0 * (EIGEN_PI / 180.0);     // the angular threshold of movement for detecting sudden playspace jumps from a device
     constexpr double k_PLAYSPACE_JUMP_WORLD_FROM_DRIVER_POS_THRESHOLD_METERS = 0.005;                       // the threshold in metres for detecting sudden playspace jumps from a device
@@ -287,6 +287,7 @@ namespace spacecal {
         float m_autoDetectStartTime = NAN;
         vr::TrackedDeviceIndex_t m_candidateRefId = vr::k_unTrackedDeviceIndexInvalid;
         vr::TrackedDeviceIndex_t m_candidateTargetId = vr::k_unTrackedDeviceIndexInvalid;
+        double m_autoDetectSpeeds[vr::k_unMaxTrackedDeviceCount] = {};
 
         // for detecting if a device jumps from one playspace to another
         Eigen::Quaterniond  m_lastRefWorldFromDriverRot = Eigen::Quaterniond::Identity();
@@ -333,8 +334,9 @@ namespace spacecal {
         double m_lastIpcConnectionAttemptTime = 0.0;
         bool m_needToApplyTransformsAfterInit = false;
 
-    public: // @HACK: i just want something in the ui for now
+    public:
         vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {};
+        vr::DriverPose_t m_lastPoses[vr::k_unMaxTrackedDeviceCount] = {};
     private:
         std::vector<TrackingSystemCalibration> m_calibrations;
         VRState m_vrState;
