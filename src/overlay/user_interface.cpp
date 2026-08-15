@@ -1141,6 +1141,11 @@ namespace spacecal {
                         break;
                     }
 
+                    if (base_station.isFirmwareCooked) {
+                        statusStr = LOCALE_GET("base_stations_state_faulty");
+                        statusBgColor = Colors::Purple;
+                    }
+
                     float pillWidth = ImGui::CalcTextSize(statusStr.c_str()).x + ImGui::k_PILL_PADDING_X * 2.0f;
                     ImGui::SameLine(ImGui::GetContentRegionAvail().x - pillWidth);
                     ImGui::PushFont(ImGui::fonts::pHeading);

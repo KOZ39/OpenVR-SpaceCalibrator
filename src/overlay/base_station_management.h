@@ -44,6 +44,7 @@ namespace spacecal {
             EBaseStation20_StandbySupport_t firmwareSupportsStandby = EBaseStation20_StandbySupport_t::StandbySupport_Unknown;
             
             bool isConnected = false;
+            bool isFirmwareCooked = false; // if true the base station is not gonna be usable
         };
 
         bool is_bluetooth_available();

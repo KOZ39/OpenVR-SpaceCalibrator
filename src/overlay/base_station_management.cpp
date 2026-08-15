@@ -138,8 +138,7 @@ namespace spacecal {
             uint8_t unk1;
             uint8_t power_state;
             uint8_t unk3;
-            uint8_t unk4;
-            uint8_t footer;
+            uint8_t is_faulty; // 1 => faulty (red light)
         };
 
         // to turn on from standby -> 
@@ -304,6 +303,7 @@ namespace spacecal {
                     g_base_station_state.aTrackedBaseStations[i].base_station.eType = baseStation.base_station.eType;
                     g_base_station_state.aTrackedBaseStations[i].base_station.powerState = baseStation.base_station.powerState;
                     g_base_station_state.aTrackedBaseStations[i].base_station.isConnected = baseStation.base_station.isConnected;
+                    g_base_station_state.aTrackedBaseStations[i].base_station.isFirmwareCooked = baseStation.base_station.isFirmwareCooked;
                     if (baseStation.base_station.firmwareSupportsStandby != EBaseStation20_StandbySupport_t::StandbySupport_Unknown) {
                         g_base_station_state.aTrackedBaseStations[i].base_station.firmwareSupportsStandby = baseStation.base_station.firmwareSupportsStandby;
                     }
@@ -387,6 +387,7 @@ namespace spacecal {
                 uint8_t baseStationChannel = k_INVALID_BASE_STATION_CHANNEL;
                 EPowerState_t baseStationPowerState = PowerState_Unknown;
                 bool isOnOldFirmware = false;
+                bool isCooked = false;
 
                 for (size_t i = 0; i < manDataCount; i++) {
                     simpleble_manufacturer_data_t manufacturerData = { 0 };
@@ -398,6 +399,7 @@ namespace spacecal {
                         baseStationChannel = infoState->channel;
                         baseStationPowerState = (EPowerState_t)infoState->power_state;
                         isOnOldFirmware = pBaseStation ? (pBaseStation->isOldFirmware) : (infoState->power_state == PowerState_Awake_TooOldFirmware);
+                        isCooked = infoState->is_faulty == 1; // if one the base station is fucked
 
 #if defined(BLUETOOTH_LOGGING_VERBOSE)
                         std::string szVerboseBaseStationState = fmt::format("MN: Got {} bytes for {} ({}) :: {:02X}",
@@ -421,6 +423,7 @@ namespace spacecal {
                                 .powerState = baseStationPowerState,
 
                                 .isConnected = isConnected,
+                                .isFirmwareCooked = isCooked,
                             },
 
                             .hBtDevice = peripheral,
