@@ -1466,6 +1466,8 @@ namespace spacecal {
         ImGui::BulletText("shau");
         ImGui::BulletText("nym (qqq10)");
         ImGui::BulletText("m3gagluk");
+        ImGui::BulletText("Flippy");
+        ImGui::BulletText("Nara");
 
         ImGui::Dummy(ImVec2(0, k_SPACING));
 
