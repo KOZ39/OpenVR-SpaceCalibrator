@@ -61,6 +61,7 @@ Major features:
 - Calibrations now require you to move around by default. The app will ignore data without enough movement to minimise the chances of poor calibrations arising due to a lack of movement.
 - Continuous calibration has been improved to reduce the frequency of mis-calibrations as much as possible.
 - Relative calibrations. The aim is to re-formulate how a calibration is stored so that it is now relative to your headset, meaning that if your headset drifts your trackers would along with it, hiding the drift entirely.
+- Made calibrating require a minimum amount of movement to ensure that a calibration is valid. This is to improve the success rate of most calibrations.
 - Robust logging. Logs are saved at `%APPDATA%/space-calibrator/logs` on Windows, and `~/.local/share/space-calibrator/logs` on Linux.
 - Settings are saved to a JSON file at `%APPDATA%/space-calibrator/config.json` on Windows, and `~/.local/share/space-calibrator/config.json` on Linux.
 - Linux support. The codebase can now be compiled for Linux x64 amd arm64. Official support assumes Steam Runtime 4, compatibility with other distributions is NOT guaranteed. This is not thoroughly tested but contributions / bug reports are appreciated.
