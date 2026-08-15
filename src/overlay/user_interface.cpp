@@ -1,4 +1,4 @@
-#include "user_interface.h"
+﻿#include "user_interface.h"
 #include "log.h"
 #include "imgui.h"
 #include "imgui_extensions.h"
@@ -1655,17 +1655,22 @@ namespace spacecal {
                 ImGui::Spacing();
                 
                 ImGui::TextHeading(LOCALE_GET("learn_page_basestation_1_title").c_str());
+                ImGui::Spacing();
+                DRAW_IMAGE("basestation_image_10_front", EImageId_LearnBaseStation_10_Front);
+                ImGui::Spacing();
                 ImGui::TextWrapped(LOCALE_GET("learn_page_basestation_1_desc").c_str());
+                ImGui::Spacing();
+                DRAW_IMAGE("basestation_image_10_channel", EImageId_LearnBaseStation_10_Channel);
                 ImGui::Spacing();
                 ImGui::TextHeading(LOCALE_GET("learn_page_basestation_2_title").c_str());
                 ImGui::TextWrapped(LOCALE_GET("learn_page_basestation_2_desc1").c_str());
                 ImGui::TextWrapped(LOCALE_GET("learn_page_basestation_2_desc2").c_str());
                 ImGui::Spacing();
+                DRAW_IMAGE("basestation_image_20", EImageId_LearnBaseStation_20);
                 ImGui::Spacing();
                 ImGui::TextHeading(LOCALE_GET("learn_page_basestation_auto_power_title").c_str());
                 ImGui::TextWrapped(LOCALE_GET("learn_page_basestation_auto_power_desc").c_str());
 
-                DRAW_IMAGE("basestation_image", EImageId_LearnBaseStation_Unk);
                 break;
             }
             case LearnPage_UITour:
@@ -1866,7 +1871,9 @@ namespace spacecal {
         if (!g_state.bNicknamesLoaded) {
             g_state.textures[EImageId_LearnStandard_CalibrateDiagram] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_calibrate_diagram.png");
             g_state.textures[EImageId_LearnContinuous_Mounting] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_continuous_mount.png");
-            g_state.textures[EImageId_LearnBaseStation_Unk] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_basestations.png");
+            g_state.textures[EImageId_LearnBaseStation_10_Front] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_basestation_10_front.png");
+            g_state.textures[EImageId_LearnBaseStation_10_Channel] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_basestation_10_channel.png");
+            g_state.textures[EImageId_LearnBaseStation_20] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_basestation_20.png");
             g_state.textures[EImageId_LearnUI_Unk0] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_ui_0.png");
             g_state.textures[EImageId_LearnUI_Unk1] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_ui_1.png");
 

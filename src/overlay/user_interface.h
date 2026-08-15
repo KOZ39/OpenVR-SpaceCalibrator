@@ -37,7 +37,9 @@ namespace spacecal {
     enum EImageId_t {
         EImageId_LearnStandard_CalibrateDiagram,
         EImageId_LearnContinuous_Mounting,
-        EImageId_LearnBaseStation_Unk,
+        EImageId_LearnBaseStation_10_Front,
+        EImageId_LearnBaseStation_10_Channel,
+        EImageId_LearnBaseStation_20,
         EImageId_LearnUI_Unk0,
         EImageId_LearnUI_Unk1,
         EImageId_Count,
