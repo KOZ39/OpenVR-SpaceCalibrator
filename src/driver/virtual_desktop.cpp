@@ -109,8 +109,8 @@ namespace hmd {
         return false;
     }
 
-    ipc::protocol::VirtualDesktop_HmdModel VD_getHmdModel() {
-        return ipc::protocol::VirtualDesktop_HmdModel::VD_HmdModel_None;
+    ipc::protocol::VD_HmdModel VD_getHmdModel() {
+        return ipc::protocol::VD_HmdModel::VD_HmdModel_None;
     }
 
     bool VD_isStageTrackingEnabled() {
