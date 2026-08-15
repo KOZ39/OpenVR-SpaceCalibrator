@@ -49,11 +49,11 @@ namespace spacecal {
         bool m_bIsSteamVrAvailable = true;
         bool m_bStateDirty = true;
         vr::EVRInitError m_eVrInitError = vr::EVRInitError::VRInitError_None;
-        VRDevice_t m_aDevices[vr::k_unMaxTrackedDeviceCount] = {};
         vr::VROverlayHandle_t m_overlayMainHandle = vr::k_ulOverlayHandleInvalid;
         vr::VROverlayHandle_t m_overlayThumbnailHandle = vr::k_ulOverlayHandleInvalid;
         ipc::protocol::SharedData_HmdMetadata m_hmdMetadata = {};
         ipc::protocol::SharedData_HmdMetadata m_lastHmdMetaState = {};
+        VRDevice_t m_aDevices[vr::k_unMaxTrackedDeviceCount] = {};
         std::vector<std::string> m_aTrackingSystems;
 
         friend class ::ipc::IpcClient; // for m_hmdMetadata
