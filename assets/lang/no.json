@@ -108,6 +108,7 @@
   "base_stations_state_standby": "Standby",
   "base_stations_state_active": "Aktiv",
   "base_stations_state_unknown": "Ukjent",
+  "base_stations_state_faulty": "Defekt",
   "base_stations_channel_select_label": "Velg en basestasjonskanal:",
   "base_stations_active_channel": "Kanal {0}", // 0: channel number (1-15) ; eg Channel 12
   "base_stations_nickname": "Kallenavn",
