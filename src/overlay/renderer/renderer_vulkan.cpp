@@ -557,6 +557,8 @@ namespace spacecal {
             VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 
             unsigned char* textureData = stbi_load(szFilePath.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+            TextureData_t data = {};
+
             if (textureData) {
                 size_t image_size = width * height * nrChannels;
                 VkResult err;
@@ -580,7 +582,9 @@ namespace spacecal {
                     info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
                     info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
                     err = vkCreateImage(m_device, &info, m_allocator, &tex_data.Image);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                     VkMemoryRequirements req;
                     vkGetImageMemoryRequirements(m_device, tex_data.Image, &req);
                     VkMemoryAllocateInfo alloc_info = {};
@@ -588,9 +592,13 @@ namespace spacecal {
                     alloc_info.allocationSize = req.size;
                     alloc_info.memoryTypeIndex = findMemoryType(req.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
                     err = vkAllocateMemory(m_device, &alloc_info, m_allocator, &tex_data.ImageMemory);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                     err = vkBindImageMemory(m_device, tex_data.Image, tex_data.ImageMemory, 0);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                 }
 
                 // Create the Image View
@@ -604,7 +612,9 @@ namespace spacecal {
                     info.subresourceRange.levelCount = 1;
                     info.subresourceRange.layerCount = 1;
                     err = vkCreateImageView(m_device, &info, m_allocator, &tex_data.ImageView);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                 }
 
                 // Create Image View Descriptor Set 
@@ -619,7 +629,9 @@ namespace spacecal {
                     buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
                     buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
                     err = vkCreateBuffer(m_device, &buffer_info, m_allocator, &tex_data.UploadBuffer);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                     VkMemoryRequirements req;
                     vkGetBufferMemoryRequirements(m_device, tex_data.UploadBuffer, &req);
                     VkMemoryAllocateInfo alloc_info = {};
@@ -627,28 +639,37 @@ namespace spacecal {
                     alloc_info.allocationSize = req.size;
                     alloc_info.memoryTypeIndex = findMemoryType(req.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
                     err = vkAllocateMemory(m_device, &alloc_info, m_allocator, &tex_data.UploadBufferMemory);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                     err = vkBindBufferMemory(m_device, tex_data.UploadBuffer, tex_data.UploadBufferMemory, 0);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                 }
 
                 // Upload to Buffer:
                 {
                     void* map = NULL;
                     err = vkMapMemory(m_device, tex_data.UploadBufferMemory, 0, image_size, 0, &map);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                     memcpy(map, textureData, image_size);
                     VkMappedMemoryRange range[1] = {};
                     range[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
                     range[0].memory = tex_data.UploadBufferMemory;
                     range[0].size = image_size;
                     err = vkFlushMappedMemoryRanges(m_device, 1, range);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                     vkUnmapMemory(m_device, tex_data.UploadBufferMemory);
                 }
 
                 // Release image memory using stb
                 stbi_image_free(textureData);
+                textureData = nullptr;
 
                 // Create a command buffer that will perform following steps when hit in the command queue.
                 // TODO: this works in the example, but may need input if this is an acceptable way to access the pool/create the command buffer.
@@ -662,13 +683,17 @@ namespace spacecal {
                     alloc_info.commandBufferCount = 1;
 
                     err = vkAllocateCommandBuffers(m_device, &alloc_info, &command_buffer);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
 
                     VkCommandBufferBeginInfo begin_info = {};
                     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
                     begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
                     err = vkBeginCommandBuffer(command_buffer, &begin_info);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                 }
 
                 // Copy to Image
@@ -716,11 +741,17 @@ namespace spacecal {
                     end_info.commandBufferCount = 1;
                     end_info.pCommandBuffers = &command_buffer;
                     err = vkEndCommandBuffer(command_buffer);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                     err = vkQueueSubmit(m_queue, 1, &end_info, VK_NULL_HANDLE);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                     err = vkDeviceWaitIdle(m_device);
-                    check_vk_result(err);
+                    if (!check_vk_result(err)) {
+                        goto vk_failure;
+                    }
                 }
 
                 dwInternalDataIdx = m_loadedTextureData.size();
@@ -729,13 +760,28 @@ namespace spacecal {
                 LOG_WARN("Failed to load texture from {}...", szFilePath);
             }
 
-            TextureData_t data = {
+            data = {
                 .hTexture = descriptorSet == VK_NULL_HANDLE ? k_INVALID_TEXTURE_HANDLE : (TextureHandle_t) descriptorSet,
                 .dwWidth = (uint32_t)width,
                 .dwHeight = (uint32_t)height,
                 .hInternalData = dwInternalDataIdx,
             };
             return data;
+
+        vk_failure:
+            if (textureData) {
+                stbi_image_free(textureData);
+                textureData = nullptr;
+            }
+
+            TextureData_t invalidData = {
+                .hTexture = k_INVALID_TEXTURE_HANDLE,
+                .dwWidth = (uint32_t)-1,
+                .dwHeight = (uint32_t)-1,
+                .hInternalData = (uintptr_t)-1,
+            };
+
+            return invalidData;
         }
 
         void Renderer_Vulkan::destroyTexture(TextureData_t hTexture) {
