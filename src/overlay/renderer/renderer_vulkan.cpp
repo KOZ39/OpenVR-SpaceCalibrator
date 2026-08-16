@@ -251,7 +251,6 @@ namespace spacecal {
             m_mainWindowData.ClearValue.color.float32[3] = clearColor.w;
 
             VkSemaphore image_acquired_semaphore = m_mainWindowData.FrameSemaphores[m_mainWindowData.SemaphoreIndex].ImageAcquiredSemaphore;
-            VkSemaphore render_complete_semaphore = m_mainWindowData.FrameSemaphores[m_mainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
             VkResult err = vkAcquireNextImageKHR(m_device, m_mainWindowData.Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &m_mainWindowData.FrameIndex);
             if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
                 m_swapChainRebuild = true;
@@ -262,6 +261,8 @@ namespace spacecal {
                     return;
                 }
             }
+
+            VkSemaphore render_complete_semaphore = m_mainWindowData.FrameSemaphores[m_mainWindowData.FrameIndex].RenderCompleteSemaphore;
 
             ImGui_ImplVulkanH_Frame* fd = &m_mainWindowData.Frames[m_mainWindowData.FrameIndex];
             {
@@ -334,7 +335,7 @@ namespace spacecal {
                 m_swapChainRebuild = false;
                 return;
             }
-            VkSemaphore render_complete_semaphore = m_mainWindowData.FrameSemaphores[m_mainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
+            VkSemaphore render_complete_semaphore = m_mainWindowData.FrameSemaphores[m_mainWindowData.FrameIndex].RenderCompleteSemaphore;
             VkPresentInfoKHR info = {
                 .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
                 .waitSemaphoreCount = 1,
