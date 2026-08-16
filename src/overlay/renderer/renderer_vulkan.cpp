@@ -209,7 +209,7 @@ namespace spacecal {
             init_info.QueueFamily = m_queueFamily;
             init_info.Queue = m_queue;
             init_info.PipelineCache = m_pipelineCache;
-            init_info.DescriptorPool = m_descriptorPool;
+            init_info.DescriptorPoolSize = 32; // Increase this pool size if loading images runs out of memory.
             init_info.MinImageCount = m_minImageCount;
             init_info.ImageCount = m_mainWindowData.ImageCount;
             init_info.Allocator = m_allocator;
@@ -226,8 +226,6 @@ namespace spacecal {
             ImGui_ImplVulkan_Shutdown();
 
             ImGui_ImplVulkanH_DestroyWindow(m_instance, m_device, &m_mainWindowData, m_allocator);
-
-            vkDestroyDescriptorPool(m_device, m_descriptorPool, m_allocator);
 
 #if defined(_DEBUG) || defined(RENDER_USE_VULKAN_DEBUG_REPORT)
             // Remove the debug report callback
@@ -513,29 +511,6 @@ namespace spacecal {
                     return false;
                 }
                 vkGetDeviceQueue(m_device, m_queueFamily, 0, &m_queue);
-            }
-
-            // Create Descriptor Pool
-            // If you wish to load e.g. additional textures you may need to alter pools sizes and maxSets.
-            {
-                VkDescriptorPoolSize pool_sizes[] =
-                {
-                    { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, IMGUI_IMPL_VULKAN_MINIMUM_SAMPLED_IMAGE_POOL_SIZE },
-                    { VK_DESCRIPTOR_TYPE_SAMPLER, IMGUI_IMPL_VULKAN_MINIMUM_SAMPLER_POOL_SIZE },
-                };
-                VkDescriptorPoolCreateInfo pool_info = {
-                    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-                    .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-                    .maxSets = 0,
-                    .poolSizeCount = (uint32_t)IM_COUNTOF(pool_sizes),
-                    .pPoolSizes = pool_sizes,
-                };
-                for (VkDescriptorPoolSize& pool_size : pool_sizes)
-                    pool_info.maxSets += pool_size.descriptorCount;
-                err = vkCreateDescriptorPool(m_device, &pool_info, m_allocator, &m_descriptorPool);
-                if (!check_vk_result(err)) {
-                    return false;
-                }
             }
 
             return true;
