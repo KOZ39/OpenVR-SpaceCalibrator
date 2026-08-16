@@ -556,11 +556,12 @@ namespace spacecal {
             uintptr_t dwInternalDataIdx = (uintptr_t) -1;
             VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 
-            unsigned char* textureData = stbi_load(szFilePath.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+            constexpr int k_TEXTURE_CHANNELS = STBI_rgb_alpha;
+            unsigned char* textureData = stbi_load(szFilePath.c_str(), &width, &height, &nrChannels, k_TEXTURE_CHANNELS);
             TextureData_t data = {};
 
             if (textureData) {
-                size_t image_size = width * height * nrChannels;
+                size_t image_size = width * height * k_TEXTURE_CHANNELS;
                 VkResult err;
 
                 VkTextureData_t tex_data = {};
