@@ -94,15 +94,51 @@ namespace spacecal {
         return Eigen::Vector3d(pos[0], pos[1], pos[2]);
     }
 
-    // lerps between two calibrations by factor %
-    // @NOTE: factor is unclamped, input should be 0-1
-    inline DeviceCalibration_t lerpCalibration(const DeviceCalibration_t& from, const DeviceCalibration_t& to, double factor) {
-        return {
-            .calibrationRotation = from.calibrationRotation.slerp(factor, to.calibrationRotation),
-            .calibrationPosition = from.calibrationPosition + factor * (to.calibrationPosition - from.calibrationPosition),
-            .hasCalibration = to.hasCalibration,
-            .lastUpdateTime = to.lastUpdateTime,
-        };
+    inline DeltaSize maxDelta(DeltaSize a, DeltaSize b) {
+        return (static_cast<int>(a) > static_cast<int>(b)) ? a : b;
+    }
+
+    DeltaSize ServerTrackedDeviceProvider::getTransformDeltaSize(DeltaSize priorDelta, const Eigen::Vector3d& deviceWorldPos, const Pose_t& current, const Pose_t& target) const {
+        const Eigen::Vector3d srcPos = current.pos + current.rot * deviceWorldPos;
+        const Eigen::Vector3d targetPos = target.pos + target.rot * deviceWorldPos;
+
+        const double transDelta = (srcPos - targetPos).squaredNorm();
+        const double rotDelta = current.rot.angularDistance(target.rot);
+
+        DeltaSize transLevel, rotLevel;
+
+        if (transDelta > m_alignmentParams.thr_trans_large) transLevel = DeltaSize::LARGE;
+        else if (transDelta > m_alignmentParams.thr_trans_small) transLevel = DeltaSize::SMALL;
+        else transLevel = DeltaSize::TINY;
+
+        if (rotDelta > m_alignmentParams.thr_rot_large) rotLevel = DeltaSize::LARGE;
+        else if (rotDelta > m_alignmentParams.thr_rot_small) rotLevel = DeltaSize::SMALL;
+        else rotLevel = DeltaSize::TINY;
+
+        if (transLevel == DeltaSize::TINY && rotLevel == DeltaSize::TINY)
+            return DeltaSize::TINY;
+
+        return maxDelta(priorDelta, maxDelta(transLevel, rotLevel));
+    }
+
+    double ServerTrackedDeviceProvider::getTransformRate(DeltaSize delta) const {
+        switch (delta) {
+        case DeltaSize::TINY:  return m_alignmentParams.align_speed_tiny;
+        case DeltaSize::SMALL: return m_alignmentParams.align_speed_small;
+        default:               return m_alignmentParams.align_speed_large;
+        }
+    }
+
+    // lerps between two calibrations by lerp factor % around local point
+    inline Pose_t interpolatePoseAround(double lerp, const Eigen::Vector3d& localPoint, const Pose_t& current, const Pose_t& target) {
+        const Eigen::Vector3d initialWorld = current.pos + current.rot * localPoint;
+        const Eigen::Vector3d targetWorld = target.pos + target.rot * localPoint;
+        const Eigen::Vector3d finalWorld = initialWorld * (1.0 - lerp) + targetWorld * lerp;
+
+        Eigen::Quaterniond rot = current.rot.slerp(lerp, target.rot);
+        Eigen::Vector3d pos = finalWorld - rot * localPoint;
+
+        return Pose_t{ .rot = rot, .pos = pos };
     }
 
     inline Eigen::Affine3d getWorldFromDriverPose(const vr::DriverPose_t& pose, double fPredictedSecondsToPhotonsFromNow = 0.0) {
@@ -193,24 +229,46 @@ namespace spacecal {
                     // C' = (T')^-1 * T_H
                     Eigen::Affine3d worldCalib = expectedTargetWorld * targetWorldNow.inverse();
 
-                    // decompose to worldspace calibration pose data
-                    Eigen::Quaterniond worldCalibRot(worldCalib.rotation());
-                    worldCalibRot.normalize();
-
                     // keep track of calibrations so that we can keep using them even when either the ref or target device lose tracking
                     // we write directly to blend target for free smoothing
-                    DeviceCalibration_t newCalib = { worldCalibRot, worldCalib.translation() };
+                    auto now = std::chrono::steady_clock::now();
+                    
+                    Pose_t targetCalib = {
+                        .rot = Eigen::Quaterniond(worldCalib.rotation()).normalized(),
+                        .pos = worldCalib.translation(),
+                    };
+
                     if (!m_cachedCalibrations[unWhichDevice].hasCalibration) {
-                        m_cachedCalibrations[unWhichDevice] = { worldCalibRot, worldCalib.translation(), true };
+                        m_cachedCalibrations[unWhichDevice] = {
+                            .pose = targetCalib,
+                            .eDeltaSize = DeltaSize::TINY,
+                            .hasCalibration = true,
+                            .lastUpdateTime = now,
+                        };
                     } else {
-                        m_cachedCalibrations[unWhichDevice] = lerpCalibration(m_cachedCalibrations[unWhichDevice], newCalib, 0.05); // @TODO: adjust fudge factor
+                        double deltaTime = std::chrono::duration<double>(now - m_cachedCalibrations[unWhichDevice].lastUpdateTime).count();
+                        m_cachedCalibrations[unWhichDevice].lastUpdateTime = now;
+
+                        Eigen::Vector3d deviceWorldPos = targetWorldNow.translation();
+
+                        m_cachedCalibrations[unWhichDevice].eDeltaSize = getTransformDeltaSize(
+                            m_cachedCalibrations[unWhichDevice].eDeltaSize,
+                            deviceWorldPos,
+                            m_cachedCalibrations[unWhichDevice].pose,
+                            targetCalib
+                        );
+
+                        double lerp = deltaTime * getTransformRate(m_cachedCalibrations[unWhichDevice].eDeltaSize);
+                        lerp = std::clamp(lerp, 0.0, 1.0);
+
+                        m_cachedCalibrations[unWhichDevice].pose = interpolatePoseAround(lerp, deviceWorldPos, m_cachedCalibrations[unWhichDevice].pose, targetCalib);
                     }
                 } 
 
                 applyCalibrationToPose(
                     modifiedPose,
-                    hmdQuatFromEigen(m_cachedCalibrations[unWhichDevice].calibrationRotation),
-                    hmdVecFromEigenVec(m_cachedCalibrations[unWhichDevice].calibrationPosition),
+                    hmdQuatFromEigen(m_cachedCalibrations[unWhichDevice].pose.rot),
+                    hmdVecFromEigenVec(m_cachedCalibrations[unWhichDevice].pose.pos),
                     transform.scale,
                     transform.calibrateMotionVecs()
                 );

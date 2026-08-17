@@ -6,11 +6,22 @@
 #include <chrono>
 
 namespace spacecal {
+    
+    enum class DeltaSize {
+        TINY,
+        SMALL,
+        LARGE
+    };
+
+    struct Pose_t {
+        Eigen::Quaterniond rot = Eigen::Quaterniond::Identity();
+        Eigen::Vector3d pos = Eigen::Vector3d::Zero();
+    };
 
     struct DeviceCalibration_t {
-        Eigen::Quaterniond calibrationRotation = Eigen::Quaterniond::Identity();
-        Eigen::Vector3d    calibrationPosition = Eigen::Vector3d::Zero();
-        bool               hasCalibration = false;
+        Pose_t pose;
+        DeltaSize eDeltaSize = DeltaSize::TINY;
+        bool hasCalibration = false;
         std::chrono::steady_clock::time_point lastUpdateTime{};
     };
 
@@ -43,6 +54,8 @@ namespace spacecal {
         }
     private:
         void applyCalibrationToPose(vr::DriverPose_t& pose, vr::HmdQuaternion_t rotation, vr::HmdVector3d_t pos, double scale, bool calibrateMotionVecs);
+        double getTransformRate(DeltaSize delta) const;
+        DeltaSize getTransformDeltaSize(DeltaSize priorDelta, const Eigen::Vector3d& deviceWorldPos, const Pose_t& current, const Pose_t& target) const;
 
     private:
         ipc::Server m_ipcServer;
