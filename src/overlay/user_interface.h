@@ -42,6 +42,10 @@ namespace spacecal {
         EImageId_LearnBaseStation_20,
         EImageId_LearnUI_Unk0,
         EImageId_LearnUI_Unk1,
+        EImageId_Learn_Preview_Standard,
+        EImageId_Learn_Preview_Continuous,
+        EImageId_Learn_Preview_BaseStations,
+        EImageId_Learn_Preview_UITour,
         EImageId_Count,
     };
 

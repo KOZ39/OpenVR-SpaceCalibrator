@@ -10,8 +10,7 @@ namespace ImGui::fonts {
 
 static ImVector<ImRect> s_GroupPanelLabelStack;
 
-void ImGui::BeginGroupPanel(const char* name, const ImVec2& size)
-{
+void ImGui::BeginGroupPanel(const char* name, const ImVec2& size) {
     ImGui::BeginGroup();
 
     auto cursorPos = ImGui::GetCursorScreenPos();
@@ -60,8 +59,7 @@ void ImGui::BeginGroupPanel(const char* name, const ImVec2& size)
     s_GroupPanelLabelStack.push_back(ImRect(labelMin, labelMax));
 }
 
-void ImGui::EndGroupPanel()
-{
+void ImGui::EndGroupPanel() {
     ImGui::PopItemWidth();
 
     auto itemSpacing = ImGui::GetStyle().ItemSpacing;
@@ -137,14 +135,14 @@ bool ImGui::CheckboxWithDescription(const char* title, bool* v, const char* desc
 
     ImVec2 startPos = ImGui::GetCursorPos();
     float contentWidth = ImGui::GetContentRegionAvail().x;
-    
+
     bool changed = ImGui::Checkbox(fmt::format("##{}", title).c_str(), v);
-    
+
     ImGui::SameLine();
     float yOffsetToTop = ImGui::GetStyle().FramePadding.y +
         (ImGui::GetFrameHeight() - (ImGui::GetStyle().FramePadding.y * 2.0f) - ImGui::GetTextLineHeight()) * 0.5f;
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() - yOffsetToTop);
-    
+
     ImGui::BeginGroup();
     ImGui::TextUnformatted(title);
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetStyle().ItemSpacing.y + 2.0f);
@@ -160,7 +158,7 @@ bool ImGui::CheckboxWithDescription(const char* title, bool* v, const char* desc
         *v = !(*v);
         changed = true;
     }
-    
+
     ImGui::SetCursorPos(endPos);
     ImGui::Spacing();
     return changed;
@@ -219,4 +217,79 @@ void ImGui::PillText(const char* text, const ImVec4& bgColor, const ImVec4& text
 
     const ImVec2 textPos = ImVec2(bb.Min.x + padding.x, bb.Min.y + padding.y);
     window->DrawList->AddText(textPos, ImGui::ColorConvertFloat4ToU32(textColor), text);
+}
+
+bool ImGui::InformationButton(const char* icon, const char* title, const char* desc, ImTextureID previewTex, ImVec2 previewSize) {
+    bool clicked = false;
+
+    ImGui::PushID(title);
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(ImGui::GetStyle().ItemInnerSpacing.x, 0.0f));
+
+    bool open = ImGui::BeginCard("##card", ImVec2(0.0f, 0.0f), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
+
+    if (open) {
+        ImVec2 startPos = ImGui::GetCursorPos();
+        bool isHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
+        bool isMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
+
+        if (isHovered) {
+            ImU32 hoverCol = isMouseDown
+                ? ImGui::GetColorU32(ImGuiCol_HeaderActive)
+                : ImGui::GetColorU32(ImGuiCol_HeaderHovered);
+
+            ImVec2 pMin = ImGui::GetWindowPos();
+            ImVec2 pMax = ImVec2(pMin.x + ImGui::GetWindowWidth(), pMin.y + ImGui::GetWindowHeight());
+
+            ImGui::GetWindowDrawList()->AddRectFilled(pMin, pMax, hoverCol, 6.0f);
+        }
+
+        int columns = previewTex ? 2 : 1;
+        if (ImGui::BeginTable("##layout", columns, ImGuiTableFlags_SizingStretchProp)) {
+
+            if (previewTex) {
+                ImGui::TableSetupColumn(nullptr, ImGuiTableColumnFlags_WidthFixed, previewSize.x);
+            }
+            ImGui::TableSetupColumn(nullptr, ImGuiTableColumnFlags_WidthStretch);
+
+            if (previewTex) {
+                ImGui::TableNextColumn();
+
+                float availX = ImGui::GetContentRegionAvail().x;
+                if (availX > previewSize.x) {
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (availX - previewSize.x));
+                }
+                ImGui::Image(previewTex, previewSize);
+            }
+
+            ImGui::TableNextColumn();
+
+            if (icon && *icon) {
+                ImGui::TextHeading("%s  %s", icon, title);
+            }
+            else {
+                ImGui::TextHeading("%s", title);
+            }
+
+            if (desc && *desc) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
+                ImGui::TextWrapped("%s", desc);
+                ImGui::PopStyleColor();
+            }
+
+            ImGui::EndTable();
+        }
+
+        float contentHeight = ImGui::GetCursorPosY() - startPos.y - ImGui::GetStyle().ItemSpacing.y;
+
+        ImGui::SetCursorPos(startPos);
+        ImGui::SetNextItemAllowOverlap();
+        clicked = ImGui::InvisibleButton("##card_button", ImVec2(ImGui::GetContentRegionAvail().x, contentHeight));
+        ImGui::SetCursorPosY(startPos.y + contentHeight);
+    }
+
+    ImGui::EndCard();
+    ImGui::PopStyleVar();
+
+    ImGui::PopID();
+    return clicked;
 }

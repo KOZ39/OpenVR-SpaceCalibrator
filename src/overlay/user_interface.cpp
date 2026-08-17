@@ -735,6 +735,7 @@ namespace spacecal {
 
             for (size_t i = 0; i < dwNumCalibrations; i++) {
                 spacecal::TrackingSystemCalibration& calibration = spacecal::CalibrationManager::getInstance()->getCalibration(i);
+                ImGui::PushID(fmt::format("calibration_id__{}", i).c_str());
 
                 std::string szCalibrationStatusIcon = "";
                 std::string szCalibrationStatusMessage = "";
@@ -885,6 +886,8 @@ namespace spacecal {
                     buildDeviceSelection(calibration);
                     buildCalibrationCommonControls(calibration);
                 }
+
+                ImGui::PopID();
             }
         }
     }
@@ -1534,40 +1537,55 @@ namespace spacecal {
             default:
             case LearnPage_Home:
             {
-                // @TODO: image loading
+                constexpr float k_PREVIEW_IMAGE_SIZE_PIXELS = 140.0f;
+                constexpr float k_CELL_PADDING = 4.0f;
+
+                ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(k_CELL_PADDING, k_CELL_PADDING));
+                ImGui::BeginTable("ui_learn_toc_cards", 2, ImGuiTableFlags_None);
+                
+                ImGui::TableNextColumn();
                 if (ImGui::InformationButton(ICON_MS_TARGET,
                     LOCALE_GET("learn_card_standard_calibration").c_str(),
                     LOCALE_GET("learn_card_standard_calibration_description").c_str(),
-                    ImTextureID_Invalid,
-                    ImVec2(120.0f, 80.0f))
+                    g_state.textures[EImageId_Learn_Preview_Standard].hTexture,
+                    ImVec2(k_PREVIEW_IMAGE_SIZE_PIXELS, k_PREVIEW_IMAGE_SIZE_PIXELS))
                 ) {
                     g_state.dwSelectedLearnPage = LearnPage_Standard;
                 }
 
-                if (ImGui::InformationButton(ICON_MS_TARGET,
+                ImGui::TableNextColumn();
+                if (ImGui::InformationButton(ICON_MS_CYCLE,
                     LOCALE_GET("learn_card_continuous_calibration").c_str(),
                     LOCALE_GET("learn_card_continuous_calibration_description").c_str(),
-                    ImTextureID_Invalid,
-                    ImVec2(120.0f, 80.0f))
+                    g_state.textures[EImageId_Learn_Preview_Continuous].hTexture,
+                    ImVec2(k_PREVIEW_IMAGE_SIZE_PIXELS, k_PREVIEW_IMAGE_SIZE_PIXELS))
                 ) {
                     g_state.dwSelectedLearnPage = LearnPage_Continuous;
                 }
-                if (ImGui::InformationButton(ICON_MS_TARGET,
+                
+                ImGui::TableNextColumn();
+                if (ImGui::InformationButton(ICON_MS_SENSORS,
                     LOCALE_GET("learn_card_base_station_management").c_str(),
                     LOCALE_GET("learn_card_base_station_management_description").c_str(),
-                    ImTextureID_Invalid,
-                    ImVec2(120.0f, 80.0f))
+                    g_state.textures[EImageId_Learn_Preview_BaseStations].hTexture,
+                    ImVec2(k_PREVIEW_IMAGE_SIZE_PIXELS, k_PREVIEW_IMAGE_SIZE_PIXELS))
                 ) {
                     g_state.dwSelectedLearnPage = LearnPage_BaseStations;
                 }
-                if (ImGui::InformationButton(ICON_MS_TARGET,
+                
+                ImGui::TableNextColumn();
+                if (ImGui::InformationButton(ICON_MS_HANDHELD_CONTROLLER,
                     LOCALE_GET("learn_card_ui_tour").c_str(),
                     LOCALE_GET("learn_card_ui_tour_description").c_str(),
-                    ImTextureID_Invalid,
-                    ImVec2(120.0f, 80.0f))
+                    g_state.textures[EImageId_Learn_Preview_UITour].hTexture,
+                    ImVec2(k_PREVIEW_IMAGE_SIZE_PIXELS, k_PREVIEW_IMAGE_SIZE_PIXELS))
                 ) {
                     g_state.dwSelectedLearnPage = LearnPage_UITour;
                 }
+
+                ImGui::PopStyleVar();
+                ImGui::EndTable();
+
                 break;
             }
             case LearnPage_Standard:
@@ -1877,6 +1895,11 @@ namespace spacecal {
             g_state.textures[EImageId_LearnBaseStation_20] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_basestation_20.png");
             g_state.textures[EImageId_LearnUI_Unk0] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_ui_0.png");
             g_state.textures[EImageId_LearnUI_Unk1] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_ui_1.png");
+
+            g_state.textures[EImageId_Learn_Preview_Standard] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_preview_standard.png");
+            g_state.textures[EImageId_Learn_Preview_Continuous] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_preview_continuous.png");
+            g_state.textures[EImageId_Learn_Preview_BaseStations] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_preview_basestations.png");
+            g_state.textures[EImageId_Learn_Preview_UITour] = renderer::getRenderContext(renderer::GraphicsBackend::OpenGL)->loadTexture(util::getSpaceCalibratorImagesDir() / "img_learn_preview_uitour.png");
 
             if (g_state.aBaseStations.capacity() == 0) {
                 g_state.aBaseStations.reserve(64);
