@@ -2,6 +2,7 @@
 
 #include <openvr_driver.h>
 #include "ipc_server.h"
+#include "latency_estimator.h"
 #include <Eigen/Geometry>
 #include <chrono>
 
@@ -67,6 +68,7 @@ namespace spacecal {
         ipc::protocol::Command_SetDeviceTransform_t m_transforms[vr::k_unMaxTrackedDeviceCount] = {};
         DeviceCalibration_t m_cachedCalibrations[vr::k_unMaxTrackedDeviceCount] = {}; // cache of calibrations for relative calibration
         vr::DriverPose_t m_poses[vr::k_unMaxTrackedDeviceCount] = {}; // raw poses
+        LatencyEstimator m_latencyEstimator;
         friend class ipc::Server;
     };
 }

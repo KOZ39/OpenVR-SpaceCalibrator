@@ -53,6 +53,7 @@ namespace spacecal {
         // we query hmd refresh rate for prediction
         vr::PropertyContainerHandle_t hHmdContainer = vr::VRProperties()->TrackedDeviceToPropertyContainer(vr::k_unTrackedDeviceIndex_Hmd);
         m_fVsyncPredictionTime = 1.0 / vr::VRProperties()->GetFloatProperty(hHmdContainer, vr::Prop_DisplayFrequency_Float);
+        m_latencyEstimator.set_hmd_refresh_rate(m_fVsyncPredictionTime);
     }
     bool ServerTrackedDeviceProvider::ShouldBlockStandbyMode() {
         return false;
@@ -145,7 +146,9 @@ namespace spacecal {
         Eigen::Quaterniond baseRot = eigenFromHmdQuat(pose.qRotation);
         Eigen::Vector3d    basePos = eigenVecFromHmdVec(pose.vecPosition);
 
-        double deltaTime = -pose.poseTimeOffset + fPredictedSecondsToPhotonsFromNow;
+        // @NOTE: ignoring poseTimeOffset because hardware lies :(
+        // double deltaTime = -pose.poseTimeOffset + fPredictedSecondsToPhotonsFromNow;
+        double deltaTime = fPredictedSecondsToPhotonsFromNow;
 
         constexpr double k_PREDICTION_MIN_DELTA_TIME = 0.0001; // 0.1ms
         constexpr double k_PREDICTION_MIN_VELOCITY = 0.00001; // 0.00001 rad/s
@@ -192,6 +195,7 @@ namespace spacecal {
             return true;
 
         m_ipcServer.UpdatePose(unWhichDevice, newPose);
+        m_latencyEstimator.push_pose(unWhichDevice, newPose);
 
         vr::DriverPose_t& modifiedPose = newPose;
 
@@ -213,7 +217,8 @@ namespace spacecal {
                     // world-space pose of ref device (H')
                     Eigen::Affine3d refWorldNow = getWorldFromDriverPose(refPose, m_fVsyncPredictionTime);
                     // world-space pose of target device (T')
-                    Eigen::Affine3d targetWorldNow = getWorldFromDriverPose(targetPose, m_fVsyncPredictionTime);
+                    double latency = m_latencyEstimator.get_latency(transform.unRelativeReferenceOpenvrDeviceId, transform.unRelativeTargetOpenvrDeviceId);
+                    Eigen::Affine3d targetWorldNow = getWorldFromDriverPose(targetPose, m_fVsyncPredictionTime + latency);
 
                     // local-space calibration transform (C_L)
                     Eigen::Affine3d calibrationLocal =
