@@ -1,0 +1,278 @@
+{
+  "app_title": "{0} {1}", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "app_title_vr": "{0} {1} - マウスを使用するにはVRオーバーレイを閉じてください", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
+  "tracking_system_no_systems": "トラッキングされたデバイスが存在しません。続けるにはデバイスの電源を入れてください。", /* Should never be hit but you never know */
+
+  "error_unknown_catastrophic": "重大なエラーが発生しました。問題の解決に向けて、GitHubまたはSteamのディスカッションでこの問題を報告してください。",
+  "ipc_unavailable": "Space Calibrator SteamVRドライバーへの接続に失敗しました。[プロパティ] -> [インストール済みファイル] でファイルの整合性を確認するか、アプリを再インストールしてください。",
+  "steamvr_unavailable": "SteamVRへの接続に失敗しました。",
+  "vr_troubleshooting_hmd_not_found": "VRヘッドセットを接続して、SteamVRを起動してください。",
+  "vr_troubleshooting_connect_steamlink": "VRヘッドセットでSteamLinkを開き、SteamVRに接続してください。",
+  "vr_troubleshooting_generic": "Please connect your VR headset and launch SteamVR first. ({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
+
+  "calibration_title": "キャリブレーション",
+  "calibration_count_none": "キャリブレーションが存在しません。開始するには新しいキャリブレーションを作成してください。", // Shown when there are no calibrations active
+  "calibration_new": "新しいキャリブレーション",
+  "calibration_delete": "キャリブレーションを削除",
+  "calibration_next": "次のキャリブレーション",
+  "calibration_previous": "前のキャリブレーション",
+
+  "calibration_status_none": "アクティブなキャリブレーションはありません",
+  "calibration_status_none_description": "開始するには2台のデバイスを選択してキャリブレーションを行ってください。",
+  "calibration_status_edit": "キャリブレーション編集",
+  "calibration_status_edit_description": "現在のキャリブレーションを変更しています。",
+  "calibration_status_continuous": "自動キャリブレーション",
+  "calibration_status_continuous_description": "アクティブなキャリブレーションがあります。固定されたトラッカーを使用して、数秒ごとに自動的に再キャリブレーションを行います。",
+  "calibration_status_standard": "標準キャリブレーション",
+  "calibration_status_standard_description": "アクティブなキャリブレーションがあります。ドリフトが発生した場合は、再キャリブレーションが必要になることがあります。",
+
+  // space here refers to a tracking space / tracking system.
+  "reference_device": "リファレンスデバイス",
+  "reference_device_description": "キャリブレーションの基準にするデバイスです。通常はヘッドマウントディスプレイまたはコントローラーを使用します。",
+  "target_device": "ターゲットデバイス",
+  "target_device_description": "トラッカーやコントローラーの位置をリファレンスデバイスに合わせるために使用されるデバイスです。",
+  "select_reference_device": "リファレンスデバイスを選択",
+  "select_target_device": "ターゲットデバイスを選択",
+
+  "identify_selected_devices": "選択したデバイスを識別 (振動またはLEDを点滅)",
+  "identify_auto_detect_devices": "デバイスの自動検出",
+  "calibration_error_reference_hmd_missing": "トラッキングシステム「{0}」からターゲットデバイスが見つかりません。再キャリブレーションが必要な場合があります。", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "calibration_warning_stage_tracking_disabled": "ステージトラッキングが無効です。より快適にプレイするには、QuestのVirtual Desktopメニューを開き、[Streaming]タブに移動して「Center to play area (Stage Tracking)」を有効にしてください。",
+  "calibration_warning_stage_tracking_disabled_ignore_button": "今後このメッセージを表示しない",
+
+  "calibration_action_start": "標準キャリブレーション",
+  "calibration_action_clear": "キャリブレーションをクリア",
+  "calibration_action_continuous": "自動キャリブレーション",
+  "calibration_action_edit": "キャリブレーションを編集",
+  "save_calibration_profile": "プロファイルを保存",
+
+  "calibration_progress": "キャリブレーションの進行状況",
+  "calibration_info_move_around_insufficient_samples": "選択したデバイスを一緒に持ち、プレイエリア内を歩き回りながら、デバイスを8の字を描くようにゆっくり回転させてください。",
+
+  "calibration_speed": "キャリブレーション速度",
+  "calibration_speed_description": "キャリブレーションにかかる時間です。速度が遅いほど精度が高くなる傾向があります。",
+  "calibration_speed_fast": "高速",
+  "calibration_speed_slow": "低速",
+  "calibration_speed_very_slow": "超低速",
+
+  /* Editing calibrations */
+  "edit_calibration_rotation": "回転",
+  "edit_calibration_position": "位置 (m)",
+  "edit_calibration_yaw": "ヨー (Yaw)",
+  "edit_calibration_pitch": "ピッチ (Pitch)",
+  "edit_calibration_roll": "ロール (Roll)",
+  "edit_calibration_x": "X",
+  "edit_calibration_y": "Y",
+  "edit_calibration_z": "Z",
+  "edit_calibration_scale": "スケール (m)",
+
+  "continuous_hide_tracker": "ターゲットデバイスをアプリから隠す",
+  "continuous_relative_calibration": "相対キャリブレーションを有効にする",
+  "continuous_relative_calibration_description": "リファレンスデバイス（通常はヘッドマウントディスプレイ）を基準にしてキャリブレーションを行うことで、再キャリブレーションを行わなくても毎フレーム更新されるようになります。この機能を使用するには、自動キャリブレーションが必須です。",
+
+  /* HMD names for Virtual Desktop */
+  /* Virtual desktop lies that it's a Quest 2/3 on most headsets, so we have to substitute the real HMD name ourselves. you generally should
+     NOT have to change these! but some headsets have different names in certain regions (eg PFD MR is YVR MR in China) */
+  "virtual_desktop_hmd_none": "なし", /* should never appear but you never know*/
+  "virtual_desktop_hmd_gearvr": "Samsung Gear VR",
+  "virtual_desktop_hmd_oculus_go": "Oculus Go",
+  "virtual_desktop_hmd_oculus_quest_1": "Oculus Quest",
+  "virtual_desktop_hmd_oculus_quest_2": "Oculus Quest 2",
+  "virtual_desktop_hmd_meta_quest_pro": "Meta Quest Pro",
+  "virtual_desktop_hmd_pico_4": "Pico 4",
+  "virtual_desktop_hmd_meta_quest_3": "Meta Quest 3",
+  "virtual_desktop_hmd_meta_quest_3s": "Meta Quest 3S",
+  "virtual_desktop_hmd_pico_4_ultra": "Pico 4 Ultra",
+  "virtual_desktop_hmd_samsung_galaxy_xr": "Samsung Galaxy XR",
+  "virtual_desktop_hmd_play_for_dream_mr": "Play For Dream MR",
+
+  /* vertical tabs on the left */
+  "tab_page_calibration": "キャリブレーション",
+  "tab_page_graphs": "グラフ",
+  "tab_page_base_station_management": "ベースステーション",
+  "tab_page_settings": "設定",
+  "tab_page_debug": "デバッグ",
+  "tab_page_learn": "使い方",
+  "tab_page_about": "情報",
+  
+  /* graphs */
+  "graphs_title": "グラフ",
+
+  /* base stations */
+  "base_stations_title": "ベースステーション管理",
+  "base_stations_no_bluetooth": "有効なBluetoothアダプターが見つかりませんでした。ベースステーション管理を使用するには、BLE対応のBluetoothデバイスを接続してください。",
+  "base_stations_none_found": "ベースステーションが検出されません。ベースステーションがある場合は、電源ケーブルの接続を確認してください。",
+  "base_stations_header_info": "{0}", // 0: station ID (LHB XXXXXXXX) / nickname
+  "base_stations_warning_collision": "チャンネルの競合が検出されました。トラッキングの問題の原因になるため、各ベースステーションには、それぞれ異なるチャンネルを設定してください。",
+  "base_stations_state_sleep": "スリープ中",
+  "base_stations_state_standby": "スタンバイ",
+  "base_stations_state_active": "アクティブ",
+  "base_stations_state_unknown": "不明",
+  "base_stations_state_faulty": "エラー",
+  "base_stations_channel_select_label": "ベースステーションのチャンネルを選択:",
+  "base_stations_active_channel": "チャンネル {0}", // 0: channel number (1-15) ; eg Channel 12
+  "base_stations_nickname": "名前",
+
+  /* actions */
+  "base_stations_action_wake_all": "すべて起動",
+  "base_stations_action_sleep_all": "すべてスリープ",
+  "base_stations_action_fix_collisions": "チャンネルの競合を修正",
+  "base_stations_btn_wake": "起動",
+  "base_stations_btn_standby": "スタンバイ",
+  "base_stations_btn_sleep": "スリープ",
+  "base_stations_btn_edit": "編集",
+  "base_stations_btn_save": "保存",
+
+  "base_station_power_management": "ベースステーション電源管理",
+  "base_stations_power_mgmt_enable": "電源管理を有効にする *",
+  "base_stations_power_mgmt_enable_description_standby": "SteamVRが使用されていないとき、ベースステーションはスタンバイモードになり、SteamVRが起動すると再び起動します。",
+  "base_stations_power_mgmt_enable_description_sleep": "SteamVRが使用されていないとき、ベースステーションはスリープモードになり、SteamVRが起動すると再び起動します。",
+  "base_stations_power_mgmt_on_startup": "SteamVRの起動時にベースステーションの電源を入れる",
+  "base_stations_power_mgmt_on_startup_description": "SteamVRの起動時に、電源が入っていないベースステーションを起動します。",
+  "base_stations_power_mgmt_on_shutdown": "SteamVRの終了時にベースステーションの電源を切る",
+  "base_stations_power_mgmt_on_shutdown_description": "SteamVRが使用されていないとき、ベースステーションの電源がオフになります。",
+  "base_stations_power_mgmt_standby": "スタンバイ",
+  "base_stations_power_mgmt_standby_description": "SteamVR起動時により素早く復帰できるよう、ベースステーションのレーザーのみをオフにします。ベースステーション1.0および一部のベースステーション 2.0ではこの機能を利用できず、代わりにスリープが使用されます。",
+  "base_stations_power_mgmt_sleep": "スリープ",
+  "base_stations_power_mgmt_sleep_description": "ベースステーションのレーザーとモーターの両方をオフにします。",
+  "base_stations_power_mgmt_warning": "※複数のSteamVRユーザーでトラッキングスペースを共有している場合は非推奨です。",
+
+  /* settings */
+  "settings_title": "設定",
+  "settings_advanced": "詳細設定",
+  "settings_advanced_description": "上級者向けの追加の設定や微調整コントロールを表示します。",
+  "settings_calibrate_motion_vectors": "モーションベクターのキャリブレーション",
+  "settings_calibrate_motion_vectors_description": "動きの予測精度を向上させ、トラッキングのレスポンスを高めます。物理演算を多用するゲームに影響を与える場合があります。",
+  "settings_autofix_playspace_jumps": "プレイエリアのジャンプを自動修正",
+  "settings_autofix_playspace_jumps_description": "プレイエリアのトラッキング中に発生する、突然の座標飛び（ジャンプ）を自動的に検出して修正を試みます。",
+  "settings_enforce_minimum_rotation_variance": "最小回転分散を強制",
+  "settings_enforce_minimum_rotation_variance_description": "キャリブレーションの品質を向上させるため、回転角度が酷似しているサンプルを自動的に除外します。",
+  "settings_locale": "言語",
+  "settings_reset": "設定をすべてリセット",
+  "settings_reset_description": "すべての設定を初期状態に戻します。この操作は元に戻すことはできません。",
+  "settings_reset_confirm": "この変更は元に戻せません。本当に続行しますか？",
+  "settings_reset_yes": "はい",
+  "settings_reset_no": "いいえ",
+
+  /* about */
+  "about_title": "Space Calibratorについて",
+  "about_description": "Space Calibratorは、異なるメーカーのデバイスをSteamVRで一緒に組み合わせて使用できるようにする、無料のオープンソースツールです。",
+  "about_view_source_info": "ソースコードはGitHubリポジトリで確認できます。",
+  "about_contributors_title": "コントリビューター",
+  "about_contributors_description": "Space Calibratorは、以下の方々の協力を得て開発されています：",
+  "about_translators_title": "翻訳",
+  "about_translators_description": "Space Calibratorは、以下の方々によって翻訳されました：",
+  "about_licenses_title": "ライセンス",
+  "about_licenses_description": "このプログラムはMITライセンスに基づいて提供されています。その他の依存関係は別のライセンスに基づいて提供されています。詳細については以下のライセンスをご確認ください。",
+  "about_link_github": "GitHub",
+  "about_link_discord": "Discordサーバー",
+  "about_link_logs_dir": "ログフォルダー",
+  
+  /* self-troubleshooting */
+  /* found another driver loaded in SteamVR -> legacy ipc connection successful */
+  "troubleshoot_diagnosis_legacy_ipc_found_title": "別のSpace Calibratorが既に実行されています",
+  "troubleshoot_diagnosis_legacy_ipc_found_description": "競合するバージョンのSpace Calibratorが現在実行中です。このアプリケーションを使用するには、アンインストールする必要があります。自動的に削除しますか？",
+  /* found legacy overlay key registered (non steam) */
+  "troubleshoot_diagnosis_legacy_overlay_found_title": "別のバージョンのSpace Calibratorが既にインストールされています",
+  "troubleshoot_diagnosis_legacy_overlay_found_description": "別のバージョンのSpace Calibratorが現在インストールされています。削除しますか？",
+  "troubleshoot_action_yes": "はい",
+  "troubleshoot_action_no": "いいえ",
+  "troubleshoot_action_quit": "終了",
+
+  /* tutorial */
+  "learn_title": "使い方",
+  "learn_card_standard_calibration": "標準キャリブレーション",
+  "learn_card_standard_calibration_description": "デバイスのペアをキャリブレーションする方法を学びます。",
+  "learn_card_continuous_calibration": "自動キャリブレーション",
+  "learn_card_continuous_calibration_description": "セッション中のドリフトを補正するため、定期的にキャリブレーションを行います。",
+  "learn_card_base_station_management": "ベースステーション管理",
+  "learn_card_base_station_management_description": "SteamVRベースステーションをワイヤレス制御します。",
+  "learn_card_ui_tour": "UIガイド",
+  "learn_card_ui_tour_description": "Space Calibratorのインターフェースについて説明します。",
+  "learn_action_back": "戻る",
+
+  /* these are kinda like a messed up wiki because its inlined into the app like this, oh well lol */
+  "learn_page_standard_desc": "標準キャリブレーションでは、2つのトラッキングシステムの位置関係を合わせ、VRデバイスを同じ物理空間で使用できるようにします。",
+  "learn_page_standard_select_devices_title": "デバイスを選択",
+  "learn_page_standard_select_devices_desc": "開始する前に、位置関係を合わせる2つのデバイスを指定する必要があります。",
+  "learn_page_standard_ref_device": "リファレンスデバイス：キャリブレーションの基準となるデバイスです。通常はコントローラーを使用します。",
+  "learn_page_standard_target_device": "ターゲットデバイス：位置が同期されていないデバイスで、通常はトラッカーなどを使用します。",
+  "learn_page_standard_perform_title": "キャリブレーションを実行",
+  "learn_page_standard_perform_step1": "両方のデバイスを片手でしっかりと持ちます。キャリブレーション中にデバイスが動かないよう、できるだけぶれないよう固定してください。",
+  "learn_page_standard_perform_step2": "「標準キャリブレーション」ボタンをクリックして、キャリブレーションを開始します。",
+  "learn_page_standard_perform_step3": "下図のように、デバイスを8の字に動かしながら部屋の中を移動してください。",
+  "learn_page_standard_speeds_title": "キャリブレーション速度",
+  "learn_page_standard_speeds_desc": "キャリブレーション速度を変更して、必要なデバイスの動きの量を調整できます。より大きく動かすほど、キャリブレーションの精度が向上する傾向があります。",
+  "learn_page_standard_speed_fast": "高速：キャリブレーションにかかる時間は短くなりますが、精度が低下する場合があります。",
+  "learn_page_standard_speed_slow": "低速／超低速：キャリブレーションに時間がかかりますが、より正確なキャリブレーション結果が得られる傾向があります。",
+  "learn_page_standard_completion_note": "進捗バーが最後まで進むと、VR内でデバイスの位置がすぐに揃うはずです。揃わない場合は、もう一度キャリブレーションを行ってください。",
+  "learn_page_standard_drift_title": "ドリフトについて",
+  "learn_page_standard_drift_desc": "時間が経つとデバイスの位置がずれて、キャリブレーションが合わなくなる場合があります。その場合は、再度キャリブレーションを行って補正してください。頻繁にこの操作が必要になる場合は、「自動キャリブレーション」の使用を検討してください。",
+
+  "learn_page_continuous_desc1": "プレイ中にデバイスの位置や向きが少しずつずれたり、徐々に位置がずれていったりする場合は、「自動キャリブレーション」でこれらの問題を解決できます。",
+  "learn_page_continuous_desc2": "定期的にプレイを中断して手動でキャリブレーションする代わりに、「自動キャリブレーション」はプレイ中もバックグラウンドでトラッキングの同期を自動的に維持します。",
+  "learn_page_continuous_note_title": "注意",
+  "learn_page_continuous_note_desc": "この機能を使用するには、ヘッドマウントディスプレイに同期用のトラッカーを取り付ける必要があります。",
+  "learn_page_continuous_desc3": "「自動キャリブレーション」は、頻繁に再キャリブレーションを行い、ドリフトを可能な限り解消します。一度設定すれば、ドリフトをほとんど意識することなく使用できるようになります。",
+  "learn_page_continuous_setup_instructions": "「自動キャリブレーション」を設定するには、まず「標準キャリブレーション」ページの説明に従ってデバイスを選択してください。ヘッドマウントディスプレイをリファレンスデバイス、キャリブレーション用のトラッカーをターゲットデバイスに設定します。次に「自動キャリブレーション」ボタンをクリックしてキャリブレーションを開始します。開始時のキャリブレーションが完了するまで少し時間がかかる場合があります。アプリがトラッキングの状態を認識できるよう、動き回ってください。",
+  "learn_page_continuous_should_use_title": "自動キャリブレーションを使用するべきか？",
+  "learn_page_continuous_should_use_standard": "ヘッドマウントディスプレイに取り付ける追加のトラッカーがない場合、VRを長時間使用しない場合、またはドリフトが発生したときに必要に応じて再キャリブレーションすることが気にならない場合は、標準キャリブレーションを使用してください。",
+  "learn_page_continuous_should_use_continuous": "ドリフトをほとんど気にせずに使用したい場合は、自動キャリブレーションを使用してください。VRを長時間使用する場合や、時間の経過とともに大きなドリフトが発生する場合におすすめです。",
+  "learn_page_continuous_physical_setup_title": "物理的なセットアップ（ヘッドマウントディスプレイへのトラッカーの取り付け）",
+  "learn_page_continuous_physical_setup_desc1": "自動キャリブレーションを使用するには、ヘッドマウントディスプレイにそれ専用のトラッカーを取り付ける必要があります。使用するVRヘッドセットやトラッカーによって、さまざまな取り付け方法があります。まずは、インターネット上で公開されている3Dモデルを探して印刷するのが一般的です。また、コミュニティで他のユーザーがどのような方法で取り付けているか聞いてみるのもよいでしょう。",
+  "learn_page_continuous_physical_setup_desc2": "取り付けたトラッカーは、ヘッドマウントディスプレイにしっかりと固定してください。ぐらついたり、回転したり、振動したりしないようにする必要があります。取り付けがしっかりしているほど、キャリブレーションの安定性が向上します。",
+
+  "learn_page_basestation_desc": "Space Calibratorでは、対応するBLE Bluetoothアダプターがあれば、SteamVRのベースステーションを制御できます。",
+  "learn_page_basestation_1_title": "ベースステーション1.0",
+  "learn_page_basestation_1_desc": "1.0モデルでは、電源のオン／オフのみを操作できます。ワイヤレスでのチャンネル設定には対応していないため、チャンネルを切り替えるにはベースステーション背面の物理ボタンを押す必要があります。",
+  "learn_page_basestation_2_title": "ベースステーション2.0",
+  "learn_page_basestation_2_desc1": "ValveとHTCの両社から製造されている2.0モデルは、1.0モデルよりもワイヤレスでの管理に対応しています。電源のオン／オフに加えて、チャンネルも設定できます。2.0モデルでは、それぞれ異なるチャンネルを設定する必要があります。同じチャンネルに設定されていると正常に動作しません。その場合、Space Calibratorは問題の解決をサポートできます。",
+  "learn_page_basestation_2_desc2": "2.0モデルのチャンネルを変更するには、「ベースステーション管理」タブに移動し、操作したいベースステーションの編集ボタンを選択して、目的のチャンネル（緑色で表示）をクリックしてください。",
+  "learn_page_basestation_auto_power_title": "自動電源管理",
+  "learn_page_basestation_auto_power_desc": "「設定」タブから電源管理を有効にすると、Space Calibratorの起動時にベースステーションの電源をオンにし、Space Calibratorを起動したままSteamVRを終了したときに電源をオフにできます。SteamVRを終了する前にSpace Calibratorを手動で終了した場合、ベースステーションの電源は自動的にはオフになりません。",
+
+  "learn_page_ui_tour_desc": "このインターフェースはいくつかのタブに分かれており、それぞれにさまざまな機能があります。",
+  "learn_page_ui_tour_calibration_heading": "キャリブレーションタブ",
+  "learn_page_ui_tour_cal_desc1": "キャリブレーションタブでは、キャリブレーションに関する各種操作を行います。",
+  "learn_page_ui_tour_cal_desc2": "上部には、現在キャリブレーションが有効になっているかどうかと、どのキャリブレーション方法が現在有効になっているのかの表示があります。",
+  "learn_page_ui_tour_cal_desc3": "その下では、キャリブレーションに使用するデバイスを選択できます。まず、キャリブレーションするトラッキングシステムを選択します。次に、左側のパネルでキャリブレーションの基準にするものを、右側のパネルでキャリブレーションするものを選択します。",
+  "learn_page_ui_tour_cal_desc4": "その下には、キャリブレーションを実行するためのボタンがあります。どのキャリブレーションを行えばよいかわからない場合は、「標準キャリブレーション」と「自動キャリブレーション」のページを読んで、それぞれの違いを確認してください。",
+  "learn_page_ui_tour_cal_desc5": "キャリブレーションタブの下部には、キャリブレーションを調整するためのさまざまなオプションがあります。一部の設定を表示するには、詳細設定を有効にする必要があります。",
+  "learn_page_ui_tour_base_stations_heading": "ベースステーション管理タブ",
+  "learn_page_ui_tour_bs_desc": "対応するBLE Bluetoothアダプターを使用している場合、ここから部屋にあるベースステーションを操作できます。初期設定が完了した後は、通常ここを操作する必要はありません。",
+  "learn_page_ui_tour_settings_heading": "設定タブ",
+  "learn_page_ui_tour_settings_desc1": "ここでは、アプリケーション全体に適用される設定を変更できます。詳細設定、ベースステーション管理、UI言語などの設定があります。",
+  "learn_page_ui_tour_settings_desc2": "このアプリの一部の機能を使用するには、詳細設定を有効にする必要があります。設定内容を理解している場合のみ有効にしてください。",
+
+  /* Names of the various languages one may select. Shown in settings */
+  "languages_en_GB": "英語 (英国)",
+  "languages_en_US": "英語 (米国)",
+  "languages_fr": "フランス語",
+  "languages_it": "イタリア語",
+  "languages_de": "ドイツ語",
+  "languages_nl": "オランダ語",
+  "languages_es_ES": "スペイン語 (スペイン)",
+  "languages_es_US": "スペイン語 (ラテンアメリカ)",
+  "languages_da": "デンマーク語",
+  "languages_sv": "スウェーデン語",
+  "languages_fi": "フィンランド語",
+  "languages_no": "ノルウェー語",
+  "languages_bg": "ブルガリア語",
+  "languages_pl": "ポーランド語",
+  "languages_cs": "チェコ語",
+  "languages_el": "ギリシャ語",
+  "languages_hu": "ハンガリー語",
+  "languages_pt_PT": "ポルトガル語 (ポルトガル)",
+  "languages_pt_BR": "ポルトガル語 (ブラジル)",
+  "languages_ro": "ルーマニア語",
+  "languages_ru": "ロシア語",
+  "languages_tr": "トルコ語",
+  "languages_uk": "ウクライナ語",
+  "languages_zh_HANS": "中国語 (簡体字)",
+  "languages_zh_HANT": "中国語 (繁体字)",
+  "languages_ja": "日本語",
+  "languages_ko": "韓国語",
+  "languages_th": "タイ語",
+  "languages_vi": "ベトナム語",
+  "languages_system": "システム言語"
+}
