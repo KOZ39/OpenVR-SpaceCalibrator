@@ -39,30 +39,32 @@ The supported languages right now are:
 - `en_US.json` English (US)
 - `fr.json` French
 - `it.json` Italian
-- `de.json` German
-- `nl.json` Dutch
+- `de.json` German (missing)
+- `nl.json` Dutch (missing)
 - `es_ES.json` Spanish (Spain)
-- `es_US.json` Spanish (Latin America)
-- `da.json` Danish
-- `sv.json` Swedish
-- `fi.json` Finnish
+- `es_US.json` Spanish (Latin America) (missing)
+- `da.json` Danish (missing)
+- `sv.json` Swedish (missing)
+- `fi.json` Finnish (missing)
 - `no.json` Norwegian
-- `bg.json` Bulgarian
+- `bg.json` Bulgarian (missing)
 - `pl.json` Polish
-- `cs.json` Czech
-- `el.json` Greek
+- `cs.json` Czech (missing)
+- `el.json` Greek (missing)
 - `hu.json` Hungarian
-- `pt_PT.json` Portuguese (Portugal)
-- `pt_BR.json` Portuguese (Brazil)
-- `ro.json` Romanian
+- `pt_PT.json` Portuguese (Portugal) (missing)
+- `pt_BR.json` Portuguese (Brazil) (missing)
+- `ro.json` Romanian (missing)
 - `ru.json` Russian
-- `tr.json` Turkish
-- `uk.json` Ukrainian
+- `tr.json` Turkish (missing)
+- `uk.json` Ukrainian (missing)
 - `zh_HANS.json` Chinese (Simplified)
-- `zh_HANT.json` Chinese (Traditional)
+- `zh_HANT.json` Chinese (Traditional) (missing)
 - `ja.json` Japanese
-- `ko.json` Korean
-- `th.json` Thai
-- `vi.json` Vietnamese
+- `ko.json` Korean (missing)
+- `th.json` Thai (missing)
+- `vi.json` Vietnamese (missing)
 
 These files must live at `<SPACECAL-DIR>/assets/lang/<LANGUAGE>.json`.
+
+Languages with `(missing)` have not been translated yet. If you know the language, feel free to make a translation. Note that machine generated translations (eg AI, Google Translate) will be rejected indiscriminately.
