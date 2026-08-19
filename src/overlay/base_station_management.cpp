@@ -473,6 +473,7 @@ namespace spacecal {
             simpleble_peripheral_t hBtDevice = g_base_station_state.aTrackedBaseStations[index].hBtDevice;
             std::string szSerialNumber = g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber;
             g_base_station_state.mutexBaseStationList.unlock();
+            LOG_BLUETOOTH_ERROR("Attempting to execute SET_POWER {} on Base Station 1.0 {}...", (uint8_t) target_state, szSerialNumber);
 
             bool success = false;
             bool bConnectable = false;
@@ -548,6 +549,7 @@ namespace spacecal {
             bool bIsOldFirmware = g_base_station_state.aTrackedBaseStations[index].isOldFirmware;
             std::string szSerialNumber = g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber;
             g_base_station_state.mutexBaseStationList.unlock();
+            LOG_BLUETOOTH_ERROR("Attempting to execute SET_CHANNEL {} on Base Station 2.0 {}...", (uint8_t)target_channel, szSerialNumber);
 
             bool success = false;
             bool bConnectable = false;
@@ -644,6 +646,7 @@ namespace spacecal {
             bool bIsOldFirmware = g_base_station_state.aTrackedBaseStations[index].isOldFirmware;
             std::string szSerialNumber = g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber;
             g_base_station_state.mutexBaseStationList.unlock();
+            LOG_BLUETOOTH_ERROR("Attempting to execute SET_POWER {} on Base Station 2.0 {}...", (uint8_t)target_state, szSerialNumber);
 
             bool success = false;
             bool bConnectable = false;
