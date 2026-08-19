@@ -47,7 +47,6 @@ namespace spacecal {
             uint32_t                 m_queueFamily = (uint32_t)-1;
             VkQueue                  m_queue = VK_NULL_HANDLE;
             VkPipelineCache          m_pipelineCache = VK_NULL_HANDLE;
-            VkDescriptorPool         m_descriptorPool = VK_NULL_HANDLE;
 
             ImGui_ImplVulkanH_Window m_mainWindowData = {};
             uint32_t                 m_minImageCount = 3;
