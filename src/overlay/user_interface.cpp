@@ -1472,7 +1472,7 @@ namespace spacecal {
         ImGui::TextWrapped(LOCALE_GET("about_translators_description").c_str());
         ImGui::BulletText("hekky");
         ImGui::BulletText("Hash");
-        ImGui::BulletText("cyly");
+        ImGui::BulletText("lenr");
         ImGui::BulletText("CucumberWorks");
         ImGui::BulletText("shau");
         ImGui::BulletText("nym (qqq10)");

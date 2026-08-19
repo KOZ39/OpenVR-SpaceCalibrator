@@ -3,43 +3,93 @@
   "app_title_vr": "{0} {1} - Az egér használatához zárja be a VR-panelt", /* 0 : Space Calibrator ; 1 : version (eg 2.0.0) */
   "tracking_system_no_systems": "Nincsenek felismert követőeszközök. A folytatáshoz kapcsoljon be egy eszközt.", /* Should never be hit but you never know */
 
-  "ipc_unavailable": "Nem sikerült csatlakozni a Space Calibrator SteamVR illesztőprogramjához. Kérjük, ellenőrizze a fájlok épségét a Steam könyvtárban, az alkalmazásra jobb kattintásnál felugró Tulajdonságok -> Telepített fájlok menüpontban, vagy telepítse újra az alkalmazást.",
+  "error_unknown_catastrophic": "Kritikus hiba lépett fel! Kérjük, jelentse ezt a fejlesztőknek GitHub-on vagy Steam-en keresztül, hogy orvosolhassák a problémát.",
+  "ipc_unavailable": "Nem sikerült csatlakozni a Space Calibrator SteamVR illesztőprogramjához. Kérjük, ellenőrizze a fájlok épségét a Steam könyvtárban az alkalmazásra jobb gombbal kattintva a „Tulajdonságok” --> „Telepített fájlok” menüpontban, vagy telepítse újra az alkalmazást.",
+  //this is it's first appearance, so i'll leave the note here:
+  //the grammatically correct way to mark a quote in hungarian is using the `„` character to begin it, and `”` to close it. Also, for foreign language words the linguistic quotation mark should be used on both ends `'`. The regular quote character `"` is also very commonly used, but technically not grammatically correct. I'm opting to use it, but if it has rendering issues, then it should be fine to switch them out to the "computer quotes" character.
+
   "steamvr_unavailable": "Nem sikerült csatlakozni a SteamVR-hoz.",
   "vr_troubleshooting_hmd_not_found": "Kérjük, először csatlakoztassa a VR-szemüvegét, és indítsa el a SteamVR-t.",
-  "vr_troubleshooting_connect_steamlink": "Kérjük, először nyissa meg a Steam Linket a VR-szemüvegén, és csatlakozzon a SteamVR-hoz.",
-  "vr_troubleshooting_generic": "Kérjük, először csatlakoztassa a VR-szemüvegét, és indítsa el a SteamVR-t. Hibakód: ({0} {1})", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
+  "vr_troubleshooting_connect_steamlink": "Kérjük, először nyissa meg a Steam Link-et a VR-szemüvegén, és csatlakozzon a SteamVR-hoz.",
+  "vr_troubleshooting_generic": "Kérjük, először csatlakoztassa a VR-szemüvegét, és indítsa el a SteamVR-t. Hibakód: „{0}: {1}”", /* 0 : SteamVR init error (eg 108), 1 : SteamVR init error string (eg Headset not connected) - this string is provided by Steam. */
 
-  // "követési tér" == "tracking space", but synonims that could be relevant include "koordináta-rendszer"(coordinate-system), "Játéktér"(Playspace), "Követési rendszer"(Tracking system), "Bázis"(Linear algebra - Basis (but this is mainly used only there))
-  "reference_space": "Viszonyítási tér:",
-  "target_space": "Illesztendő tér:", /*Assuming that reference_space is treated as the "standard basis", and target_space is the one that's then transformed to align with it, idk which way around is it actually*/
-  "select_reference_device": "Viszonyítási követőrendszer kiválasztása",
-  "select_target_device": "Illesztendő követőrendszer kiválasztása",
+  "calibration_title": "Összehangolás",
+  //-- "Calibration" can be translated as: --//
+  //"Kalibráció" (A very hunglish word, less known but would otherwise be the most direct. Didn't use it, because I'm assuming the people who will use this app in hungarian are less likely to already posess a better intuitive understanting of it's meaning.), 
+  //"Összehangolás" (Bringing two or more things into harmony/cooperation with eachother. The word originates from the action of tuning together multiple instruments. Perhaps the closest in meaning to "Calibration".),
+  //"Összeigazítás" (Adjusting/Aligning two or more things together. For example it's used when conveying the act of aligning two pictures in a word document to be level.)
+  // -- "Hozzá" instead of "Össze": Use while actively referring to one of the devices/universes. Like "The target tracker {Hozzáigazítása} to the refrence base.", here "Hozzáigazítás" refers to performing the action on the target tracker, with the action being to align it with the reference base.
+  //"Illesztés" (Fitting/Joining. Like the "fitting" of the two tracking universes. In this case, the Calibration/It's transformation matrix itself, not neccessarily the act of doing so, but it can also be the act of doing it ("Illeszt") depending on context.)
+  //"Egyeztetés" (Coordination. The act of making two or more people/things agree in a sense. Maybe a bit less fitting in this case, but still maybe usefull. (Ie. when talking about two tracking universes "agreeing"/"being the same"/"matching"/{megegyeznek}.) )
+  //"Szinkronizálás" (Synchronization. Like calibration/"Összehangolás", but implies more that it's a continuous thing (or refers to timing also). A bit hunglish too, but less technical and probably wider known.)
+  //-- --//
+  //Proper usage of these words, where appropriate should result in better understandability than just using the "kalibráció" loanword.
 
-  "devices_from_space": "Innen származó eszközök: [{0}]", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "calibration_count_none": "Nincs létező illesztés. Kérjük, készítsen egy újat a folytatáshoz.", // Shown when there are no calibrations active
+  "calibration_new": "Új illesztés készítése",
+  "calibration_delete": "Illesztés törlése",
+  "calibration_next": "Következő illesztés",
+  "calibration_previous": "Előző illesztés",
+
+  "calibration_status_none": "Nincs aktív illesztés",
+  "calibration_status_none_description": "A kezdéshez válasszon ki egy eszközpárt, és kezdje meg velük az összehangolást.",
+  "calibration_status_edit": "Illesztés szerkesztése",
+  "calibration_status_edit_description": "A jelenlegi illesztés módosítása.",
+  "calibration_status_continuous": "Folyamatos szinkronizáció",
+  "calibration_status_continuous_description": "Aktív illesztéssel rendelkezik. Egy VR-szemüvegre felszerelt követőeszközt használ, melynek segítségével néhány másodpercenként automatikusan újraigazítja az aktív illesztést.",
+  "calibration_status_standard": "Normál összeigazítás",
+  "calibration_status_standard_description": "Rendelkezik aktív illesztéssel. Ha eltolódást/elcsúszást érzékel, szükség lehet az ismételt összehangolásra.",
+
+  // space here refers to a tracking space / tracking system.
+  // reference can be translated as "referencia", or "viszonyítási". They mean the same thing, although "viszonyítási" carries a bit more meaning of "comparison", and is less of a loanword. When in the context of positioning stuff, they act very similarly, but in this case the latter fits more.
+  // target is commonly translated as "cél", but that means "goal". I assume that here, it means "the device to be calibrated/aligned with [the reference device]", and that translates to "Illesztendő" (or "igazítandó").
+  "reference_device": "Viszonyítási eszköz", // assuming that the reference_device is treated as standard base, and the target_device's universe is the one on which the basis transformation happens, and not the other way around.
+  "reference_device_description": "Ez az eszköz amivel az összehangolás történik. Általában a VR-szemüveg vagy egy kontroller.",
+  "target_device": "Illesztendő eszköz",
+  "target_device_description": "Ezen eszköz segítségével lesz a többi követőeszköz és/vagy kontroller összehangolva a viszonyítási eszközzel.",
+  "select_reference_device": "Viszonyítási eszköz kiválasztása",
+  "select_target_device": "Illesztendő eszköz kiválasztása",
+
   "identify_selected_devices": "Kiválasztott eszközök azonosítása (villogó LED-es jelzőfény vagy rezgés)",
-  "calibration_error_reference_hmd_missing": "A viszonyítási ({0}) VR-szemüveg nem található, profil letiltva", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "identify_auto_detect_devices": "Eszközök automatikus észlelése",
+  "calibration_error_reference_hmd_missing": "A(z) „{0}” követőrendszer illesztendő eszköze nem található. Előfordulhat, hogy újra el kell végeznie az összehangolást.", /* 0 : tracking system name, eg SteamVR Tracking*/
+  "calibration_warning_stage_tracking_disabled": "A játéktér-alapú követés ('Stage Tracking') ki van kapcsolva! Az optimális működés érdekében nyissa meg a VR-szemüvegén futó Virtual Desktop menüjében a „Streaming” fület, és engedélyezze a „Center to play area (Stage Tracking)” opciót.",
+  "calibration_warning_stage_tracking_disabled_ignore_button": "Ne mutassa többet",
 
-  "calibration_action_start": "Összehangolás indítása", /*"Összehangolás" could be "Kalibráció"(too hunglish, meh), or "Térszinkronizáció"(Technical), or simply "Szinkronizáció"(but this is a bit hunglish too)*/
-  "calibration_action_clear": "Összehangolás törlése",
-  "calibration_action_continuous": "Folyamatos összehangolás",
-  "calibration_action_edit": "Összehangolás szerkesztése",
-  "save_calibration_profile": "Profil mentése",
+  "calibration_action_start": "Normál összeigazítás indítása",
+  "calibration_action_clear": "Illesztés törlése",
+  "calibration_action_continuous": "Folyamatos szinkronizáció",
+  "calibration_action_edit": "Illesztés szerkesztése",
+  "save_calibration_profile": "Illesztési profil megjegyzése",
 
-  "calibration_progress": "Összehangolás állapota",
-  "calibration_progress_placeholder": "Összehangolás folyamatban...",
-  "calibration_info_move_around_unsifficient_samples": "Összehangolás közben tartsa össze és mozgassa együtt a kiválasztott eszközöket a játéktérben, és közben sétáljon körbe a szobában.",
+  "calibration_progress": "Összehangolás haladása",
+  "calibration_info_move_around_insufficient_samples": "Tartsa össze a kiválasztott eszközöket, és sétáljon körbe a játéktérben miközben finoman együtt forgatja őket nyolcasokat leírva a levegőben.",
 
-  "calibration_speed": "Összehangolás sebessége",
+  "calibration_speed": "Összeigazítás sebessége",
+  "calibration_speed_description": "Azt állítja, hogy mennyi időbe kerül az összeigazítás végrehajtása. Általában a hosszabb összeigazítások pontosabbak.",
   "calibration_speed_fast": "Gyors",
   "calibration_speed_slow": "Lassú",
-  "calibration_speed_very_slow": "Nagyon lassú",
+  "calibration_speed_very_slow": "Csigalassú",
 
-  "continuous_hide_tracker": "Kiválasztott viszonyítási követőeszköz elrejtése a többi alkalmazás elől", /*Assuming this hides the selected tracker from the reference_space ("Viszonyítási"), and not the one from the target_space ("Illesztendő"). Might be the other way around idk rn.*/
+  /* Editing calibrations */
+  "edit_calibration_rotation": "Forgatás",
+  "edit_calibration_position": "Pozíció (m)",
+  "edit_calibration_yaw": "Legyezőmozgás ('Yaw')", //The official equivalents to Yaw, Pitch, Roll, are rarely used and not instantly intuitive to everyone, they may come off as weird. So it may be advised to keep the english words in place. Also, "legyezőmozgás" could be "elfordulás" but that's also unofficial.
+  "edit_calibration_pitch": "Bólintás ('Pitch')", //yes these are the actual words here. this is not a joke. The official word for yaw is basically "fan movement" ("fan" as in the handheld folding one)
+  "edit_calibration_roll": "Dőlés ('Roll')", //Like this is just so goofy. Why has no one yet invented better words for these? Like come on lmao..
+  "edit_calibration_x": "X",
+  "edit_calibration_y": "Y",
+  "edit_calibration_z": "Z",
+  "edit_calibration_scale": "Átméretezés (m)",
+
+  "continuous_hide_tracker": "Kiválasztott illesztendő követőeszköz elrejtése más alkalmazások elől",
+  "continuous_relative_calibration": "Relatív illesztés engedélyezése",
+  "continuous_relative_calibration_description": "Relatívvá teszi az illesztést a viszonyítási eszközhöz (tipikusan a VR-szemüveghez), így az minden képkockánál frissül anélkül, hogy meg kéne ismételni az összehangolást. Ez csak folyamatos szinkronizáció esetében lehetséges.",
 
   /* HMD names for Virtual Desktop */
   /* Virtual desktop lies that it's a Quest 2/3 on most headsets, so we have to substitute the real HMD name ourselves. you generally should
      NOT have to change these! but some headsets have different names in certain regions (eg PFD MR is YVR MR in China) */
-  "virtual_desktop_hmd_none": "Semmilyen", /* should never appear but you never know*/
+  "virtual_desktop_hmd_none": "Ismeretlen", /* should never appear but you never know*/
   "virtual_desktop_hmd_gearvr": "Samsung Gear VR",
   "virtual_desktop_hmd_oculus_go": "Oculus Go",
   "virtual_desktop_hmd_oculus_quest_1": "Oculus Quest",
@@ -52,9 +102,163 @@
   "virtual_desktop_hmd_samsung_galaxy_xr": "Samsung Galaxy XR",
   "virtual_desktop_hmd_play_for_dream_mr": "Play For Dream MR",
 
+  /* vertical tabs on the left */
+  "tab_page_calibration": "Összehangolás",
+  "tab_page_graphs": "Grafikonok",
+  "tab_page_base_station_management": "Bázisállomások",
+  "tab_page_settings": "Beállítások",
+  "tab_page_debug": "Hibakeresés",
+  "tab_page_learn": "Súgó",
+  "tab_page_about": "Névjegy",
+
+  /* graphs */
+  "graphs_title": "Grafikonok",
+
+  /* base stations */
+  "base_stations_title": "Bázisállomás-kezelő",
+  "base_stations_no_bluetooth": "Nem sikerült találni alkalmas Bluetooth eszközt. Csatlakoztasson egy BLE kompatibilis Bluetooth antennát, hogy kezelni tudja a bázisállomásokat.",
+  "base_stations_none_found": "Nem található bázisállomás. Amennyiben ki vannak helyezve, ellenőrizze a tápellátásukat!",
+  "base_stations_header_info": "{0}", // 0: station ID (LHB XXXXXXXX) / nickname
+  "base_stations_warning_collision": "Csatornaütközés észlelve! Ez problémákat fog okozni a követésben. Minden bázisállomásnak egyedi csatornát kell használnia.",
+  "base_stations_state_sleep": "Alvó üzemmód",
+  "base_stations_state_standby": "Készenléti mód",
+  "base_stations_state_active": "Aktív",
+  "base_stations_state_unknown": "Ismeretlen állapot",
+  "base_stations_state_faulty": "Meghibásodott",
+  "base_stations_channel_select_label": "Bázisállomás csatornájának kiválasztása:",
+  "base_stations_active_channel": "Csatorna {0}", // 0: channel number (1-15) ; eg Channel 12
+  "base_stations_nickname": "Eszköznév", //As an alternative, "Becenév". (more like "Gúnynév" haha)
+
+  /* actions */
+  "base_stations_action_wake_all": "Összes felébresztése",
+  "base_stations_action_sleep_all": "Összes altatása",
+  "base_stations_action_fix_collisions": "Csatornaütközések orvoslása",
+  "base_stations_btn_wake": "Ébresztés",
+  "base_stations_btn_standby": "Készenlét",
+  "base_stations_btn_sleep": "Altatás",
+  "base_stations_btn_edit": "Szerkesztés",
+  "base_stations_btn_save": "Elmentés",
+
+  "base_station_power_management": "Bázisállomás-állapotkezelés",
+  "base_stations_power_mgmt_enable": "Állapotkezelés engedélyezése *",
+  "base_stations_power_mgmt_enable_description_standby": "A bekapcsolt bázisállomások készenléti üzemmódba váltanak amikor a SteamVR nincs használatban, és felébrednek amikor a SteamVR elindul.",
+  "base_stations_power_mgmt_enable_description_sleep": "A bekapcsolt bázisállomások alvó üzemmódba váltanak amikor a SteamVR nincs használatban, és felébrednek amikor a SteamVR elindul.",
+  "base_stations_power_mgmt_on_startup": "Bázisállomások bekapcsolása a SteamVR indulásakor",
+  "base_stations_power_mgmt_on_startup_description": "A kikapcsolt Bázisállomások felébrednek amikor a SteamVR elindul.",
+  "base_stations_power_mgmt_on_shutdown": "Bázisállomások kikapcsolása a SteamVR bezárásakor",
+  "base_stations_power_mgmt_on_shutdown_description": "A bekapcsolt Bázisállomások kikapcsolnak amikor a SteamVR nincs használatban.",
+  "base_stations_power_mgmt_standby": "Készenléti mód",
+  "base_stations_power_mgmt_standby_description": "Csak a lézereiket kapcsolják ki a bázisállomások, ezzel lehetővé téve a gyorsabb felébredést amikor a SteamVR elindul. Mivel ez az 1.0-s (és egyes 2.0-s) bázisállomásokon nem elérhető, esetükben az alvó üzemmód lép érvénybe.",
+  "base_stations_power_mgmt_sleep": "Alvó üzemmód",
+  "base_stations_power_mgmt_sleep_description": "A bázisállomások a lézereiket és a motorjaikat is kikapcsolják.",
+  "base_stations_power_mgmt_warning": "* NEM AJÁNLOTT közös játékterekhez, amelyeket több SteamVR-felhasználó is használhat egyszerre.",
+
   /* settings */
   "settings_title": "Beállítások",
+  "settings_advanced": "Haladó beállítások",
+  "settings_advanced_description": "További beállítások és finomhangolási lehetőségek megjelenítése tapasztalt felhasználók számára.",
+  "settings_calibrate_motion_vectors": "Mozgásvektorok igazítása",
+  "settings_calibrate_motion_vectors_description": "Javítja a mozgásjóslást a közvetlenebb követés érdekében. Hatással lehet a fizika-alapú játékokra.",
+  "settings_autofix_playspace_jumps": "Játéktér-ugrások automatikus korrigálása",
+  "settings_autofix_playspace_jumps_description": "Megkísérli a játéktér hirtelen elmozdulásainak észlelését és kijavítását.",
+  "settings_enforce_minimum_rotation_variance": "Minimális forgási eltérés megkövetelése",
+  "settings_enforce_minimum_rotation_variance_description": "Automatikusan kiszűri a hasonló orientációjú mintákat az illesztés minőségének növelése érdekében.",
   "settings_locale": "Nyelv",
+  "settings_reset": "Beállítások visszaállítása",
+  "settings_reset_description": "Visszaállítja az összes beállítást alapértelmezettre. Ez nem visszavonható.",
+  "settings_reset_confirm": "Ez egy visszavonhatatlan módosítás. Biztosan folytatja?",
+  "settings_reset_yes": "Igen",
+  "settings_reset_no": "Nem",
+
+  /* about */
+  "about_title": "Névjegy",
+  "about_description": "A Space Calibrator egy ingyenes és nyílt forráskódú eszköz, amely segíti különböző gyártók eszközeinek együttes működtetését SteamVR-on belül.",
+  "about_view_source_info": "A forráskód megtekinthető a GitHub tárolón.",
+  "about_contributors_title": "Fejlesztők",
+  "about_contributors_description": "A Space Calibrator-t az alábbi emberek segítsége teszi lehetővé:",
+  "about_translators_title": "Fordítók",
+  "about_translators_description": "A Space Calibrator-t az alábbi emberek fordították:",
+  "about_licenses_title": "Licencek",
+  "about_licenses_description": "Ez a program az MIT licenc alatt áll. Más függőségek más licencek alatt állnak, további információkért tekintse meg az alábbi licenceket.",
+  "about_link_github": "GitHub tároló",
+  "about_link_discord": "Discord szerver",
+  "about_link_logs_dir": "Naplózási mappa",
+
+  /* self-troubleshooting */
+  /* found another driver loaded in SteamVR -> legacy ipc connection successful */
+  "troubleshoot_diagnosis_legacy_ipc_found_title": "Már jelen van a Space Calibrator egy másik példánya is.",
+  "troubleshoot_diagnosis_legacy_ipc_found_description": "A Space Calibrator egy másik verziója jelenleg is fut, ami ütközést okoz. Ezen alkalmazás használatához el kell távolítani az ütköző példányt. Kívánja ezt automatikusan elvégezni?",
+  /* found legacy overlay key registered (non steam) */
+  "troubleshoot_diagnosis_legacy_overlay_found_title": "Már jelen van a Space Calibrator egy másik példánya is.",
+  "troubleshoot_diagnosis_legacy_overlay_found_description": "Telepítve van már egy más verziószámú Space Calibrator példány. Szeretné eltávolítani?",
+  "troubleshoot_action_yes": "Igen",
+  "troubleshoot_action_no": "Nem",
+  "troubleshoot_action_quit": "Kilépés",
+
+  /* tutorial */
+  "learn_title": "Súgó",
+  "learn_card_standard_calibration": "Normál összeigazítás",
+  "learn_card_standard_calibration_description": "Hogyan kell két eszközt összehangolni?",
+  "learn_card_continuous_calibration": "Folyamatos szinkronizáció",
+  "learn_card_continuous_calibration_description": "Az illesztés elcsúszásának elkerülése gyakori, és automatikus újraigazítással.",
+  "learn_card_base_station_management": "Bázisállomás-kezelés",
+  "learn_card_base_station_management_description": "Bázisállomások vezeték nélküli vezérlése.",
+  "learn_card_ui_tour": "Felhasználói felület áttekintése",
+  "learn_card_ui_tour_description": "A Space Calibrator alkalmazás ismertetése.",
+  "learn_action_back": "Vissza",
+
+  /* these are kinda like a messed up wiki because its inlined into the app like this, oh well lol */
+  "learn_page_standard_desc": "Normál összeigazítás során két különböző követőrendszer összehangolásra kerül, a követési tereik szinkronba kerülnek. Biztosítja a megfelelő együttes működést, és lehetővé teszi különféle VR-eszközök egyidejű használatát ugyanabban a fizikai játéktérben.",
+  "learn_page_standard_select_devices_title": "Eszközök kiválasztása",
+  "learn_page_standard_select_devices_desc": "Mielőtt elkezdené, ki kell választani az alkalmazásban, hogy mely két eszközt szeretné használni összeigazításhoz.",
+  "learn_page_standard_ref_device": "Viszonyítási eszköz: Ez az eszköz szolgál majd támaszpontként, amelynek a követési rendszeréhez igazítva lesz a másik. Általában a VR-szemüveg, vagy egy ahhoz tartozó kontroller.",
+  "learn_page_standard_target_device": "Illesztendő eszköz: Az az eszköz, amelynek a követési tere hozzá lesz igazítva a másikéhoz, mivel alapból nem illeszkedik a kettő. Általában egy egyszerű követőeszköz ('Tracker'), vagy ahhoz hasonló.",
+  "learn_page_standard_perform_title": "Az összeigazítás folyamata",
+  "learn_page_standard_perform_step1": "Tartsa össze mindkét eszközt határozottan, egy kézben. Szorosan fogja őket, hogy az összeigazítás során ne mozduljanak el egymáshoz képest.",
+  "learn_page_standard_perform_step2": "Kattintson a „Normál összeigazítás” gombra az összehangolás megkezdéséhez.",
+  "learn_page_standard_perform_step3": "Sétáljon körbe a játéktérben, miközben a két eszközt együtt mozgatja, nyolcasokat leírva a levegőben, ahogy ez az alábbi ábrán is látható.",
+  "learn_page_standard_speeds_title": "Összeigazítás sebessége",
+  "learn_page_standard_speeds_desc": "Lehetőség van az összeigazítás sebességének állítására. Ez arra van hatással, hogy mennyi mozgatási minta szükséges az illesztés kiszámolásához. A több begyűjtött minta általában pontosítani tudja az illesztést.",
+  "learn_page_standard_speed_fast": "Gyors: Kevesebb időt vesz igénybe az összehangolás. Ronthat az illesztés minőségén.",
+  "learn_page_standard_speed_slow": "Lassú / Csigalassú: Több időbe kerül az összeigazítás, viszont általában pontosabb illesztést eredményez.",
+  "learn_page_standard_completion_note": "Amint a folyamatjelző sáv végigér, az eszközeinek azonnal illeszkedniük kell a fizikai térhez. Ha ez mégsem történt meg, akkor próbálja meg újra az összeigazítást.",
+  "learn_page_standard_drift_title": "Megjegyzés az elcsúszódásról",
+  "learn_page_standard_drift_desc": "Idővel az eszközei követése elcsúszhat, ezzel elrontva az illesztésüket. Ha ez bekövetkezik, újra el kell végeznie az összehangolásukat. Ha erre gyakran szükség van, ajánlott megfontolni a „Folyamatos Szinkronizáció” használatát.",
+
+  "learn_page_continuous_desc1": "Ha azt érzékeli, hogy az eszközei lassacskán elcsúsznak, pozíciójuk lassan eltolódik vagy elfordul használat közben, akkor erre megoldást nyújthat a folyamatos szinkronizáció.",
+  "learn_page_continuous_desc2": "Ahelyett, hogy időnként meg kellene állnia, hogy kézileg újra összeigazítsa a követőrendszereket, folyamatos szinkronizációval az alkalmazás automatikusan szinkronban tudja tartani a követési tereket.",
+  "learn_page_continuous_note_title": "Megjegyzés",
+  "learn_page_continuous_note_desc": "Ezen funkció használatához szükséges egy, a VR-szemüvegre felszerelt külön követőeszköz.",
+  "learn_page_continuous_desc3": "A folyamatos szinkronizáció megpróbálja a követési rendszerek összeigazítását gyakran és automatikusan megismételni, ezzel megszüntetve mindenféle elcsúszást. Megfelelő beállítás után már szinte sose kell bajlódnia az öszehangolással.",
+  "learn_page_continuous_setup_instructions": "A folyamatos szinkronizáció beállításához először válassza ki a két eszközt, mint ahogy ez a normál összeigazításnál is el lett magyarázva. Általában viszonyítási eszköznek a VR-szemüveget, illesztendő eszköznek pedig a felszerelt követőeszközt kell kijelölni. Az összehangolás megkezdéséhez kattintson a „Folyamatos Szinkronizáció” gombra. Beletelhet egy kis időbe, amíg a kezdeti illesztés számolása befejeződik, közben sétáljon körbe a játéktérben, hogy az alkalmazás elegendő mintát gyűjthessen!",
+  "learn_page_continuous_should_use_title": "Mikor használjunk folyamatos szinkronizációt?",
+  "learn_page_continuous_should_use_standard": "Használja a „Normál összeigazítás”-t, ha nem rendelkezik külön követőeszközzel, amit rá tudna szerelni a VR-szemüvegére, nem tölt sok időt a virtuális valóságban, vagy nem bánja, hogy időnként újra el kell végeznie az összeigazítást.",
+  "learn_page_continuous_should_use_continuous": "Használjon „Folyamatos Szinkronizáció”-t, ha gyakorlatilag soha sem szeretne bajlódni az összehangolással a jövőben. Ajánlott, ha sok időt tölt a virtuális valóságban, vagy ha használat közben idővel jelentős mértékű elcsúszást érzékel.",
+  "learn_page_continuous_physical_setup_title": "Követőeszköz felszerelése VR-szemüvegre",
+  "learn_page_continuous_physical_setup_desc1": "A folyamatos szinkronizáció használatához szükséges egy külön követőeszköz, melyet a VR-szemüvegre kell rögzíteni. Attól függően, hogy milyen VR-szemüveget és követőeszközt használ, lehet hogy léteznek már erre különböző megoldások. Gyakran található erre készített és letölthető 3D-nyomtatható modell az interneten, vagy körbe is lehet kérdezősködni a közösségben, hogy mások hogyan oldották meg.",
+  "learn_page_continuous_physical_setup_desc2": "Felszerelés után a követőnek biztonságosan rögzítve kell lennie a VR-szemüvegre. Nem szabad billegnie, forognia, vagy remegnie. Minél biztosabb a rögzítés, annál biztonságosabb, és ráadásul stabilabb is lesz a szinkronizáció.",
+
+  "learn_page_basestation_desc": "A Space Calibrator lehetővé teszi SteamVR bázisállomások („világítótornyok”, „szenzorok”, 'Base Stations', 'Lighthouses') vezérlését, ha rendelkezésre áll egy erre alkalmas (BLE kompatibilis) Bluetooth antenna.",
+  "learn_page_basestation_1_title": "1.0-s Bázisállomás modellek",
+  "learn_page_basestation_1_desc": "Csak a ki- és be kapcsolást támogatják. A csatornák vezeték nélküli beállítása nem támogatott, a hátoldalukon lévő fizikai gombot kell megnyomni csatornaváltáshoz.",
+  "learn_page_basestation_2_title": "2.0-s Bázisállomás modellek",
+  "learn_page_basestation_2_desc1": "A Valve és HTC által egyaránt gyártott 2.0-s modellek kiterjedtebb vezeték nélküli kezelést támogatnak. Bluetooth segítségével állítani lehet a csatornát, és választani az Alvó, Készenléti, vagy Aktív üzemmódok közül. Fontos, hogy minden bázisállomás egyedi csatornát használjon, különben nem fognak működni. A Space Calibrator ezt felismeri, és felajánlja a probléma automatikus orvoslását.",
+  "learn_page_basestation_2_desc2": "Egy 2.0-s bázisállomás csatornájának módosításához lépjen a Bázisállomás-kezelés fülre, válassza ki a vezérelni kívánt bázisállomás szerkesztés gombját, majd kattintson a kívánt csatornára (zölddel jelölve).",
+  "learn_page_basestation_auto_power_title": "Automatikus állapotkezelés",
+  "learn_page_basestation_auto_power_desc": "A „Beállítások” fülön engedélyezhető az automatikus bázisállomás állapotkezelés, amely bekapcsolja a bázisállomásokat amikor a Space Calibrator elindul, és kikapcsolja őket amikor leáll a SteamVR (és a Space Calibrator fut még). Vegye figyelembe, hogy ha Space Calibrator manuálisan bezáródik a SteamVR leállítása előtt, akkor NEM tudja automatikusan kikapcsolni a bázisállomásokat.",
+
+  "learn_page_ui_tour_desc": "A felhasználói felület több fülre van osztva, melyek mindegyike különbőző dolgokat tartalmaz.",
+  "learn_page_ui_tour_calibration_heading": "Összehangolás fül",
+  "learn_page_ui_tour_cal_desc1": "Az összehangolás fülön lehet vezérelni és szerkeszteni az összeigazítást és illesztést.",
+  "learn_page_ui_tour_cal_desc2": "Legfelül található a panel, amelyről le lehet olvasni, hogy van -e aktív illesztés, és ha van, akkor milyen fajta.",
+  "learn_page_ui_tour_cal_desc3": "Alatta kiválaszthatja az összehangoláshoz használni kívánt eszközöket. Felül az összehangolandó követési rendszereket adhatja meg. Ezt követően a bal oldalon válassza ki a támaszpontként szolgáló viszonyítási eszközt, a jobb oldalon pedig azt az eszközt, amelyet ehhez szeretne hozzáigazítani.",
+  "learn_page_ui_tour_cal_desc4": "Alattuk találhatóak az összeigazítás elindítására szolgáló gombok. Ha nem biztos abban, hogy mely módszert használja, további információkért nézzen utána a Súgó megfelelő oldalain, ahol a „Normál összeigazítás”-ról és a „Folyamatos Szinkronizáció”-ról lehet tájékozódni.",
+  "learn_page_ui_tour_cal_desc5": "Az oldal alján található számos további beállítás amelyekkel szabályozni lehet az összeigazítást. Közülük pár alapértelmezetten el van rejtve, felfedésükhöz engedélyezze a „Haladó beállítások”-at a Beállítások fülön.",
+  "learn_page_ui_tour_base_stations_heading": "Bázisállomás-kezelés fül",
+  "learn_page_ui_tour_bs_desc": "Itt lehetőség nyílik Bázisállomások távoli vezérlésére. Ezen funkció működéséhez szükséges egy erre alkalmas (BLE kompatibilis) Bluetooth antenna. Megfelelő beállítás esetén ritkán kell hozzányúlni ezen fülhöz.",
+  "learn_page_ui_tour_settings_heading": "Beállítások fül",
+  "learn_page_ui_tour_settings_desc1": "Itt be lehet állítani pár, a programra globális kihatással bíró opciót. Ide tartoznak a haladó beállítások, a bázisállomás-kezeléssel kapcsolatos beállítások, és a felhasználói felület nyelve.",
+  "learn_page_ui_tour_settings_desc2": "Az alkalmazás pár funkciójának felfedéséhez engedélyeznie kell a „Haladó beállítások”-at. Ezeket csak akkor módosítsa, ha ért hozzá, és pontosan tudja, mit csinálnak.",
 
   /* Names of the various languages one may select. Shown in settings */
   "languages_en_GB": "Angol (brit)",

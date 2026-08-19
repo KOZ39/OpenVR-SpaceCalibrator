@@ -108,7 +108,7 @@
   "base_stations_state_standby": "Ожидание",
   "base_stations_state_active": "Работает",
   "base_stations_state_unknown": "Неизвестный режим",
-"base_stations_state_faulty": "Неисправна",
+  "base_stations_state_faulty": "Неисправна",
   "base_stations_channel_select_label": "Выберите канал базовой станции:",
   "base_stations_active_channel": "Канал {0}", // 0: channel number (1-15) ; eg Channel 12
   "base_stations_nickname": "Имя",

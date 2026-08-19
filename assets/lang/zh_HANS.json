@@ -108,6 +108,7 @@
   "base_stations_state_standby": "待机",
   "base_stations_state_active": "运行中",
   "base_stations_state_unknown": "未知",
+  "base_stations_state_faulty": "故障",
   "base_stations_channel_select_label": "选择基站信道：",
   "base_stations_active_channel": "信道 {0}", // 0: channel number (1-15) ; eg Channel 12
   "base_stations_nickname": "别名",
