@@ -301,7 +301,11 @@ namespace spacecal {
                     g_base_station_state.aTrackedBaseStations[i].base_station.szMacAddress = baseStation.base_station.szMacAddress;
                     g_base_station_state.aTrackedBaseStations[i].base_station.channel = baseStation.base_station.channel;
                     g_base_station_state.aTrackedBaseStations[i].base_station.eType = baseStation.base_station.eType;
-                    g_base_station_state.aTrackedBaseStations[i].base_station.powerState = baseStation.base_station.powerState;
+                    if (baseStation.base_station.eType == EBaseStationType_t::BaseStationType_20 ||
+                        (baseStation.base_station.powerState != EPowerState_t::PowerState_Unknown) // prevent overwrite for 1.0s
+                    ) {
+                        g_base_station_state.aTrackedBaseStations[i].base_station.powerState = baseStation.base_station.powerState;
+                    }
                     g_base_station_state.aTrackedBaseStations[i].base_station.isConnected = baseStation.base_station.isConnected;
                     g_base_station_state.aTrackedBaseStations[i].base_station.isFirmwareCooked = baseStation.base_station.isFirmwareCooked;
                     if (baseStation.base_station.firmwareSupportsStandby != EBaseStation20_StandbySupport_t::StandbySupport_Unknown) {
@@ -473,7 +477,7 @@ namespace spacecal {
             simpleble_peripheral_t hBtDevice = g_base_station_state.aTrackedBaseStations[index].hBtDevice;
             std::string szSerialNumber = g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber;
             g_base_station_state.mutexBaseStationList.unlock();
-            LOG_BLUETOOTH_ERROR("Attempting to execute SET_POWER {} on Base Station 1.0 {}...", (uint8_t) target_state, szSerialNumber);
+            LOG_BLUETOOTH_INFO("Attempting to execute SET_POWER {} on Base Station 1.0 {}...", (uint8_t) target_state, szSerialNumber);
 
             bool success = false;
             bool bConnectable = false;
@@ -516,14 +520,13 @@ namespace spacecal {
                 simpleble_peripheral_disconnect(hBtDevice);
             }
 
-            g_base_station_state.mutexBaseStationList.lock();
-            if (index < g_base_station_state.aTrackedBaseStations.size()) {
-                auto& final_station = g_base_station_state.aTrackedBaseStations[index];
-                if (success) {
-                    final_station.base_station.powerState = target_state;
+            if (success) {
+                g_base_station_state.mutexBaseStationList.lock();
+                if (index < g_base_station_state.aTrackedBaseStations.size()) {
+                    g_base_station_state.aTrackedBaseStations[index].base_station.powerState = target_state;
                 }
+                g_base_station_state.mutexBaseStationList.unlock();
             }
-            g_base_station_state.mutexBaseStationList.unlock();
 
             // re-attempt
             if (!success && retry_count < k_MAX_OPERATION_ATTEMPTS) {
@@ -549,7 +552,7 @@ namespace spacecal {
             bool bIsOldFirmware = g_base_station_state.aTrackedBaseStations[index].isOldFirmware;
             std::string szSerialNumber = g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber;
             g_base_station_state.mutexBaseStationList.unlock();
-            LOG_BLUETOOTH_ERROR("Attempting to execute SET_CHANNEL {} on Base Station 2.0 {}...", (uint8_t)target_channel, szSerialNumber);
+            LOG_BLUETOOTH_INFO("Attempting to execute SET_CHANNEL {} on Base Station 2.0 {}...", (uint8_t)target_channel, szSerialNumber);
 
             bool success = false;
             bool bConnectable = false;
@@ -611,16 +614,16 @@ namespace spacecal {
                 }
             }
 
-            g_base_station_state.mutexBaseStationList.lock();
-            if (index < g_base_station_state.aTrackedBaseStations.size()) {
-                auto& final_station = g_base_station_state.aTrackedBaseStations[index];
-                if (success) {
+            if (success) {
+                g_base_station_state.mutexBaseStationList.lock();
+                if (index < g_base_station_state.aTrackedBaseStations.size()) {
+                    auto& final_station = g_base_station_state.aTrackedBaseStations[index];
                     final_station.base_station.channel = target_channel;
                     final_station.base_station.firmwareSupportsStandby = bIsOldFirmware ? EBaseStation20_StandbySupport_t::StandbySupport_Unavailable : EBaseStation20_StandbySupport_t::StandbySupport_Supported;
                     final_station.isOldFirmware = bIsOldFirmware;
                 }
+                g_base_station_state.mutexBaseStationList.unlock();
             }
-            g_base_station_state.mutexBaseStationList.unlock();
 
             // re-attempt
             if (!success && retry_count < k_MAX_OPERATION_ATTEMPTS) {
@@ -646,7 +649,7 @@ namespace spacecal {
             bool bIsOldFirmware = g_base_station_state.aTrackedBaseStations[index].isOldFirmware;
             std::string szSerialNumber = g_base_station_state.aTrackedBaseStations[index].base_station.szSerialNumber;
             g_base_station_state.mutexBaseStationList.unlock();
-            LOG_BLUETOOTH_ERROR("Attempting to execute SET_POWER {} on Base Station 2.0 {}...", (uint8_t)target_state, szSerialNumber);
+            LOG_BLUETOOTH_INFO("Attempting to execute SET_POWER {} on Base Station 2.0 {}...", (uint8_t)target_state, szSerialNumber);
 
             bool success = false;
             bool bConnectable = false;
@@ -796,16 +799,16 @@ namespace spacecal {
                 }
             }
 
-            g_base_station_state.mutexBaseStationList.lock();
-            if (index < g_base_station_state.aTrackedBaseStations.size()) {
-                auto& final_station = g_base_station_state.aTrackedBaseStations[index];
-                if (success) {
+            if (success) {
+                g_base_station_state.mutexBaseStationList.lock();
+                if (index < g_base_station_state.aTrackedBaseStations.size()) {
+                    auto& final_station = g_base_station_state.aTrackedBaseStations[index];
                     final_station.base_station.powerState = target_state;
                     final_station.base_station.firmwareSupportsStandby = bIsOldFirmware ? EBaseStation20_StandbySupport_t::StandbySupport_Unavailable : EBaseStation20_StandbySupport_t::StandbySupport_Supported;
                     final_station.isOldFirmware = bIsOldFirmware;
                 }
+                g_base_station_state.mutexBaseStationList.unlock();
             }
-            g_base_station_state.mutexBaseStationList.unlock();
 
             // re-attempt
             if (!success && retry_count < k_MAX_OPERATION_ATTEMPTS) {
