@@ -54,6 +54,20 @@ namespace spacecal {
         vr::PropertyContainerHandle_t hHmdContainer = vr::VRProperties()->TrackedDeviceToPropertyContainer(vr::k_unTrackedDeviceIndex_Hmd);
         m_fVsyncPredictionTime = 1.0 / vr::VRProperties()->GetFloatProperty(hHmdContainer, vr::Prop_DisplayFrequency_Float);
         m_latencyEstimator.set_hmd_refresh_rate(m_fVsyncPredictionTime);
+
+        // device state may get desynced so we update it here
+        vr::TrackedDevicePose_t rawPoses[vr::k_unMaxTrackedDeviceCount] = {};
+        vr::VRServerDriverHost()->GetRawTrackedDevicePoses((float)m_fVsyncPredictionTime, rawPoses, vr::k_unMaxTrackedDeviceCount);
+
+        for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
+            if (IsPoseValid(m_poses[i]) && !IsPoseValid(rawPoses[i])) {
+                vr::DriverPose_t corrected = m_poses[i];
+                corrected.deviceIsConnected = rawPoses[i].bDeviceIsConnected;
+                corrected.poseIsValid = rawPoses[i].bPoseIsValid;
+                corrected.result = rawPoses[i].eTrackingResult;
+                m_ipcServer.UpdatePose(i, corrected);
+            }
+        }
     }
     bool ServerTrackedDeviceProvider::ShouldBlockStandbyMode() {
         return false;

@@ -592,20 +592,22 @@ namespace spacecal {
         bool bIsTrackingOk = true;
 
         if (referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
+            bool actuallyConnected = VRState::getInstance()->getVrDevice(referenceDevice.deviceId).bIsConnected;
             reference = CalibrationManager::getInstance()->m_poses[this->referenceDevice.deviceId];
-            if (!(reference.deviceIsConnected && reference.poseIsValid && reference.result == vr::ETrackingResult::TrackingResult_Running_OK)) {
+            if (!(actuallyConnected && reference.poseIsValid && reference.result == vr::ETrackingResult::TrackingResult_Running_OK)) {
                 // dont spam logs
-                if (reference.deviceIsConnected) {
+                if (actuallyConnected) {
                     LOG_CALIB_WARN("Reference device is not tracking");
                 }
                 bIsTrackingOk = false;
             }
         }
         if (targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
+            bool actuallyConnected = VRState::getInstance()->getVrDevice(targetDevice.deviceId).bIsConnected;
             target = CalibrationManager::getInstance()->m_poses[this->targetDevice.deviceId];
-            if (!(target.deviceIsConnected && target.poseIsValid && target.result == vr::ETrackingResult::TrackingResult_Running_OK)) {
+            if (!(actuallyConnected && target.poseIsValid && target.result == vr::ETrackingResult::TrackingResult_Running_OK)) {
                 // dont spam logs
-                if (target.deviceIsConnected) {
+                if (actuallyConnected) {
                     LOG_CALIB_WARN("Target device is not tracking");
                 }
                 bIsTrackingOk = false;
@@ -628,7 +630,8 @@ namespace spacecal {
         if (device.deviceId >= vr::k_unMaxTrackedDeviceCount) return false;
 
         const auto& pose = CalibrationManager::getInstance()->m_poses[device.deviceId];
-        if (!pose.deviceIsConnected || !pose.poseIsValid) return false;
+        bool actuallyConnected = VRState::getInstance()->getVrDevice(device.deviceId).bIsConnected;
+        if (!VRState::getInstance()->getVrDevice(device.deviceId).bIsConnected || !actuallyConnected || !pose.poseIsValid) return false;
 
         Eigen::Quaterniond curRot(pose.qWorldFromDriverRotation.w, pose.qWorldFromDriverRotation.x, pose.qWorldFromDriverRotation.y, pose.qWorldFromDriverRotation.z);
         Eigen::Vector3d curTrans(pose.vecWorldFromDriverTranslation[0], pose.vecWorldFromDriverTranslation[1], pose.vecWorldFromDriverTranslation[2]);
@@ -1022,8 +1025,9 @@ namespace spacecal {
         double deltaTime = currentTime - m_lastTick;
         for (vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
             const auto& pose = CalibrationManager::getInstance()->m_poses[i];
+            bool actuallyConnected = VRState::getInstance()->getVrDevice(i).bIsConnected;
             const auto& lastPose = CalibrationManager::getInstance()->m_lastPoses[i];
-            if (!pose.deviceIsConnected || !pose.poseIsValid || pose.result != vr::ETrackingResult::TrackingResult_Running_OK)
+            if (!actuallyConnected || !pose.poseIsValid || pose.result != vr::ETrackingResult::TrackingResult_Running_OK)
                 continue;
             if (!lastPose.deviceIsConnected || !lastPose.poseIsValid || lastPose.result != vr::ETrackingResult::TrackingResult_Running_OK)
                 continue;
@@ -1132,14 +1136,16 @@ namespace spacecal {
         bool calibrationDevicesAreValid = targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount && referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount;
         if (referenceDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
             auto refPose = CalibrationManager::getInstance()->m_poses[referenceDevice.deviceId];
-            if (!refPose.deviceIsConnected || !refPose.poseIsValid) {
+            bool actuallyConnected = VRState::getInstance()->getVrDevice(referenceDevice.deviceId).bIsConnected;
+            if (!actuallyConnected || !refPose.poseIsValid) {
                 calibrationDevicesAreValid = false;
             }
         }
 
         if (targetDevice.deviceId < vr::k_unMaxTrackedDeviceCount) {
             auto targetPose = CalibrationManager::getInstance()->m_poses[targetDevice.deviceId];
-            if (!targetPose.deviceIsConnected || !targetPose.poseIsValid) {
+            bool actuallyConnected = VRState::getInstance()->getVrDevice(targetDevice.deviceId).bIsConnected;
+            if (!actuallyConnected || !targetPose.poseIsValid) {
                 calibrationDevicesAreValid = false;
             }
         }
@@ -1304,6 +1310,10 @@ namespace spacecal {
         }
 
         memcpy(m_lastPoses, m_poses, sizeof(m_lastPoses));
+        // deviceIsConnected may be stale; keep it in sync
+        for (size_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
+            m_lastPoses[i].deviceIsConnected = VRState::getInstance()->getVrDevice(i).bIsConnected;
+        }
     }
 
     void CalibrationManager::apply() {
