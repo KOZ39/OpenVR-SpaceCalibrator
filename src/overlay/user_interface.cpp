@@ -785,7 +785,13 @@ namespace spacecal {
                     ImGui::TextHeading(fmt::format("{} {}", szCalibrationStatusIcon, LOCALE_GET(szCalibrationStatusMessage)).c_str());
                     ImGui::TextWrappedDisabled(LOCALE_GET(szCalibrationStatusDescription).c_str());
 
-                    if (calibration.isCalibrating()) {
+                    if (calibration.isContinuousCalibration()) {
+                        // continuous is an indeterminate calibration, ie we cant compute a "percentage" for it
+                        ImGui::AlignTextToFramePadding();
+                        ImGui::TextHeading("%s", LOCALE_GET("calibration_progress").c_str());
+                        ImGui::SameLine();
+                        ImGui::ProgressBar(-0.25f * (float)ImGui::GetTime(), ImVec2(-FLT_MIN, 0.0f), "");
+                    } else if (calibration.isCalibrating()) {
                         // standard calibration
                         ImGui::TextWrappedDisabled(LOCALE_GET("calibration_info_move_around_insufficient_samples").c_str());
                         float fCalibrationProgressPercent = calibration.getCalibrationProgress() * 100.0f;
