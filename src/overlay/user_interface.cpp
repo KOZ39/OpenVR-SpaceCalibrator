@@ -886,7 +886,7 @@ namespace spacecal {
                     }
                 } else {
 
-                    if (calibration.isValidCalibration() && !calibration.isActive) {
+                    if (calibration.isValidCalibration() && !calibration.isActive && !calibration.devicesAreValid()) {
                         ImGui::BeginCardDanger("calibration_invalid");
                         std::string szTrackingSystemUiName = getTrackingSystemFriendlyName(calibration.referenceDevice.trackingSystem);
                         ImGui::TextWrapped(LOCALE_FORMAT("calibration_error_reference_hmd_missing", szTrackingSystemUiName).c_str());
