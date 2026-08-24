@@ -8,7 +8,7 @@ namespace spacecal {
     constexpr const char* c_STEAMVR_STEAM_APP_ID = "250820";
 
     // @NOTE: you may see this version referred to as Nova across the code-base. Nova was the internal codename for this version of the app.
-    #define SPACECAL_VERSION_STRING "v2.0-nova-PREVIEW"
+    #define SPACECAL_VERSION_STRING "v2.0.0-BETA"
 
     #ifndef M_PI
         #define M_PI 3.1415926535
