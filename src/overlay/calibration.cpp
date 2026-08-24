@@ -1001,6 +1001,19 @@ namespace spacecal {
         }
     }
 
+    void TrackingSystemCalibration::tryAssigningTargets() {
+        if (!devicesAreValid()) {
+            // successfully loaded calibration; update runtime state
+            const auto& hmdDevice = VRState::getInstance()->getVrDevice(vr::k_unTrackedDeviceIndex_Hmd);
+
+            assignTarget(referenceDevice);
+            assignTarget(targetDevice);
+
+            // update state
+            hmdIsInReferenceTrackingSystem = hmdDevice.szTrackingSystemId == referenceDevice.trackingSystem;
+        }
+    }
+
     void TrackingSystemCalibration::autoDetectDevices() {
         LOG_CALIB_INFO("Entering auto-detection mode...");
         state = isContinuousCalibration() ? CalibrationState::AUTO_DETECT_DEVICES_CONTINUOUS : CalibrationState::AUTO_DETECT_DEVICES_STANDARD;

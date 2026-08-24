@@ -35,6 +35,8 @@ namespace spacecal {
         "virtual_desktop_hmd_play_for_dream_mr",
     };
 
+    constexpr const char* k_VIRTUAL_DESKTOP_SERIAL_NUMBER = "1PASH5D1P17365";
+
     VRState* VRState::s_instance = nullptr;
 
     bool VRState::init() {
@@ -179,7 +181,7 @@ namespace spacecal {
             if (deviceClass == vr::TrackedDeviceClass_HMD && szTrackingSystem == "oculus") {
                 if (m_hmdMetadata.isVirtualDesktopAvailable /* && isHmdVirtualDesktop() */) {
                     // VD hardcodes the sn to "1PASH5D1P17365"
-                    if (szDeviceSerial == "1PASH5D1P17365" && m_hmdMetadata.VD_hmdModel > ipc::protocol::VD_HmdModel_None && m_hmdMetadata.VD_hmdModel < ipc::protocol::VD_HmdModel_Count) {
+                    if (szDeviceSerial == k_VIRTUAL_DESKTOP_SERIAL_NUMBER && m_hmdMetadata.VD_hmdModel > ipc::protocol::VD_HmdModel_None && m_hmdMetadata.VD_hmdModel < ipc::protocol::VD_HmdModel_Count) {
                         szDeviceModel = LOCALE_GET(k_VIRTUAL_DESKTOP_HMD_NAMES[m_hmdMetadata.VD_hmdModel]);
                     }
                 }
@@ -274,10 +276,17 @@ namespace spacecal {
                 // @TODO: Handle these??
             case vr::EVREventType::VREvent_Input_TrackerActivated:
             case vr::EVREventType::VREvent_TrackedDeviceActivated:
+            {
                 LOG_OPENVR_INFO("New device connected at index {}", vrEvent.trackedDeviceIndex);
                 updateSteamVRDevice(vrEvent.trackedDeviceIndex);
+
+                for (size_t i = 0; i < CalibrationManager::getInstance()->getCalibrationCount(); i++) {
+                    CalibrationManager::getInstance()->getCalibration(i).tryAssigningTargets();
+                }
+
                 m_bStateDirty = true;
                 break;
+            }
             case vr::EVREventType::VREvent_TrackedDeviceDeactivated:
                 LOG_OPENVR_INFO("Device disconnected at index {}", vrEvent.trackedDeviceIndex);
                 updateSteamVRDevice(vrEvent.trackedDeviceIndex);
@@ -492,7 +501,6 @@ namespace spacecal {
     }
 
     const VRDevice_t VRState::findVrDevice(const std::string& trackingSystem, const std::string& model, const std::string& serial) const {
-
         // Find the device with the matching tracking system, model and serial
         for (int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
             const auto& device = m_aDevices[i];

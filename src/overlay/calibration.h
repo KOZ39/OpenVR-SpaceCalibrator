@@ -156,6 +156,7 @@ namespace spacecal {
 
         // finds the device id given props, if and only if device id is invalid
         void assignTarget(CalibrationDevice& device);
+        void tryAssigningTargets();
         // attempts to auto-detect devices
         void autoDetectDevices();
         // marks a device as invalid; space calibrator will attempt reassigning an id next frame to it
