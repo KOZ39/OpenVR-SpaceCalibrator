@@ -140,9 +140,13 @@ namespace spacecal {
                 auto ghostLabel = fmt::format("< {} | {} >", device.deviceModel, device.deviceSerialNumber);
                 std::string uniqueId = fmt::format("{}_pass0_{}", ghostLabel, iterator);
                 iterator++;
+                ImGui::BeginDisabled();
+                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.75f, 0.38f, 0.42f, 0.20f));
                 ImGui::PushID(uniqueId.c_str());
                 ImGui::Selectable(ghostLabel.c_str(), true);
                 ImGui::PopID();
+                ImGui::PopStyleColor();
+                ImGui::EndDisabled();
             }
         }
 
