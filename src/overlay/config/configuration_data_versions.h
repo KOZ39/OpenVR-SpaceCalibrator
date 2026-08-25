@@ -1,5 +1,6 @@
 #pragma once
 
+// clang-format off
 #include "platform.h"
 #include <inttypes.h>
 #include <string>
@@ -211,3 +212,4 @@ struct glz::meta<spacecal::config::versioned::Configuration_1::AnchorMode> {
         HmdRelative
     );
 };
+// clang-format on

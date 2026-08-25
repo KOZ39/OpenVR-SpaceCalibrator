@@ -1,8 +1,9 @@
 #pragma once
 
-#include <quill/bundled/fmt/format.h>
-#include <quill/Logger.h>
 #include <quill/LogMacros.h>
+#include <quill/Logger.h>
+#include <quill/bundled/fmt/format.h>
+
 
 #if defined(IS_DRIVER) || defined(IS_OVERLAY)
 #include "log_formatters.h"
@@ -10,17 +11,17 @@
 #include <string>
 
 namespace logging {
-    extern ::quill::Logger* s_logger;
-    extern ::quill::Logger* s_loggerOpenVr;
-    extern ::quill::Logger* s_loggerIpc;
-    extern ::quill::Logger* s_loggerHooking;
-    extern ::quill::Logger* s_loggerCalibration;
-    extern ::quill::Logger* s_loggerBluetooth;
-    void Init(bool isOverlay);
+extern ::quill::Logger* s_logger;
+extern ::quill::Logger* s_loggerOpenVr;
+extern ::quill::Logger* s_loggerIpc;
+extern ::quill::Logger* s_loggerHooking;
+extern ::quill::Logger* s_loggerCalibration;
+extern ::quill::Logger* s_loggerBluetooth;
+void Init(bool isOverlay);
 #ifndef _DEBUG
-    constexpr uint32_t CLEAR_LOG_FILES_AFTER_DAYS = 30;
+constexpr uint32_t CLEAR_LOG_FILES_AFTER_DAYS = 30;
 #else
-    constexpr uint32_t CLEAR_LOG_FILES_AFTER_DAYS = 7;
+constexpr uint32_t CLEAR_LOG_FILES_AFTER_DAYS = 7;
 #endif
 }
 

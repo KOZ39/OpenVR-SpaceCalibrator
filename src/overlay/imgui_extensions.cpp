@@ -4,13 +4,14 @@
 #include <fmt/format.h>
 
 namespace ImGui::fonts {
-    ImFont* pDefault = nullptr;
-    ImFont* pHeading = nullptr;
+ImFont* pDefault = nullptr;
+ImFont* pHeading = nullptr;
 }
 
 static ImVector<ImRect> s_GroupPanelLabelStack;
 
-void ImGui::BeginGroupPanel(const char* name, const ImVec2& size) {
+void ImGui::BeginGroupPanel(const char* name, const ImVec2& size)
+{
     ImGui::BeginGroup();
 
     auto cursorPos = ImGui::GetCursorScreenPos();
@@ -40,7 +41,7 @@ void ImGui::BeginGroupPanel(const char* name, const ImVec2& size) {
     ImGui::Dummy(ImVec2(0.0, frameHeight + itemSpacing.y));
     ImGui::BeginGroup();
 
-    //ImGui::GetWindowDrawList()->AddRect(labelMin, labelMax, IM_COL32(255, 0, 255, 255));
+    // ImGui::GetWindowDrawList()->AddRect(labelMin, labelMax, IM_COL32(255, 0, 255, 255));
 
     ImGui::PopStyleVar(2);
 
@@ -59,7 +60,8 @@ void ImGui::BeginGroupPanel(const char* name, const ImVec2& size) {
     s_GroupPanelLabelStack.push_back(ImRect(labelMin, labelMax));
 }
 
-void ImGui::EndGroupPanel() {
+void ImGui::EndGroupPanel()
+{
     ImGui::PopItemWidth();
 
     auto itemSpacing = ImGui::GetStyle().ItemSpacing;
@@ -71,7 +73,7 @@ void ImGui::EndGroupPanel() {
 
     ImGui::EndGroup();
 
-    //ImGui::GetWindowDrawList()->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(0, 255, 0, 64), 4.0f);
+    // ImGui::GetWindowDrawList()->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(0, 255, 0, 64), 4.0f);
 
     ImGui::EndGroup();
 
@@ -83,7 +85,7 @@ void ImGui::EndGroupPanel() {
 
     auto itemMin = ImGui::GetItemRectMin();
     auto itemMax = ImGui::GetItemRectMax();
-    //ImGui::GetWindowDrawList()->AddRectFilled(itemMin, itemMax, IM_COL32(255, 0, 0, 64), 4.0f);
+    // ImGui::GetWindowDrawList()->AddRectFilled(itemMin, itemMax, IM_COL32(255, 0, 0, 64), 4.0f);
 
     auto labelRect = s_GroupPanelLabelStack.back();
     s_GroupPanelLabelStack.pop_back();
@@ -92,18 +94,24 @@ void ImGui::EndGroupPanel() {
     ImRect frameRect = ImRect(itemMin + halfFrame, itemMax - ImVec2(halfFrame.x, 0.0f));
     labelRect.Min.x -= itemSpacing.x;
     labelRect.Max.x += itemSpacing.x;
-    for (int i = 0; i < 4; ++i)
-    {
-        switch (i)
-        {
+    for (int i = 0; i < 4; ++i) {
+        switch (i) {
             // left half-plane
-        case 0: ImGui::PushClipRect(ImVec2(-FLT_MAX, -FLT_MAX), ImVec2(labelRect.Min.x, FLT_MAX), true); break;
+        case 0:
+            ImGui::PushClipRect(ImVec2(-FLT_MAX, -FLT_MAX), ImVec2(labelRect.Min.x, FLT_MAX), true);
+            break;
             // right half-plane
-        case 1: ImGui::PushClipRect(ImVec2(labelRect.Max.x, -FLT_MAX), ImVec2(FLT_MAX, FLT_MAX), true); break;
+        case 1:
+            ImGui::PushClipRect(ImVec2(labelRect.Max.x, -FLT_MAX), ImVec2(FLT_MAX, FLT_MAX), true);
+            break;
             // top
-        case 2: ImGui::PushClipRect(ImVec2(labelRect.Min.x, -FLT_MAX), ImVec2(labelRect.Max.x, labelRect.Min.y), true); break;
+        case 2:
+            ImGui::PushClipRect(ImVec2(labelRect.Min.x, -FLT_MAX), ImVec2(labelRect.Max.x, labelRect.Min.y), true);
+            break;
             // bottom
-        case 3: ImGui::PushClipRect(ImVec2(labelRect.Min.x, labelRect.Max.y), ImVec2(labelRect.Max.x, FLT_MAX), true); break;
+        case 3:
+            ImGui::PushClipRect(ImVec2(labelRect.Min.x, labelRect.Max.y), ImVec2(labelRect.Max.x, FLT_MAX), true);
+            break;
         }
 
         ImGui::GetWindowDrawList()->AddRect(
@@ -130,7 +138,8 @@ void ImGui::EndGroupPanel() {
     ImGui::EndGroup();
 }
 
-bool ImGui::CheckboxWithDescription(const char* title, bool* v, const char* desc) {
+bool ImGui::CheckboxWithDescription(const char* title, bool* v, const char* desc)
+{
     ImGui::BeginGroup();
 
     ImVec2 startPos = ImGui::GetCursorPos();
@@ -139,8 +148,7 @@ bool ImGui::CheckboxWithDescription(const char* title, bool* v, const char* desc
     bool changed = ImGui::Checkbox(fmt::format("##{}", title).c_str(), v);
 
     ImGui::SameLine();
-    float yOffsetToTop = ImGui::GetStyle().FramePadding.y +
-        (ImGui::GetFrameHeight() - (ImGui::GetStyle().FramePadding.y * 2.0f) - ImGui::GetTextLineHeight()) * 0.5f;
+    float yOffsetToTop = ImGui::GetStyle().FramePadding.y + (ImGui::GetFrameHeight() - (ImGui::GetStyle().FramePadding.y * 2.0f) - ImGui::GetTextLineHeight()) * 0.5f;
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() - yOffsetToTop);
 
     ImGui::BeginGroup();
@@ -164,7 +172,8 @@ bool ImGui::CheckboxWithDescription(const char* title, bool* v, const char* desc
     return changed;
 }
 
-bool ImGui::RadioButtonWithDescription(const char* title, bool v, const char* desc) {
+bool ImGui::RadioButtonWithDescription(const char* title, bool v, const char* desc)
+{
     ImGui::BeginGroup();
 
     ImVec2 startPos = ImGui::GetCursorPos();
@@ -172,8 +181,7 @@ bool ImGui::RadioButtonWithDescription(const char* title, bool v, const char* de
 
     bool changed = ImGui::RadioButton(fmt::format("##{}", title).c_str(), v);
     ImGui::SameLine();
-    float yOffsetToTop = ImGui::GetStyle().FramePadding.y +
-        (ImGui::GetFrameHeight() - (ImGui::GetStyle().FramePadding.y * 2.0f) - ImGui::GetTextLineHeight()) * 0.5f;
+    float yOffsetToTop = ImGui::GetStyle().FramePadding.y + (ImGui::GetFrameHeight() - (ImGui::GetStyle().FramePadding.y * 2.0f) - ImGui::GetTextLineHeight()) * 0.5f;
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() - yOffsetToTop);
 
     ImGui::BeginGroup();
@@ -196,9 +204,11 @@ bool ImGui::RadioButtonWithDescription(const char* title, bool v, const char* de
     return changed;
 }
 
-void ImGui::PillText(const char* text, const ImVec4& bgColor, const ImVec4& textColor) {
+void ImGui::PillText(const char* text, const ImVec4& bgColor, const ImVec4& textColor)
+{
     ImGuiWindow* window = ImGui::GetCurrentWindow();
-    if (window->SkipItems) return;
+    if (window->SkipItems)
+        return;
 
     const ImGuiID id = window->GetID(text);
 
@@ -210,7 +220,8 @@ void ImGui::PillText(const char* text, const ImVec4& bgColor, const ImVec4& text
     const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
 
     ImGui::ItemSize(size, ImGui::GetStyle().FramePadding.y);
-    if (!ImGui::ItemAdd(bb, id)) return;
+    if (!ImGui::ItemAdd(bb, id))
+        return;
 
     const float rounding = size.y * 0.5f;
     window->DrawList->AddRectFilled(bb.Min, bb.Max, ImGui::ColorConvertFloat4ToU32(bgColor), rounding);
@@ -219,7 +230,8 @@ void ImGui::PillText(const char* text, const ImVec4& bgColor, const ImVec4& text
     window->DrawList->AddText(textPos, ImGui::ColorConvertFloat4ToU32(textColor), text);
 }
 
-bool ImGui::InformationButton(const char* icon, const char* title, const char* desc, ImTextureID previewTex, ImVec2 previewSize) {
+bool ImGui::InformationButton(const char* icon, const char* title, const char* desc, ImTextureID previewTex, ImVec2 previewSize)
+{
     bool clicked = false;
 
     ImGui::PushID(title);
@@ -265,8 +277,7 @@ bool ImGui::InformationButton(const char* icon, const char* title, const char* d
 
             if (icon && *icon) {
                 ImGui::TextHeading("%s  %s", icon, title);
-            }
-            else {
+            } else {
                 ImGui::TextHeading("%s", title);
             }
 

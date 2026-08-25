@@ -1,8 +1,10 @@
 #include "crash_handler.h"
 #if OS_WINDOWS
+// clang-format off
 #include "util.h"
 #include <windows.h>
 #include <Dbghelp.h>
+// clang-format on
 
 namespace spacecal {
     // based on https://mecanik.dev/en/posts/how-to-write-mini-dump-on-software-crash/

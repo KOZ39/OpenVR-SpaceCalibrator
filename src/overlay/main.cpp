@@ -1,3 +1,4 @@
+// clang-format off
 #include <stdio.h>
 #include <stdlib.h>
 #include "util.h"
@@ -13,9 +14,10 @@
 #if OS_WINDOWS
 #include <windows.h>
 #endif
+// clang-format on
 
 namespace spacecal {
-    extern std::string g_licenses_text;
+extern std::string g_licenses_text;
 }
 
 #if OS_WINDOWS
@@ -27,7 +29,8 @@ extern "C" __declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0x
 
 // really bad cli parser
 // @FIXME: should probably make a cli parsing lib and use that here eventually, but api design is effort i cba to deal with for now
-void args_parse(int argc, char* argv[], spacecal::renderer::GraphicsBackend* renderer) {
+void args_parse(int argc, char* argv[], spacecal::renderer::GraphicsBackend* renderer)
+{
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "--renderer" && (i + 1 < argc) && renderer) {
@@ -48,12 +51,13 @@ void args_parse(int argc, char* argv[], spacecal::renderer::GraphicsBackend* ren
 }
 
 // cross-platform entry point ; windows needs wWinMain beause we want to hide the terminal at startup
-int entry_point(int argc, char* argv[]) {
+int entry_point(int argc, char* argv[])
+{
 
     // default to dx11 on windows and vk on linux
 #if OS_WINDOWS
     // init COM
-    (void) CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    (void)CoInitializeEx(NULL, COINIT_MULTITHREADED);
     spacecal::renderer::GraphicsBackend eGraphicsApi = spacecal::renderer::GraphicsBackend::DirectX11;
 #else
     spacecal::renderer::GraphicsBackend eGraphicsApi = spacecal::renderer::GraphicsBackend::Vulkan;
@@ -155,7 +159,8 @@ int entry_point(int argc, char* argv[]) {
 // platform specific entry points
 
 #if OS_WINDOWS
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow) {
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
+{
 
     // need to convert from UTF16-LE to UTF8 bc windows is special
     int argc;
@@ -177,7 +182,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     return result;
 }
 #elif OS_LINUX
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     return entry_point(argc, argv);
 }
 #else

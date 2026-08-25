@@ -1,10 +1,10 @@
 #pragma once
 
-#include "protocol.h"
 #include "ipc.h"
+#include "protocol.h"
 
 namespace spacecal {
-    class ServerTrackedDeviceProvider;
+class ServerTrackedDeviceProvider;
 }
 
 namespace ipc {

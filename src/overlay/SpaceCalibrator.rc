@@ -1,5 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
+// clang-format off
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -110,3 +111,4 @@ END
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
+    // clang-format on

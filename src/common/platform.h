@@ -1,8 +1,9 @@
 #pragma once
 
-#include <string>
 #include <filesystem>
+#include <string>
 
+// clang-format off
 #if defined(_WIN32)
 #define OS_WINDOWS 1
 #define OS_LINUX 0
@@ -55,28 +56,29 @@
 #define BEGIN_EXTERNAL_HEADERS
 #define END_EXTERNAL_HEADERS
 #endif
+// clang-format on
 
 namespace platform {
-    // %APPDATA% or ~/.config
-    std::filesystem::path getUserConfigDir();
-    std::filesystem::path getExeDir();
+// %APPDATA% or ~/.config
+std::filesystem::path getUserConfigDir();
+std::filesystem::path getExeDir();
 
-    std::string getEnvVariable(const std::string& szEnvVarName);
+std::string getEnvVariable(const std::string& szEnvVarName);
 
-    bool isAnotherInstanceRunning(bool& bIsRunningViaSteam);
-    void shutdownCurrentInstance();
+bool isAnotherInstanceRunning(bool& bIsRunningViaSteam);
+void shutdownCurrentInstance();
 
-    // title -> window title in the window decoration
-    // message -> text in the dialog box
-    void showMessageDialog(const std::string& title, const std::string& message);
+// title -> window title in the window decoration
+// message -> text in the dialog box
+void showMessageDialog(const std::string& title, const std::string& message);
 
-    // opens the directory in the OS' file brower
-    void launchDirInFileBrowser(const std::filesystem::path& szDirectory);
-    // launches a url in the default web browser
-    void launchWebpage(const std::string& szUrl);
+// opens the directory in the OS' file brower
+void launchDirInFileBrowser(const std::filesystem::path& szDirectory);
+// launches a url in the default web browser
+void launchWebpage(const std::string& szUrl);
 
-    void setThreadName(const std::string& threadName);
+void setThreadName(const std::string& threadName);
 
-    // utf8 stuff for imgui -> overlay -> os interop
-    
+// utf8 stuff for imgui -> overlay -> os interop
+
 }

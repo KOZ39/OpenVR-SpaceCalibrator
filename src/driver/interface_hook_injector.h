@@ -3,10 +3,10 @@
 #include <openvr_driver.h>
 
 namespace spacecal {
-    class ServerTrackedDeviceProvider;
+class ServerTrackedDeviceProvider;
 }
 
 namespace hooking {
-    void InjectHooks(spacecal::ServerTrackedDeviceProvider* driver, vr::IVRDriverContext* pDriverContext);
-    void DisableHooks();
+void InjectHooks(spacecal::ServerTrackedDeviceProvider* driver, vr::IVRDriverContext* pDriverContext);
+void DisableHooks();
 }

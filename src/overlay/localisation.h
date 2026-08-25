@@ -1,86 +1,87 @@
 #pragma once
 
-#include "platform.h"
 #include "log_formatters.h"
+#include "platform.h"
 #include <fmt/args.h>
 #include <string>
 #include <unordered_map>
 
+
 namespace spacecal {
 
-    enum class Locale {
-        // Use the OS defined locale
-        System,
+enum class Locale {
+    // Use the OS defined locale
+    System,
 
-        // Western-languages
-        English_UK,
-        English_US,
-        French,
-        Italian,
-        German,
-        Dutch,
-        Spanish_Spain,
-        Spanish_LatinAmerica,
-        Danish,
-        Swedish,
-        Finnish,
-        Norwegian,
-        Bulgarian,
-        Polish,
-        Czech,
-        Greek,
-        Hungarian,
-        Portuguese_Portugal,
-        Portuguese_Brazil,
-        Romanian,
-        Russian,
-        Turkish,
-        Ukrainian,
+    // Western-languages
+    English_UK,
+    English_US,
+    French,
+    Italian,
+    German,
+    Dutch,
+    Spanish_Spain,
+    Spanish_LatinAmerica,
+    Danish,
+    Swedish,
+    Finnish,
+    Norwegian,
+    Bulgarian,
+    Polish,
+    Czech,
+    Greek,
+    Hungarian,
+    Portuguese_Portugal,
+    Portuguese_Brazil,
+    Romanian,
+    Russian,
+    Turkish,
+    Ukrainian,
 
-        // Asian languages
-        Chinese_Simplified,
-        Chinese_Traditional,
-        Japanese,
-        Korean,
-        Thai,
-        Vietnamese,
+    // Asian languages
+    Chinese_Simplified,
+    Chinese_Traditional,
+    Japanese,
+    Korean,
+    Thai,
+    Vietnamese,
 
-        Count,
-    };
+    Count,
+};
 
-    class LocalisationManager {
+class LocalisationManager {
 
-    public:
-        static inline LocalisationManager* getInstance() { return m_instance; }
+public:
+    static inline LocalisationManager* getInstance() { return m_instance; }
 
-        void init();
-        std::string getString(const std::string& input) const;
-        bool loadLocalisationStrings(const Locale locale);
-        Locale estimateSystemLocale() const;
-        bool setLocale(const Locale locale);
+    void init();
+    std::string getString(const std::string& input) const;
+    bool loadLocalisationStrings(const Locale locale);
+    Locale estimateSystemLocale() const;
+    bool setLocale(const Locale locale);
 
-        /// <summary>
-        /// Converts a locale into a locale region in the form of en_US, en_GB, pl, etc. Used to identify which locale files to load.
-        /// </summary>
-        /// <param name="locale">The locale to convert</param>
-        /// <returns>A string representing the unique locale code for the given Locale</returns>
-        std::string getLocaleAsRegionString(const Locale locale) const;
-        const Locale getLocaleFromRegionString(const std::string& szLocale) const;
+    /// <summary>
+    /// Converts a locale into a locale region in the form of en_US, en_GB, pl, etc. Used to identify which locale files to load.
+    /// </summary>
+    /// <param name="locale">The locale to convert</param>
+    /// <returns>A string representing the unique locale code for the given Locale</returns>
+    std::string getLocaleAsRegionString(const Locale locale) const;
+    const Locale getLocaleFromRegionString(const std::string& szLocale) const;
 
-        // gets the locale's own name in it's native tongue. eg, for german it would return "Deustche" as defined in lang/lang_de.json
-        std::string getNativeTongueLocaleName(const Locale locale) const;
+    // gets the locale's own name in it's native tongue. eg, for german it would return "Deustche" as defined in lang/lang_de.json
+    std::string getNativeTongueLocaleName(const Locale locale) const;
 
-    private:
-        bool loadLocaleFromFile(const Locale locale);
-        void loadNativeNameForLocale(const Locale locale, const std::string& regionCode);
+private:
+    bool loadLocaleFromFile(const Locale locale);
+    void loadNativeNameForLocale(const Locale locale, const std::string& regionCode);
 
-    private:
-        static LocalisationManager* m_instance;
-        Locale m_selectedLocale = Locale::System;
+private:
+    static LocalisationManager* m_instance;
+    Locale m_selectedLocale = Locale::System;
 
-        std::unordered_map<std::string, std::string> m_localisedStrings;
-        std::unordered_map<Locale, std::string> m_nativeLanguageNames; // eg Locale::German -> "Deutsche"
-    };
+    std::unordered_map<std::string, std::string> m_localisedStrings;
+    std::unordered_map<Locale, std::string> m_nativeLanguageNames; // eg Locale::German -> "Deutsche"
+};
 }
 
 #define LOCALE_GET(key) ::spacecal::LocalisationManager::getInstance()->getString(key)
