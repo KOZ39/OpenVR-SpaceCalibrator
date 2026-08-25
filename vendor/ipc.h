@@ -103,6 +103,7 @@ bool ipc_client_read_shared_memory(IpcHandle_t hIpcClient, IpcOperation_t ipcOpe
 #define IPC_OS_LINUX 0
 #endif
 
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <vector>

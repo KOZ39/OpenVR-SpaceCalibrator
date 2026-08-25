@@ -1,8 +1,9 @@
 #pragma once
 
-#include "ipc.h"
+// clang-format off
 #include "protocol.h"
-
+#include "ipc.h"
+// clang-format on
 
 namespace ipc {
 class IpcClient {
