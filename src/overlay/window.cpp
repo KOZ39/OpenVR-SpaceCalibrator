@@ -7,7 +7,6 @@
 #include "util.h"
 #include "vr_core.h"
 
-
 #include <filesystem>
 #include <fmt/format.h>
 
@@ -15,7 +14,6 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
-
 
 #if OS_WINDOWS
 #include <dwmapi.h>
