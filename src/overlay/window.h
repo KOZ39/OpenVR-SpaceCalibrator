@@ -4,7 +4,6 @@
 #include "ipc_client.h"
 #include "platform.h"
 
-
 #if OS_WINDOWS
 #define GLFW_EXPOSE_NATIVE_WIN32
 #endif // OS_WINDOWS
