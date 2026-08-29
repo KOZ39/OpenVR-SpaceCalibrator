@@ -58,9 +58,9 @@
   /* Editing calibrations */
   "edit_calibration_rotation": "회전",
   "edit_calibration_position": "위치(m)",
-  "edit_calibration_yaw": "요(Yaw)",
-  "edit_calibration_pitch": "피치(Pitch)",
-  "edit_calibration_roll": "롤(Roll)",
+  "edit_calibration_yaw": "Yaw",
+  "edit_calibration_pitch": "Pitch",
+  "edit_calibration_roll": "Roll",
   "edit_calibration_x": "X",
   "edit_calibration_y": "Y",
   "edit_calibration_z": "Z",
