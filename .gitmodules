@@ -34,3 +34,6 @@
 [submodule "vendor/implot3d"]
 	path = vendor/implot3d
 	url = git@github.com:brenocq/implot3d.git
+[submodule "vendor/zstd"]
+	path = vendor/zstd
+	url = https://github.com/facebook/zstd.git
