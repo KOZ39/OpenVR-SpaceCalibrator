@@ -4,3 +4,4 @@
 *.c text eol=crlf
 *.h text eol=crlf
 *.hpp text eol=crlf
+*.sh text eol=lf
