@@ -667,7 +667,8 @@ bool TrackingSystemCalibration::checkAndUpdateWorldFromDriver(const CalibrationD
 
     double angleDelta = curRot.angularDistance(lastRot);
     double posDelta = (curTrans - lastTrans).norm();
-    bool changed = (angleDelta > k_PLAYSPACE_JUMP_WORLD_FROM_DRIVER_ANGLE_THRESHOLD_RAD) || (posDelta > k_PLAYSPACE_JUMP_WORLD_FROM_DRIVER_POS_THRESHOLD_METERS);
+    bool changed = (angleDelta > k_PLAYSPACE_JUMP_WORLD_FROM_DRIVER_ANGLE_THRESHOLD_RAD) ||
+        (posDelta > k_PLAYSPACE_JUMP_WORLD_FROM_DRIVER_POS_THRESHOLD_METERS);
 
     if (changed) {
         Eigen::AffineCompact3d oldWFD = Eigen::Translation3d(lastTrans) * lastRot;
@@ -693,6 +694,16 @@ bool TrackingSystemCalibration::checkWorldFromDriverJump()
     }
 
     LOG_CALIB_WARN("Detected tracking discontinuity (ref={} target={}), attempting to recover calibration...", refChanged, targetChanged);
+    if (refChanged) {
+        Eigen::Vector3d trans = deltaRef.translation();
+        Eigen::Vector3d euler = deltaRef.rotation().canonicalEulerAngles(2, 1, 0) * (180.0 / EIGEN_PI);
+        LOG_CALIB_WARN("  Ref change: pos x={:.2f} y={:.2f} z={:.2f}  rot yaw={:.2f} pitch={:.2f} roll={:.2f}", trans.x(), trans.y(), trans.z(), euler[1], euler[2], euler[0]);
+    }
+    if (targetChanged) {
+        Eigen::Vector3d trans = deltaTarget.translation();
+        Eigen::Vector3d euler = deltaTarget.rotation().canonicalEulerAngles(2, 1, 0) * (180.0 / EIGEN_PI);
+        LOG_CALIB_WARN("  Tgt change: pos x={:.2f} y={:.2f} z={:.2f}  rot yaw={:.2f} pitch={:.2f} roll={:.2f}", trans.x(), trans.y(), trans.z(), euler[1], euler[2], euler[0]);
+    }
 
     // clear sample data as it'll have invalid data since we detected this discontinuity
     m_sampleHistory.clear();
