@@ -207,8 +207,11 @@ Eigen::Vector3d TrackingSystemCalibration::calibrateTranslation(const std::vecto
     eCalibrationError = CalibrationError::None;
 
     // @TODO: optimise this, this is REALLY slow -> up to 2 SECOND LAG SPIKE IN DEBUG
-    std::vector<std::pair<Eigen::Vector3d, Eigen::Matrix3d>> deltas;
-    deltas.reserve(samples.size() * (samples.size() - 1)); // combination(2, 1)
+    const size_t numDeltas = samples.size() * (samples.size() - 1); // combination(2, 1)
+    Eigen::VectorXd constants(numDeltas * 3);
+    Eigen::MatrixXd coefficients(numDeltas * 3, 3);
+
+    size_t row = 0;
 
     // rotation is only applied to the target tracking system, as that's the tracking system the calibration is targeting! we do not need to modify the reference pose!
     for (size_t i = 0; i < samples.size(); i++) {
@@ -223,25 +226,15 @@ Eigen::Vector3d TrackingSystemCalibration::calibrateTranslation(const std::vecto
 
             auto QAi = sample_i.reference.rot.transpose();
             auto QAj = sample_j.reference.rot.transpose();
-            auto dQA = QAj - QAi;
-            auto CA = QAj * (sample_j.reference.trans - sample_j.target.trans) - QAi * (sample_i.reference.trans - sample_i.target.trans);
-            deltas.push_back(std::make_pair(CA, dQA));
+            coefficients.block<3, 3>(row, 0) = QAj - QAi;
+            constants.segment<3>(row) = QAj * (sample_j.reference.trans - sample_j.target.trans) - QAi * (sample_i.reference.trans - sample_i.target.trans);
+            row += 3;
 
             auto QBi = sample_i.target.rot.transpose();
             auto QBj = sample_j.target.rot.transpose();
-            auto dQB = QBj - QBi;
-            auto CB = QBj * (sample_j.reference.trans - sample_j.target.trans) - QBi * (sample_i.reference.trans - sample_i.target.trans);
-            deltas.push_back(std::make_pair(CB, dQB));
-        }
-    }
-
-    Eigen::VectorXd constants(deltas.size() * 3);
-    Eigen::MatrixXd coefficients(deltas.size() * 3, 3);
-
-    for (size_t i = 0; i < deltas.size(); i++) {
-        for (int axis = 0; axis < 3; axis++) {
-            constants(i * 3 + axis) = deltas[i].first(axis);
-            coefficients.row(i * 3 + axis) = deltas[i].second.row(axis);
+            coefficients.block<3, 3>(row, 0) = QBj - QBi;
+            constants.segment<3>(row) = QBj * (sample_j.reference.trans - sample_j.target.trans) - QBi * (sample_i.reference.trans - sample_i.target.trans);
+            row += 3;
         }
     }
 
