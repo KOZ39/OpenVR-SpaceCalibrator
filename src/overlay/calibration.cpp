@@ -307,7 +307,7 @@ CalibrationError TrackingSystemCalibration::computeCalibrationOneshot(double cur
 
     // ensure translation is valid
     Eigen::Vector3d computedTranslation = calibrateTranslation(m_samples, computedRotation, eTmpCalibErr);
-    if (eTmpCalibErr != CalibrationError::None) {
+    if (eCalibrationError == CalibrationError::None && eTmpCalibErr != CalibrationError::None) {
         eCalibrationError = eTmpCalibErr;
     }
 
@@ -361,12 +361,17 @@ CalibrationError TrackingSystemCalibration::computeCalibrationOneshot(double cur
         calibratedTranslation = computedTranslation;
 
         m_lastRmsError = rmsError;
+        m_lastAxisVariance = axisVariance;
 
         if (eCalibrationError == CalibrationError::None && isContinuousCalibration()) {
             trackCollectedSamplesForErrorTracking();
             m_lastSuccessfulCalibTime = currentTime;
         }
 
+        if (bForceCalibration) {
+            LOG_CALIB_INFO("Forcibly applying calibration...");
+        }
+        LOG_CALIB_INFO("Using new calibration RMS: {} axis var: {}", rmsError, axisVariance);
         apply();
         CalibrationManager::getInstance()->saveConfig();
     } else {
