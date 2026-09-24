@@ -522,7 +522,7 @@ namespace bluetooth {
                 .id = k_LIGHTHOUSE_10_GENERIC_ID,
             };
 
-            if (simpleble_peripheral_write_command(hBtDevice, BASE_STATION_1_POWER_SERVICE_UUID, BASE_STATION_1_POWER_CHARACTERISTIC_UUID, (const uint8_t*)&lighthouse_10_packet, sizeof(lighthouse_10_packet)) != SIMPLEBLE_SUCCESS) {
+            if (simpleble_peripheral_write_request(hBtDevice, BASE_STATION_1_POWER_SERVICE_UUID, BASE_STATION_1_POWER_CHARACTERISTIC_UUID, (const uint8_t*)&lighthouse_10_packet, sizeof(lighthouse_10_packet)) != SIMPLEBLE_SUCCESS) {
                 LOG_BLUETOOTH_WARN("Failed to set {} power state, got BLE failure", szSerialNumber);
             } else {
                 success = true;
@@ -610,7 +610,7 @@ namespace bluetooth {
 
             uint8_t writeData[] = { target_channel };
             size_t writeDataSize = sizeof(writeData) / sizeof(writeData[0]);
-            err = simpleble_peripheral_write_command(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_MODE_CHARACTERISTIC_UUID, writeData, writeDataSize);
+            err = simpleble_peripheral_write_request(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_MODE_CHARACTERISTIC_UUID, writeData, writeDataSize);
             if (err == SIMPLEBLE_SUCCESS) {
                 success = true;
             }
@@ -760,7 +760,7 @@ namespace bluetooth {
             }
 
             if (isValidCommand) {
-                err = simpleble_peripheral_write_command(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_POWER_CHARACTERISTIC_UUID, writeData, writeDataSize);
+                err = simpleble_peripheral_write_request(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_POWER_CHARACTERISTIC_UUID, writeData, writeDataSize);
                 if (err == SIMPLEBLE_SUCCESS) {
                     success = true;
                 }
@@ -768,7 +768,7 @@ namespace bluetooth {
                 if (target_state == PowerState_Sleep) {
                     // Sleep cmd requires to send 0x01 followed by 0x00
                     writeData[0] = 0x00;
-                    err = simpleble_peripheral_write_command(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_POWER_CHARACTERISTIC_UUID, writeData, writeDataSize);
+                    err = simpleble_peripheral_write_request(hBtDevice, BASE_STATION_2_SERVICE_UUID, BASE_STATION_2_POWER_CHARACTERISTIC_UUID, writeData, writeDataSize);
                     if (err == SIMPLEBLE_SUCCESS) {
                         success = true;
                     } else {
