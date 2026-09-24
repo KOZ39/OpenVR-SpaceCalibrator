@@ -317,6 +317,9 @@ CalibrationError TrackingSystemCalibration::computeCalibrationOneshot(double cur
         // this also handles the case of recentering (eg assume quest + vive trackers, i take headset off to do something, i come back, headset auto recenters invalidating calibration so we must reject the old calibration)
         Eigen::Vector3d _posOffset_temp = Eigen::Vector3d::Zero();
         validateCalibration(calibratedRotation, calibratedTranslation, m_lastRmsError, _posOffset_temp, isRelativeCalibration);
+
+        // also keep axis variance in sync, we want to compute reality and not the (possibly incorrect) past!
+        m_lastAxisVariance = computeAxisVariance(calibratedRotation, calibratedTranslation)(1);
     }
 
     double rmsError = 0.0;
