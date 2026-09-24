@@ -70,6 +70,8 @@ inline void buildDeviceSelection(spacecal::TrackingSystemCalibration& calibratio
                 continue;
             if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)
                 continue;
+            if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_DisplayRedirect)
+                continue;
 
             if (selected == vrDevice.dwDeviceIndex) {
                 matched = true;
@@ -95,6 +97,8 @@ inline void buildDeviceSelection(spacecal::TrackingSystemCalibration& calibratio
                 continue;
             if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)
                 continue;
+            if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_DisplayRedirect)
+                continue;
 
             if (vrDevice.eControllerRole == vr::ETrackedControllerRole::TrackedControllerRole_LeftHand) {
                 selected = vrDevice.dwDeviceIndex;
@@ -113,6 +117,8 @@ inline void buildDeviceSelection(spacecal::TrackingSystemCalibration& calibratio
                     continue;
                 if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)
                     continue;
+                if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_DisplayRedirect)
+                    continue;
 
                 selected = vrDevice.dwDeviceIndex;
                 break;
@@ -130,6 +136,8 @@ inline void buildDeviceSelection(spacecal::TrackingSystemCalibration& calibratio
             if (vrDevice.szTrackingSystemId != device.trackingSystem)
                 continue;
             if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)
+                continue;
+            if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_DisplayRedirect)
                 continue;
 
             if (device.deviceModel != vrDevice.szModel)
@@ -164,6 +172,8 @@ inline void buildDeviceSelection(spacecal::TrackingSystemCalibration& calibratio
         if (vrDevice.szTrackingSystemId != device.trackingSystem)
             continue;
         if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)
+            continue;
+        if (vrDevice.eDeviceClass == vr::ETrackedDeviceClass::TrackedDeviceClass_DisplayRedirect)
             continue;
 
         auto label = fmt::format("{} | {}", vrDevice.szModel, vrDevice.szSerial);
