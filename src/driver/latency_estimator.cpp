@@ -113,7 +113,7 @@ double LatencyEstimator::weighted_standard_deviation_of(const std::vector<double
 }
 
 // DBL_MAX if invalid
-double LatencyEstimator::curve_difference_at(const DeviceVelocityHistory& ref, const DeviceVelocityHistory& target, double deltaTime) const
+LatencyEstimator::CurveDifferenceResult_t LatencyEstimator::curve_difference_at(const DeviceVelocityHistory& ref, const DeviceVelocityHistory& target, double deltaTime) const
 {
     // compute a weighted score for how well the two curves align at the given deltaTime
     // weight is to minimise the effects of low velocity
@@ -141,11 +141,21 @@ double LatencyEstimator::curve_difference_at(const DeviceVelocityHistory& ref, c
     }
 
     size_t sampleCount = pairedRefSpeeds.size();
-    if (sampleCount < k_MIN_PAIRED_SAMPLES)
-        return DBL_MAX;
+    if (sampleCount < k_MIN_PAIRED_SAMPLES) {
+        return {
+            .difference = DBL_MAX,
+            .totalWeight = totalWeight,
+            .sampleCount = sampleCount,
+        };
+    }
 
-    if (totalWeight < k_MIN_USEFUL_WEIGHT)
-        return DBL_MAX;
+    if (totalWeight < k_MIN_USEFUL_WEIGHT) {
+        return {
+            .difference = DBL_MAX,
+            .totalWeight = totalWeight,
+            .sampleCount = sampleCount,
+        };
+    }
 
     double refMean = weighted_mean_of(pairedRefSpeeds, pairedWeights, totalWeight);
     double targetMean = weighted_mean_of(pairedTargetSpeeds, pairedWeights, totalWeight);
@@ -153,8 +163,13 @@ double LatencyEstimator::curve_difference_at(const DeviceVelocityHistory& ref, c
     double targetSpread = weighted_standard_deviation_of(pairedTargetSpeeds, pairedWeights, totalWeight, targetMean);
 
     constexpr double kMinSpread = 1e-6;
-    if (refSpread < kMinSpread || targetSpread < kMinSpread)
-        return DBL_MAX;
+    if (refSpread < kMinSpread || targetSpread < kMinSpread) {
+        return {
+            .difference = DBL_MAX,
+            .totalWeight = totalWeight,
+            .sampleCount = sampleCount,
+        };
+    }
 
     double weightedSumSquaredDifference = 0.0;
     for (size_t i = 0; i < sampleCount; ++i) {
@@ -164,13 +179,17 @@ double LatencyEstimator::curve_difference_at(const DeviceVelocityHistory& ref, c
         weightedSumSquaredDifference += pairedWeights[i] * difference * difference;
     }
 
-    return weightedSumSquaredDifference / totalWeight;
+    return {
+        .difference = weightedSumSquaredDifference / totalWeight,
+        .totalWeight = totalWeight,
+        .sampleCount = sampleCount,
+    };
 }
 
 // DBL_MAX if invalid
 double LatencyEstimator::regularized_difference_at(const DeviceVelocityHistory& ref, const DeviceVelocityHistory& target, double deltaTime, double priorLatency) const
 {
-    double difference = curve_difference_at(ref, target, deltaTime);
+    double difference = curve_difference_at(ref, target, deltaTime).difference;
     if (difference == DBL_MAX)
         return DBL_MAX;
 
@@ -179,21 +198,27 @@ double LatencyEstimator::regularized_difference_at(const DeviceVelocityHistory& 
 }
 
 // DBL_MAX if invalid
-double LatencyEstimator::compute_latency(const DeviceVelocityHistory& ref, const DeviceVelocityHistory& target, double priorLatency) const
+double LatencyEstimator::compute_latency(const DeviceVelocityHistory& ref, const DeviceVelocityHistory& target, double priorLatency, double& outConfidence) const
 {
     if (ref.count() < k_MIN_PAIRED_SAMPLES || target.count() < k_MIN_PAIRED_SAMPLES)
         return DBL_MAX;
 
     double bestDeltaTime = 0.0;
     double bestDifference = DBL_MAX;
+    double secondBestDifference = DBL_MAX;
 
     // first minimise search space
     for (int i = 0; i < k_NUM_COARSE_SEARCH_STEPS; ++i) {
         double candidateDelaTime = -k_MAX_LATENCY_SECONDS + (2.0 * k_MAX_LATENCY_SECONDS) * (double(i) / (k_NUM_COARSE_SEARCH_STEPS - 1));
         double difference = regularized_difference_at(ref, target, candidateDelaTime, priorLatency);
         if (difference < bestDifference) {
+            if (std::abs(bestDeltaTime - candidateDelaTime) > k_MIN_PEAK_SEPARATION_SECONDS && bestDifference < secondBestDifference) {
+                secondBestDifference = bestDifference;
+            }
             bestDifference = difference;
             bestDeltaTime = candidateDelaTime;
+        } else if (difference < secondBestDifference && std::abs(candidateDelaTime - bestDeltaTime) > k_MIN_PEAK_SEPARATION_SECONDS) {
+            secondBestDifference = difference;
         }
     }
 
@@ -229,17 +254,52 @@ double LatencyEstimator::compute_latency(const DeviceVelocityHistory& ref, const
 
     double finalDeltaTime = 0.5 * (lo + hi);
 
-    double trueDifference = curve_difference_at(ref, target, finalDeltaTime);
-    if (trueDifference > k_MAX_ACCEPTABLE_DIFFERENCE)
+    LatencyEstimator::CurveDifferenceResult_t finalResult = curve_difference_at(ref, target, finalDeltaTime);
+    if (finalResult.difference > k_MAX_ACCEPTABLE_DIFFERENCE)
         return DBL_MAX;
+
+    double ambiguityRatio = (secondBestDifference == DBL_MAX)
+        ? INFINITY : secondBestDifference / std::max(bestDifference, 1e-9);
+
+    // range 0...1
+    double rawConfidence = confidence_from_difference(finalResult.difference)
+        * confidence_from_ambiguity(ambiguityRatio)
+        * confidence_from_sample_support(finalResult.totalWeight, finalResult.sampleCount);
 
     return finalDeltaTime;
 }
 
-double LatencyEstimator::get_latency(vr::TrackedDeviceIndex_t refIndex, vr::TrackedDeviceIndex_t targetIndex)
+double LatencyEstimator::confidence_from_difference(double difference) const
 {
-    if (refIndex >= vr::k_unMaxTrackedDeviceCount || targetIndex >= vr::k_unMaxTrackedDeviceCount || refIndex == targetIndex)
+    if (difference == DBL_MAX) {
         return 0.0;
+    }
+    return std::clamp(1.0 - (difference / k_MAX_ACCEPTABLE_DIFFERENCE), 0.0, 1.0);
+}
+
+double LatencyEstimator::confidence_from_ambiguity(double ambiguityRatio) const
+{
+    if (!std::isfinite(ambiguityRatio)) {
+        return 1.0;
+    }
+
+    double t = (ambiguityRatio - k_AMBIGUITY_RATIO_LOW) / (k_AMBIGUITY_RATIO_HIGH - k_AMBIGUITY_RATIO_LOW);
+    return std::clamp(t, 0.0, 1.0);
+}
+
+double LatencyEstimator::confidence_from_sample_support(double totalWeight, size_t sampleCount) const
+{
+    double weightConfidence = std::clamp((totalWeight - k_MIN_USEFUL_WEIGHT) / (k_MIN_USEFUL_WEIGHT * k_SAMPLE_WEIGHT_SUPPORT_SCALE), 0.0, 1.0);
+    double countConfidence = std::clamp((double(sampleCount) - double(k_MIN_PAIRED_SAMPLES)) / (double(k_MIN_PAIRED_SAMPLES) * k_SAMPLE_COUNT_SUPPORT_SCALE), 0.0, 1.0);
+    return std::min(weightConfidence, countConfidence);
+}
+
+double LatencyEstimator::get_latency(vr::TrackedDeviceIndex_t refIndex, vr::TrackedDeviceIndex_t targetIndex, double& outConfidence)
+{
+    if (refIndex >= vr::k_unMaxTrackedDeviceCount || targetIndex >= vr::k_unMaxTrackedDeviceCount || refIndex == targetIndex) {
+        outConfidence = 0.0;
+        return 0.0;
+    }
 
     CacheEntry_t& entry = m_cache[refIndex][targetIndex];
     const DeviceVelocityHistory& ref = m_histories[refIndex];
@@ -248,26 +308,35 @@ double LatencyEstimator::get_latency(vr::TrackedDeviceIndex_t refIndex, vr::Trac
     uint64_t refFrames = ref.frame_counter();
     uint64_t targetFrames = target.frame_counter();
     if (entry.referenceFrameCount.load(std::memory_order_acquire) == refFrames && entry.targetFrameCount.load(std::memory_order_acquire) == targetFrames) {
+        outConfidence = entry.confidence.load(std::memory_order_acquire);
         return entry.latency.load(std::memory_order_acquire);
     }
 
     bool expected = false;
     if (!entry.claimed.compare_exchange_strong(expected, true, std::memory_order_acquire)) {
+        outConfidence = entry.confidence.load(std::memory_order_acquire);
         return entry.latency.load(std::memory_order_acquire);
     }
 
     double timeNowSeconds = std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
     double current = entry.latency.load(std::memory_order_acquire);
-    double rawLatency = compute_latency(ref, target, current);
+    double confidence = entry.confidence.load(std::memory_order_acquire);
+    double rawConfidence = 0.0;
+    double rawLatency = compute_latency(ref, target, current, rawConfidence);
 
     entry.referenceFrameCount.store(refFrames, std::memory_order_relaxed);
     entry.targetFrameCount.store(targetFrames, std::memory_order_relaxed);
 
     if (rawLatency == DBL_MAX) {
+        outConfidence = entry.confidence.load(std::memory_order_relaxed) * k_CONFIDENCE_DECAY_ON_MISS;
+        entry.confidence.store(outConfidence, std::memory_order_release);
         entry.lastTimeSeconds = timeNowSeconds;
         entry.claimed.store(false, std::memory_order_release);
         return current;
     }
+
+    double smoothedConfidence = entry.confidenceSmoother.filter(rawConfidence, timeNowSeconds);
+    entry.confidence.store(std::clamp(smoothedConfidence, 0.0, 1.0), std::memory_order_release);
 
     bool hadEstimate = entry.hasEstimate.load(std::memory_order_relaxed);
 
@@ -289,6 +358,7 @@ double LatencyEstimator::get_latency(vr::TrackedDeviceIndex_t refIndex, vr::Trac
 
     entry.lastTimeSeconds = timeNowSeconds;
     entry.claimed.store(false, std::memory_order_release);
+    outConfidence = entry.confidence.load(std::memory_order_acquire);
     return entry.latency.load(std::memory_order_acquire);
 }
 }

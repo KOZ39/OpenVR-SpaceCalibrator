@@ -231,7 +231,6 @@ inline Eigen::Affine3d getWorldFromDriverPose(const vr::DriverPose_t& pose, doub
 
 bool ServerTrackedDeviceProvider::HandleDevicePoseUpdated(vr::TrackedDeviceIndex_t unWhichDevice, vr::DriverPose_t& newPose)
 {
-
     // bounds check, as sometimes the id is invalid?
     if (!IsDeviceIndexValid(unWhichDevice))
         return true;
@@ -258,7 +257,8 @@ bool ServerTrackedDeviceProvider::HandleDevicePoseUpdated(vr::TrackedDeviceIndex
                 // world-space pose of ref device (H')
                 Eigen::Affine3d refWorldNow = getWorldFromDriverPose(refPose, m_fVsyncPredictionTime);
                 // world-space pose of target device (T')
-                double latency = m_latencyEstimator.get_latency(transform.unRelativeReferenceOpenvrDeviceId, transform.unRelativeTargetOpenvrDeviceId);
+                double latencyConfidence = 0.0;
+                double latency = m_latencyEstimator.get_latency(transform.unRelativeReferenceOpenvrDeviceId, transform.unRelativeTargetOpenvrDeviceId, latencyConfidence);
                 Eigen::Affine3d targetWorldNow = getWorldFromDriverPose(targetPose, m_fVsyncPredictionTime + latency);
 
                 // local-space calibration transform (C_L)
@@ -302,6 +302,7 @@ bool ServerTrackedDeviceProvider::HandleDevicePoseUpdated(vr::TrackedDeviceIndex
                         targetCalib);
 
                     double lerp = deltaTime * getTransformRate(m_cachedCalibrations[unWhichDevice].eDeltaSize);
+                    lerp *= latencyConfidence;
                     lerp = std::clamp(lerp, 0.0, 1.0);
 
                     m_cachedCalibrations[unWhichDevice].pose = interpolatePoseAround(lerp, deviceWorldPos, m_cachedCalibrations[unWhichDevice].pose, targetCalib);
