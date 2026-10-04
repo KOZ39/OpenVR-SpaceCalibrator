@@ -825,8 +825,6 @@ std::string format_as(ETrackedDeviceProperty trackedDeviceProperty)
     case ETrackedDeviceProperty::Prop_UserIpdMeters_Float:
         return "Prop_UserIpdMeters_Float";
     case ETrackedDeviceProperty::Prop_CurrentUniverseId_Uint64:
-        return "Prop_CurrentUniverseId_Uint64";
-    case ETrackedDeviceProperty::Prop_PreviousUniverseId_Uint64:
         return "Prop_PreviousUniverseId_Uint64";
     case ETrackedDeviceProperty::Prop_DisplayFirmwareVersion_Uint64:
         return "Prop_DisplayFirmwareVersion_Uint64";
