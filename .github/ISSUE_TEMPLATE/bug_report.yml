@@ -1,4 +1,3 @@
----
 name: Bug report
 description: Report an issue with Space Calibrator.
 title: '[Bug]: '
@@ -45,14 +44,6 @@ body:
     attributes:
       value: >-
         You are advised to also provide logs to help make it easier for me to
-        troubleshoot your issues. You can go to Space Calibrator -> Settings and
+        troubleshoot your issues. You can go to Space Calibrator -> About and
         click the [View logs] button to open the folder. Please attach
         `log_overlay_latest.log` and `log_driver_latest.log`. Thank you!
-
----
-
-<!--
-If you are having trouble setting this up with SteamVR and would like help, the fastest way is to ask in the Discord group. https://discord.com/invite/m7g2Wyj
-
-If you are having issues after updating SteamVR, please check for a new release at https://github.com/pushrax/OpenVR-SpaceCalibrator/releases before posting an issue.
--->
