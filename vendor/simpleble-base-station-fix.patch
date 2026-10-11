@@ -1,5 +1,27 @@
+diff --git a/simpleble/src/Logging.cpp b/simpleble/src/Logging.cpp
+index faea717f..814cc581 100644
+--- a/simpleble/src/Logging.cpp
++++ b/simpleble/src/Logging.cpp
+@@ -89,8 +89,15 @@ void Logger::log_default_stdout() {
+ }
+ 
+ void Logger::log_default_file() {
+-    std::time_t t = std::time(nullptr);
+-    std::string date_time_str = fmt::format("{:%Y-%m-%d_%H-%M-%S}", fmt::localtime(t));
++    const auto utc_now = std::chrono::system_clock::now();
++    const auto utc_time_t = std::chrono::system_clock::to_time_t(utc_now);
++    std::tm tm_local = {};
++#ifdef _MSC_VER
++    localtime_s(&tm_local, &utc_time_t);
++#else
++    localtime_r(&utc_time_t, &tm_local);
++#endif
++    std::string date_time_str = fmt::format("{:%Y-%m-%d_%H-%M-%S}", tm_local);
+     std::string filename = fmt::format("simpleble_{}", date_time_str);
+     log_default_file(filename);
+ }
 diff --git a/simpleble/src/backends/dongl/PeripheralDongl.cpp b/simpleble/src/backends/dongl/PeripheralDongl.cpp
-index 3dacd54..807d643 100644
+index 3dacd54e..807d643e 100644
 --- a/simpleble/src/backends/dongl/PeripheralDongl.cpp
 +++ b/simpleble/src/backends/dongl/PeripheralDongl.cpp
 @@ -152,9 +152,9 @@ void PeripheralDongl::write_request(BluetoothUUID const& service_uuid, Bluetooth
@@ -29,7 +51,7 @@ index 3dacd54..807d643 100644
      simpleble_WriteRsp rsp = _serial_protocol->simpleble_write(_conn_handle, characteristic.handle_value,
                                                                 simpleble_WriteOperation_WRITE_CMD, data);
 diff --git a/simpleble/src/backends/linux/PeripheralLinux.cpp b/simpleble/src/backends/linux/PeripheralLinux.cpp
-index 9345afe..3126001 100644
+index 9345afef..31260012 100644
 --- a/simpleble/src/backends/linux/PeripheralLinux.cpp
 +++ b/simpleble/src/backends/linux/PeripheralLinux.cpp
 @@ -241,10 +241,10 @@ void PeripheralLinux::write_request(BluetoothUUID const& service, BluetoothUUID
@@ -63,7 +85,7 @@ index 9345afe..3126001 100644
  }
  
 diff --git a/simpleble/src/backends/windows/PeripheralWindows.cpp b/simpleble/src/backends/windows/PeripheralWindows.cpp
-index 2136ae3..909a48b 100644
+index 2136ae39..909a48b3 100644
 --- a/simpleble/src/backends/windows/PeripheralWindows.cpp
 +++ b/simpleble/src/backends/windows/PeripheralWindows.cpp
 @@ -324,10 +324,10 @@ void PeripheralWindows::write_request(BluetoothUUID const& service, BluetoothUUI
