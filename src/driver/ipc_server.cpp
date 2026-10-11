@@ -69,7 +69,9 @@ void Server::Callback_ResetCalibration(::IpcCommandType_t cmdType, ::IpcHandle_t
 {
     if (pArguments) {
         Server* pThis = reinterpret_cast<Server*>(userdata);
-        pThis->m_driver->ResetCalibration();
+        if (pThis) {
+            pThis->m_driver->ResetCalibration();
+        }
 
         // LOG_IPC_INFO("Server::Callback_ResetCalibration");
     }
@@ -79,7 +81,9 @@ void Server::Callback_RequestVirtualDesktopProps(::IpcCommandType_t cmdType, ::I
 {
     if (pArguments) {
         Server* pThis = reinterpret_cast<Server*>(userdata);
-        pThis->m_driver->RequestVirtualDesktopProps();
+        if (pThis) {
+            pThis->m_driver->RequestVirtualDesktopProps();
+        }
 
         // LOG_IPC_INFO("Server::Callback_RequestVirtualDesktopProps");
     }

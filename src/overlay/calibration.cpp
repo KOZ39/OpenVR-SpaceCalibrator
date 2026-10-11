@@ -1351,12 +1351,12 @@ void CalibrationManager::calibrationTick(const double currentTime)
     if (!m_ipcClient.IsConnected()) {
         if (currentTime - m_lastIpcConnectionAttemptTime >= k_IPC_CONNECTION_RETRY_INTERVAL_SEC) {
             m_lastIpcConnectionAttemptTime = currentTime;
-            m_ipcClient.Connect();
-
-            // initialise memory properly
-            m_ipcClient.RequestVirtualDesktopProps();
-            m_ipcClient.PollPoses();
-            apply();
+            if (m_ipcClient.Connect()) {
+                // initialise memory properly
+                m_ipcClient.RequestVirtualDesktopProps();
+                m_ipcClient.PollPoses();
+                apply();
+            }
         }
 
         // driver is either not ready (we just connected to it) or unavailable (driver is disabled in steamvr addons), its pointless to do calibration logic now so early exit
